@@ -12,6 +12,10 @@
   "scripts": {
     "build": "tsc --project tsconfig.build.json",
     "typecheck": "tsc --noEmit --project tsconfig.build.json && tsc --noEmit",
-    "test": "vitest run --config ../../vitest.package.config.ts"
+    "test": "vitest run --config ../../vitest.package.config.ts",
+    "json-schema": "tsx ../../scripts/export-json-schema.ts && biome format --write json"
+  },
+  "dependencies": {
+    "zod": "4.6.7"
   }
 }

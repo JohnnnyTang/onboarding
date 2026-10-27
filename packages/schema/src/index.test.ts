@@ -1,6 +1,7 @@
 import { expect, test } from "vitest";
-import * as scaffold from "./index.js";
+import * as schema from "./index.js";
 
-test("the package scaffold loads", () => {
-  expect(Object.keys(scaffold)).toEqual([]);
+test("the public package exposes contract validators", () => {
+  expect(schema.PROTOCOL_VERSION).toBe(1);
+  expect(schema.ManifestSchema).toBeDefined();
 });

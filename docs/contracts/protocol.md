@@ -83,3 +83,31 @@ Shared by `rejected`, `error` and HTTP error bodies.
 | `INTERNAL`          | Unexpected server error; details only in server logs                 |
 
 Messages sent to clients never include stack traces, match state or another seat's data.
+
+## Validation examples
+
+Sequence numbers and `ts` (milliseconds) are nonnegative safe integers; accepted event
+sequences start at 1. A client may start its increasing `clientSeq` at 0. Positions are
+integer millimeters. Schemas check message structure; connection order, sequence gaps,
+patch application, rate limits and seat permissions are room-server checks (T11).
+
+<!-- schema: ClientMessageSchema -->
+```json
+{
+  "t": "hello",
+  "protocol": 1,
+  "matchId": "match-1",
+  "auth": { "kind": "guest", "token": "guest-token" },
+  "lastSeq": 0
+}
+```
+
+<!-- schema: ServerMessageSchema -->
+```json
+{
+  "t": "patch",
+  "seq": 1,
+  "ops": [{ "op": "replace", "path": "/game/deckCount", "value": 3 }],
+  "cause": { "seat": "0", "clientSeq": 0, "move": "draw" }
+}
+```

@@ -6,6 +6,7 @@ How a game describes itself and how a version is uploaded. Implemented in `@bgp/
 
 Lives at the root of a game package (code games) and is generated from a project (sandbox games).
 
+<!-- schema: ManifestSchema -->
 ```json
 {
   "schemaVersion": 1,
@@ -58,6 +59,16 @@ Every `AssetRef` in `components.json` must point to an uploaded file. Game versi
 **Build hash:** SHA-256 over the UTF-8 text formed by sorting all file paths and joining lines `"<path>\t<sha256>\n"`. Two uploads with identical files get the same build hash.
 
 Ready versions are immutable. Fixing a bug means publishing a new version.
+
+`GamePackageSchema` validates `{ manifest, components }` together and requires `zones`
+and `setup` for sandbox games. Option IDs are unique; integer defaults lie within
+`min..max`; choice defaults belong to the nonempty, unique `choices` list.
+`optionsForManifestSchema(manifest)` checks a complete options object after the caller
+has applied the declared defaults; undeclared options are rejected. File existence,
+content signatures, byte limits, bundle shape and setup execution are finalize checks
+(T10/T19), beyond structural schema validation.
+
+Enforced games may declare zones, but omit sandbox `setup`.
 
 ## Visibility
 

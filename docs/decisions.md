@@ -216,9 +216,11 @@ What to decide, when, and how to judge it. Record each outcome as a new entry or
 
 Agents: add questions here with the option you chose for now and why.
 
-| ID    | Question                                                                                                        | Current default                                 | Needed by               |
-| ----- | --------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- | ----------------------- |
-| Q-001 | Platform name and package scope                                                                                 | `@bgp/*`, CLI `bgp`                             | Before public release   |
-| Q-002 | Hosting: university infrastructure or a cloud provider; with it, the storage and identity providers             | Container images, no provider-specific services | Before first deployment |
-| Q-003 | Outer isolation layer and security review for public games                                                      | QuickJS in separate processes (D-008)           | Phase 4                 |
-| Q-004 | Dexterity physics: deterministic Rapier on every client, or simulate on the server and play back the trajectory | Not started                                     | Phase 2 spike           |
+| ID    | Question                                                                                                        | Current default                                                                           | Needed by               |
+| ----- | --------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- | ----------------------- |
+| Q-001 | Platform name and package scope                                                                                 | `@bgp/*`, CLI `bgp`                                                                       | Before public release   |
+| Q-002 | Hosting: university infrastructure or a cloud provider; with it, the storage and identity providers             | Container images, no provider-specific services                                           | Before first deployment |
+| Q-003 | Outer isolation layer and security review for public games                                                      | QuickJS in separate processes (D-008)                                                     | Phase 4                 |
+| Q-004 | Dexterity physics: deterministic Rapier on every client, or simulate on the server and play back the trajectory | Not started                                                                               | Phase 2 spike           |
+| Q-005 | Confirm the minimal public HTTP response envelopes and validation-error shape added in T02                      | Use the shapes in contracts/http-api.md; expose no database internals or match seed       | T10 API implementation  |
+| Q-006 | Die face strings represent either labels or assets; how should extension-like labels be escaped?                | Treat image extensions as asset references and reject SVG paths; other strings are labels | T16 authoring UI        |

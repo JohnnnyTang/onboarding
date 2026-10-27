@@ -21,7 +21,7 @@
     "db:migrate": "tsx scripts/pending-task.ts T07 db:migrate",
     "check:boundaries": "tsx scripts/check-boundaries.ts",
     "check:wasm": "tsx scripts/check-wasm-inventory.ts",
-    "json-schema": "tsx scripts/pending-task.ts T02 json-schema",
+    "json-schema": "pnpm --filter @bgp/schema json-schema",
     "perf": "tsx scripts/pending-task.ts T20 PERF-01"
   },
   "devDependencies": {

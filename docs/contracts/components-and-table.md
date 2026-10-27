@@ -175,9 +175,9 @@ Selection is renderer UI state. The app passes the current selection to `actions
 Implemented by `@bgp/table-2d` now and `@bgp/table-3d` in Phase 2.
 
 ```ts
-export interface TableRenderer {
+export interface TableRenderer<Container> {
   mount(
-    container: HTMLElement,
+    container: Container,
     init: {
       components: ComponentsFile;
       assetUrl(ref: AssetRef): string;
@@ -192,6 +192,9 @@ export interface TableRenderer {
   destroy(): void;
 }
 ```
+
+In `@bgp/schema`, use `TableRenderer<HTMLElement>` from a browser package. The container
+is a type parameter so the pure schema package does not depend on DOM libraries.
 
 ## Sandbox state and manual operations
 
@@ -247,3 +250,68 @@ export type ManualOp =
 Otherwise the view omits `def` (cards show their back). Moving an item between zones does not change its face unless `face` is given; dealing defaults to face down into `owner` zones.
 
 **Validation.** Unknown items or zones, a `pos_mm` outside the table, and taking an item out of another seat's `owner` zone are rejected as `INVALID_ARGS`. Giving an item to another seat's `owner` zone is allowed, as at a real table.
+
+## Schema validation
+
+`ComponentsFileSchema` checks unique definition/zone IDs, card-back references and setup
+references. Owner visibility requires an owner. Declared zone rectangles may have decimal
+dimensions; snapshot rectangles and positions use integers. Grid settings are allowed
+only for grid layouts. Die-face strings ending in image extensions are asset paths;
+other strings are labels. SVG paths are rejected, including die faces.
+
+`TableSnapshotSchema` checks structure, unique IDs, zone references and free-zone/table
+coordinates. Hidden identity requires context: use `tableSnapshotForSeatSchema` with a
+trusted `canIdentify(item)` predicate for enforced games, or
+`sandboxSnapshotForSeatSchema(components, seat)` for sandbox visibility (including
+`"each"` zones). Supply an `isCard(item)` predicate when the caller knows a hidden item
+is a card; the schema then requires its back. Do not derive either predicate from an
+untrusted snapshot. Opaque ID provenance and hidden game data require the T05 leak
+checker and the game/runtime's `playerView`; a schema cannot infer them.
+
+<!-- schema: ComponentsFileSchema -->
+```json
+{
+  "schemaVersion": 1,
+  "defs": [
+    { "id": "back", "kind": "cardBack", "image": "assets/back.png" },
+    {
+      "id": "fish",
+      "kind": "card",
+      "size_mm": [63, 88],
+      "thickness_mm": 0.3,
+      "front": "assets/fish.png",
+      "back": "back"
+    }
+  ],
+  "zones": [
+    {
+      "id": "deck",
+      "layout": "stack",
+      "rect_mm": { "x": 0, "y": 0, "w": 100, "h": 100 },
+      "visibility": "public"
+    }
+  ],
+  "setup": {
+    "instances": [{ "def": "fish", "zone": "deck", "count": 10, "face": "down", "shuffle": true }]
+  }
+}
+```
+
+<!-- schema: TableSnapshotSchema -->
+```json
+{
+  "table": { "size_mm": [800, 600] },
+  "zones": [{ "id": "deck", "layout": "stack", "rect_mm": { "x": 0, "y": 0, "w": 100, "h": 100 } }],
+  "items": [{ "id": "i8f3a2c91", "zone": "deck", "index": 0, "face": "down", "back": "back" }]
+}
+```
+
+<!-- schema: ManualOpSchema -->
+```json
+{ "op": "deal", "from": "deck", "to": ["hand:0", "hand:1"], "count": 3 }
+```
+
+<!-- schema: GestureSchema -->
+```json
+{ "kind": "drop", "item": "i8f3a2c91", "from": "deck", "to": "market", "pos_mm": [10, -20] }
+```

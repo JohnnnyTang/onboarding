@@ -126,7 +126,7 @@ export interface GameDefinition<S extends Json, V extends Json = Json> {
 
   // ---- Authoritative (rules host; also hot-seat in the game worker) ----
   setup(init: SetupContext): S;
-  moves: Record<string, MoveDefinition<S, any>>;
+  moves: Record<string, MoveDefinition<S>>;
   turn?: TurnConfig<S>;
   phases?: Record<string, PhaseDefinition<S>>;
   startPhase?: string; // required if phases are declared
@@ -252,3 +252,14 @@ export type RejectCode =
 ## SDK helpers exported by `@bgp/rules`
 
 `invalid`, `defineGame` (identity function for type inference), `rekey` (fresh IDs for a list of instances), `countHidden` (replace an array with its length for views), `seatsAfter` (turn-order helper).
+
+## Validation example
+
+`MatchInitSchema` validates seats numbered from `"0"` in order (1–8 seats), a uint32
+seed and integer-only options. `MatchStateSchema` also checks the four uint32 RNG words
+and context membership. Runtime helpers above are implemented in T03.
+
+<!-- schema: MatchInitSchema -->
+```json
+{ "seats": ["0", "1"], "seed": 123, "options": { "shortGame": false } }
+```
