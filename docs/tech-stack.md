@@ -41,7 +41,7 @@ Libraries and tools by area, each with a status. Phase 1 rows are the build list
 | HTTP API                   | Fastify                                                            | Default                             | Hono (runtime-agnostic, if the server runtime changes)                                             | With any runtime change                                          | Deferred to T10                             |                                                                   |
 | WebSocket                  | `@fastify/websocket` (on `ws`)                                     | Default                             | uWebSockets.js (connection density); WebTransport later                                            | Phase 4                                                          | Deferred to T11                             | D-004                                                             |
 | Room server                | Our own                                                            | Default                             | Colyseus (rooms and matchmaking); hosted rooms (Cloudflare Durable Objects, PartyKit)              | Phase 4                                                          | Own code, T11                               | D-004                                                             |
-| Rules sandbox (server)     | quickjs-emscripten **(WASM)** in separate Node processes           | Default                             | Node `vm` + process + permission flags; isolated-vm; Deno subprocess; containers as an outer layer | T08 spike                                                        | Deferred to T08 spike                       | Behind `RulesSandbox` (D-008)                                     |
+| Rules sandbox (server)     | quickjs-emscripten **(WASM)** in separate Node processes           | Default                             | Node `vm` + process + permission flags; isolated-vm; Deno subprocess; containers as an outer layer | T08 spike                                                        | 0.32.0 (core + release-sync)                | Behind `RulesSandbox` (D-008)                                     |
 | Tokens                     | `jose`                                                             | Decided                             | —                                                                                                  | —                                                                | Deferred to T09                             | OIDC verification, guest tokens                                   |
 | Database                   | PostgreSQL                                                         | Decided                             | —                                                                                                  | —                                                                | postgres:17.11                              | D-011                                                             |
 | ORM and migrations         | Drizzle ORM, drizzle-kit, `postgres` driver                        | Default                             | Kysely; Prisma                                                                                     | Before T07                                                       | ORM 0.45.4; kit 0.31.11; postgres 3.4.9     | Typed SQL schema, generated migrations and PostgreSQL connections |
@@ -89,6 +89,13 @@ React; neither decision was changed by the scaffold.
 The T13 root development harness also links `@bgp/schema`, `@bgp/table-2d` and
 `pixi.js` 8.6.6 to compare the renderers against the same validated fixtures.
 Three.js and its optional loaders are excluded from the production renderer.
+
+T08 installs `quickjs-emscripten-core` and `@jitl/quickjs-wasmfile-release-sync`, both
+0.32.0, behind `RulesSandbox`. These are the modular distribution of quickjs-emscripten;
+installing only the synchronous release variant avoids unused debug/async WASM binaries.
+The local package asset is loaded lazily by the server, with no third-party runtime fetch.
+T08 also pins esbuild 0.28.2 as development tooling to bundle the trusted rules runtime
+for evaluation inside the interpreter and to build the disposable VM comparison worker.
 
 Installed direct dependencies use exact versions and the lockfile records transitives.
 T07 pins PostgreSQL `postgres:17.11` and Keycloak `quay.io/keycloak/keycloak:26.8.0`; see infra/README.md for upstream release notes.

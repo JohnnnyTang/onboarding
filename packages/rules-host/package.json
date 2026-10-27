@@ -10,12 +10,14 @@
     }
   },
   "scripts": {
-    "build": "tsc --project tsconfig.build.json",
+    "build": "tsc --project tsconfig.build.json && pnpm -w exec tsx scripts/build-rules-host.ts",
     "typecheck": "tsc --noEmit --project tsconfig.build.json && tsc --noEmit",
-    "test": "vitest run --config ../../vitest.package.config.ts"
+    "test": "pnpm -w exec tsx scripts/build-rules-host.ts && vitest run --config ../../vitest.package.config.ts"
   },
   "dependencies": {
     "@bgp/rules": "workspace:*",
-    "@bgp/schema": "workspace:*"
+    "@bgp/schema": "workspace:*",
+    "@jitl/quickjs-wasmfile-release-sync": "0.32.0",
+    "quickjs-emscripten-core": "0.32.0"
   }
 }

@@ -1,6 +1,9 @@
 import { expect, test } from "vitest";
 import * as scaffold from "./index.js";
 
-test("the package scaffold loads", () => {
-  expect(Object.keys(scaffold)).toEqual([]);
+test("game errors expose a fixed safe code and message", () => {
+  expect(new scaffold.GameError()).toMatchObject({
+    code: "GAME_ERROR",
+    message: "Game execution failed",
+  });
 });

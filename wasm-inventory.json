@@ -1,4 +1,16 @@
 {
   "schemaVersion": 1,
-  "modules": []
+  "modules": [
+    {
+      "id": "quickjs-release-sync",
+      "package": "@jitl/quickjs-wasmfile-release-sync",
+      "decision": "D-002",
+      "reason": "Separate interpreter heap with per-match memory limits and CPU interrupts; only the synchronous release variant is installed",
+      "fallback": "Node vm in a restricted process for private or unlisted games; see D-008",
+      "scope": "server",
+      "files": [
+        "node_modules/.pnpm/@jitl+quickjs-wasmfile-release-sync@0.32.0/node_modules/@jitl/quickjs-wasmfile-release-sync/dist/emscripten-module.wasm"
+      ]
+    }
+  ]
 }
