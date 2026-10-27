@@ -111,7 +111,10 @@ export function applyIntent<S extends Json, V extends Json = Json>(
     try {
       acceptedIntent = cloneJson(MoveIntentSchema.parse(intent));
       const parsed = move.parse
-        ? move.parse(acceptedIntent.args === undefined ? undefined : cloneJson(acceptedIntent.args))
+        ? move.parse(
+            acceptedIntent.args === undefined ? undefined : cloneJson(acceptedIntent.args),
+            { state: cloneJson(state.game), ctx: cloneJson(state.ctx), seat },
+          )
         : (acceptedIntent.args ?? null);
       const invalid = asInvalid(parsed);
       if (invalid) return reject("INVALID_ARGS", "Invalid arguments", invalid);

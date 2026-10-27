@@ -137,8 +137,17 @@ export interface SetupContext {
   options: Json;
   random: Random;
 }
+/** Detached, read-only-by-convention input for state-dependent argument checks. */
+export const MoveParseContextSchema = z
+  .strictObject({ state: JsonSchema, ctx: CtxSchema, seat: SeatIdSchema })
+  .refine((input) => input.ctx.seats.includes(input.seat), "Unknown acting seat");
+export interface MoveParseContext<S extends Json> {
+  state: S;
+  ctx: Ctx;
+  seat: SeatId;
+}
 export interface MoveDefinition<S extends Json, A extends Json = Json> {
-  parse?(args: Json | undefined): A | Invalid;
+  parse?(args: Json | undefined, context?: MoveParseContext<S>): A | Invalid;
   // biome-ignore lint/suspicious/noConfusingVoidType: The rules contract allows mutation with no return or an Invalid result.
   apply(state: S, ctx: MoveContext, args: A): void | Invalid;
   anySeat?: boolean;

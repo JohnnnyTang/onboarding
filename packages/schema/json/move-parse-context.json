@@ -1,0 +1,113 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "state": {
+      "$ref": "#/$defs/IntegerJson"
+    },
+    "ctx": {
+      "$ref": "#/$defs/__schema0"
+    },
+    "seat": {
+      "$ref": "#/$defs/__schema2"
+    }
+  },
+  "required": ["state", "ctx", "seat"],
+  "additionalProperties": false,
+  "$defs": {
+    "__schema0": {
+      "type": "object",
+      "properties": {
+        "seats": {
+          "$ref": "#/$defs/__schema1"
+        },
+        "currentSeat": {
+          "$ref": "#/$defs/__schema2"
+        },
+        "activeSeats": {
+          "$ref": "#/$defs/__schema3"
+        },
+        "phase": {
+          "$ref": "#/$defs/__schema4"
+        },
+        "turn": {
+          "$ref": "#/$defs/__schema5"
+        },
+        "moveNumber": {
+          "$ref": "#/$defs/__schema7"
+        },
+        "options": {
+          "$ref": "#/$defs/IntegerJson"
+        }
+      },
+      "required": ["seats", "currentSeat", "activeSeats", "phase", "turn", "moveNumber", "options"],
+      "additionalProperties": false
+    },
+    "__schema1": {
+      "minItems": 1,
+      "maxItems": 8,
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/__schema2"
+      }
+    },
+    "__schema2": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)$"
+    },
+    "__schema3": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/__schema2"
+      }
+    },
+    "__schema4": {
+      "type": "string",
+      "minLength": 1
+    },
+    "__schema5": {
+      "exclusiveMinimum": 0,
+      "$ref": "#/$defs/__schema6"
+    },
+    "__schema6": {
+      "type": "integer",
+      "minimum": -9007199254740991,
+      "maximum": 9007199254740991
+    },
+    "__schema7": {
+      "minimum": 0,
+      "$ref": "#/$defs/__schema6"
+    },
+    "IntegerJson": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        },
+        {
+          "type": "string"
+        },
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/IntegerJson"
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/IntegerJson"
+          }
+        }
+      ]
+    }
+  },
+  "title": "MoveParseContext"
+}
