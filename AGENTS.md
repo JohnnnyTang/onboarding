@@ -42,6 +42,14 @@ Breaking one of these is a blocking defect, even if tests pass.
 - Commits: Conventional Commits (`feat:`, `fix:`, `test:`, `docs:`, `refactor:`, `chore:`), one task ID in the body (`Task: T07`).
 - Keep functions small and code boring. No clever metaprogramming in the rules runtime; it must stay easy to audit.
 
+## Commit workflow
+
+- Make several meaningful commits during each task as coherent increments become ready. Commit as work progresses without waiting for a separate commit request; do not save all commits for the end.
+- Each commit must be focused, self-contained and reviewable. Keep related implementation, tests, contract documentation, dependency pins and generated artifacts together when they are needed for that increment to work. Do not split changes arbitrarily just to increase the commit count.
+- Use a specific Conventional Commit subject describing the change. In the body, explain the reason and relevant validation, and include exactly one task reference such as `Task: T02`. Avoid vague messages, WIP commits and unfinished fixups.
+- Review the staged diff and run checks appropriate to the increment before committing. Keep each commit buildable and testable; complete the full task checks before marking the task done.
+- Push commits when requested. Do not rewrite published history unless explicitly authorized.
+
 ## Definition of done (every task)
 
 - The task's "Done when" checks in [docs/tasks.md](docs/tasks.md) pass.
