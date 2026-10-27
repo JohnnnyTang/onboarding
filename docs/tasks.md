@@ -42,6 +42,8 @@ flowchart LR
 
 ### T02 `@bgp/schema`: contracts as code
 
+**Status:** Complete. Local validation and scope: [t02-validation.md](t02-validation.md).
+
 **Deliverables:** Zod schemas and inferred types for every contract in [contracts/](contracts/): rules API types, components file, zones, `TableSnapshot`, gestures, manual operations, manifest, protocol messages, HTTP bodies, error codes. A `json-schema` script that writes JSON Schema files to `packages/schema/json/`.
 
 **Done when:** every example in the contract docs parses; each documented violation (bad slug, float in state, unknown message type, SVG asset, `def` on a hidden item where testable) is rejected; JSON Schema generation runs in CI.
