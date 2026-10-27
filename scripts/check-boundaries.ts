@@ -22,7 +22,10 @@ const POLICIES: Record<string, Policy> = {
   "packages/card-generator": { imports: ["@bgp/schema"] },
   "packages/cli": { imports: ["@bgp/rules", "@bgp/schema", "@bgp/testing", "esbuild"], node: true },
   "apps/web": { imports: ["@bgp/schema", "@bgp/table-2d", "@bgp/card-generator"] },
-  "apps/server": { imports: ["@bgp/schema", "@bgp/rules-host"], node: true },
+  "apps/server": {
+    imports: ["@bgp/schema", "@bgp/rules-host", "drizzle-orm", "postgres"],
+    node: true,
+  },
 };
 const GAME_POLICY: Policy = { imports: ["@bgp/rules", "@bgp/schema"], pure: true };
 const NODE_MODULES = new Set(builtinModules.map((name) => name.replace(/^node:/, "")));
@@ -99,6 +102,8 @@ export function checkSource(root: string, file: string, source: string): string[
     }
     const name = packageName(specifier);
     if (testFile && (name === "vitest" || name === "fast-check")) return;
+    if (path === "apps/server/drizzle.config.ts" && name === "drizzle-kit") return;
+    if (path === "apps/server/vitest.config.ts" && name === "vitest") return;
     if (specifier.startsWith("node:") || NODE_MODULES.has(specifier)) {
       if (!policy.node) report(node, `Node import ${specifier} is forbidden in ${owner}.`);
       return;

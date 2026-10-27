@@ -12,7 +12,11 @@ services:
       - pgdata:/var/lib/postgresql/data
       - ./postgres/init:/docker-entrypoint-initdb.d:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U bgp -d bgp && psql -U bgp -d bgp_test -c 'SELECT 1' >/dev/null"]
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U bgp -d bgp && psql -U bgp -d bgp_test -c 'SELECT 1' >/dev/null",
+        ]
       interval: 5s
       timeout: 5s
       retries: 20
