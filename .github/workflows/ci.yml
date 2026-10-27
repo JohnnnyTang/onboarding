@@ -42,7 +42,8 @@ jobs:
           pnpm db:migrate
       - run: pnpm test
       - run: pnpm exec playwright install --with-deps chromium
-      - run: pnpm test:e2e --project=chromium
+      # Visual baselines use Windows fonts/GPU rasterization; the dedicated job compares them.
+      - run: pnpm test:e2e --project=chromium --ignore-snapshots
       - name: Upload browser diagnostics
         if: failure()
         uses: actions/upload-artifact@v4
@@ -78,7 +79,30 @@ jobs:
           pnpm db:migrate
       - run: pnpm test
       - run: pnpm exec playwright install --with-deps
-      - run: pnpm test:e2e
+      - run: pnpm test:e2e --ignore-snapshots
       - name: Performance suite (from T20)
         if: hashFiles('scripts/perf/*.ts') != ''
         run: pnpm perf
+
+  table-visuals:
+    runs-on: windows-latest
+    env:
+      CI: "true"
+      TURBO_TELEMETRY_DISABLED: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install chromium firefox webkit
+      - run: pnpm test:e2e e2e/table-2d.spec.ts --workers=1
+      - name: Upload visual diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: table-visual-diagnostics
+          path: test-results/
+          if-no-files-found: ignore

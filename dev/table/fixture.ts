@@ -83,14 +83,14 @@ export const fixture = TableSnapshotSchema.parse({
       id: "deck",
       label: "STACK / 12",
       layout: "stack",
-      rect_mm: { x: -280, y: 130, w: 130, h: 140 },
+      rect_mm: { x: -280, y: 100, w: 130, h: 140 },
       droppable: true,
     },
     {
       id: "market",
       label: "ROW / MARKET",
       layout: "row",
-      rect_mm: { x: 80, y: 130, w: 540, h: 140 },
+      rect_mm: { x: 80, y: 100, w: 540, h: 140 },
       droppable: true,
     },
     {
@@ -121,7 +121,7 @@ export const fixture = TableSnapshotSchema.parse({
       label: "SEAT 1",
       owner: "1",
       layout: "fan",
-      rect_mm: { x: 0, y: 230, w: 400, h: 140 },
+      rect_mm: { x: 0, y: 235, w: 400, h: 130 },
     },
   ],
   items: [

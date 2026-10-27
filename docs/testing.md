@@ -58,6 +58,13 @@ The nightly job sets `BGP_PROPERTY_RUNS=1000` and `BGP_PRNG_DRAWS=100000`; prope
 distribution suites must read these settings when implemented. It runs the Chromium,
 Firefox and WebKit matrix, while push and pull-request jobs run Chromium.
 
+T13 adds real table renderer interactions and screenshots at 360/1440 px. Windows
+baselines are enforced in the `table-visuals` job across Chromium, Firefox and
+WebKit. Linux jobs keep the interaction matrix and pass `--ignore-snapshots` to
+avoid comparing Windows font/GPU rasterization on Linux. Review every changed
+PNG before accepting `--update-snapshots`. The fixture server starts automatically
+through Playwright and needs neither Docker nor the T12 app shell.
+
 1. Install with a frozen lockfile.
 2. `pnpm lint`, `pnpm typecheck`.
 3. CI-WASM-INVENTORY.
