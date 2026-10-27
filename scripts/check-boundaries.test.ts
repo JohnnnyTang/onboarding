@@ -85,6 +85,15 @@ describe("package boundaries", () => {
       check("packages/rules/src/index.ts", 'crypto.subtle.digest("SHA-256", bytes);'),
     ).not.toEqual([]);
     expect(check("packages/rules/src/hash.ts", "crypto.getRandomValues(bytes);")).not.toEqual([]);
+    expect(check("packages/rules/src/hash.ts", "crypto.subtle.generateKey(options);")).not.toEqual(
+      [],
+    );
+    expect(
+      check("packages/rules/src/hash.ts", 'crypto.subtle.digest("SHA-1", bytes);'),
+    ).not.toEqual([]);
+    expect(check("packages/rules/src/hash.ts", "const capability = crypto.subtle;")).not.toEqual(
+      [],
+    );
     expect(check("packages/rules/src/hash.ts", "Math.random();")).not.toEqual([]);
     expect(check("packages/rules/src/index.ts", 'import { produce } from "immer";')).toEqual([]);
   });

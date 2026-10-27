@@ -149,11 +149,23 @@ export function checkSource(root: string, file: string, source: string): string[
         (ts.isPropertySignature(parent) && parent.name === node);
       // D-006 permits the deterministic SHA-256 capability in this one module.
       // No entropy APIs (including getRandomValues) are admitted by this exception.
+      const digest = ts.isPropertyAccessExpression(parent) ? parent.parent : undefined;
+      const digestCall = digest?.parent;
       const hashCapability =
         path === "packages/rules/src/hash.ts" &&
         node.text === "crypto" &&
-        ((ts.isVariableDeclaration(parent) && parent.name === node) ||
-          (ts.isPropertyAccessExpression(parent) && parent.name.text === "subtle"));
+        ((ts.isVariableDeclaration(parent) && parent.name === node && !parent.initializer) ||
+          (ts.isPropertyAccessExpression(parent) &&
+            parent.name.text === "subtle" &&
+            digest !== undefined &&
+            ts.isPropertyAccessExpression(digest) &&
+            digest.name.text === "digest" &&
+            digestCall !== undefined &&
+            ts.isCallExpression(digestCall) &&
+            digestCall.expression === digest &&
+            digestCall.arguments[0] !== undefined &&
+            ts.isStringLiteral(digestCall.arguments[0]) &&
+            digestCall.arguments[0].text === "SHA-256"));
       if (!propertyName && !hashCapability) report(node, `Pure code must not access ${node.text}.`);
     }
     if (

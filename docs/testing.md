@@ -50,9 +50,18 @@ Tests guard the three properties that must never break: **hidden information**, 
 ## CI pipeline
 
 T01 implements the pipeline in `.github/workflows/ci.yml`. It builds before the WASM scan
-so emitted binaries are included. Schema export, Docker integration services and PERF-01
-are conditional on the corresponding T02/T07/T20 artifacts being present. Until those
-tasks land, package tests and the browser test are explicitly scaffold tests only.
+so emitted binaries are included. T02 exports and verifies contract schemas on every run;
+Docker integration services and PERF-01 are conditional on the T07/T20 artifacts.
+Schema and rules tests now exercise their implementations; other package tests remain
+scaffold tests until their owning tasks land.
+
+T03 adds `e2e/rules.spec.ts`, which loads the compiled runtime and the installed
+dependencies as ESM through Playwright request routing. It compares Node and browser
+hashes at every step of a seeded random game and its replay, inserts rejected random
+draws to verify rollback, and plays tic-tac-toe to a win. The test uses Immer's production
+ESM artifact, which requires no Node globals. Run `pnpm build` before standalone browser
+tests; CI builds the runtime before its browser checks. These are headless core checks,
+not the full game-worker and Harbor Market E2E-06 acceptance test due in later tasks.
 
 The nightly job sets `BGP_PROPERTY_RUNS=1000` and `BGP_PRNG_DRAWS=100000`; property and
 distribution suites must read these settings when implemented. It runs the Chromium,

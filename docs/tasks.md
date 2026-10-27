@@ -50,6 +50,8 @@ flowchart LR
 
 ### T03 `@bgp/rules`: runtime core
 
+**Status:** Complete. Local validation and scope: [t03-validation.md](t03-validation.md).
+
 **Deliverables:** sfc32 PRNG with integer-only operations; `Random` (int, die, pick, shuffle, id); canonical JSON and `hashState` (works in Node and browsers); `createMatch`, `applyIntent` following the documented [order of operations](contracts/rules-api.md#order-of-operations-in-applyintent), `viewFor`, `replay`; turns, phases and events; integer-only state check; SDK helpers (`invalid`, `defineGame`, `rekey`, `countHidden`, `seatsAfter`). A tiny tic-tac-toe test game inside the package's tests.
 
 **Done when:** unit tests cover every rejection code and every event combination; tic-tac-toe plays to win and draw; the same seed and intents give identical hashes in repeated runs; no DOM or Node API is imported (lint).

@@ -314,7 +314,7 @@ game callbacks and the rest of the runtime cannot access cryptographic entropy A
 
 `MatchInitSchema` validates seats numbered from `"0"` in order (1–8 seats), a uint32
 seed and integer-only options. `MatchStateSchema` also checks the four uint32 RNG words
-and context membership. Runtime helpers above are implemented in T03.
+and context membership. Runtime helpers above are implemented by `@bgp/rules`.
 
 <!-- schema: MatchInitSchema -->
 ```json
