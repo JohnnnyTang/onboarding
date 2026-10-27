@@ -240,6 +240,37 @@ export type RejectCode =
 
 `createMatch` runs `setup`, sets `currentSeat` to `seats[0]`, enters `startPhase` (its `onBegin`), then `turn.onBegin` for turn 1.
 
+Runtime details for SDK 1 (reversible defaults tracked in Q-007):
+
+- A seat must belong to the match even for `anySeat` moves. Omitted args are passed to
+  `parse` as `undefined`; without a parser, `apply` receives `null`.
+- Each callback receives a detached context snapshot. The move sees the acting seat;
+  hooks see the current seat at the time they run. Writes to that snapshot do not
+  change runtime context. State, intents, options and returned views are detached
+  from caller-owned objects.
+- Events form ordered batches. In each batch the last call of each kind wins, then
+  phase, active seats, turn and result are applied in that order. Entering the same
+  phase still runs its end/begin hooks. `endTurn` resets active seats to the next seat,
+  so it supersedes `setActiveSeats` in the same batch.
+- Hooks may queue events; these run in the next ordered batch. Initialization drains
+  events after both initial hooks. A transaction allows at most 128 event calls, then
+  fails atomically. Once a result is set, later batches are ignored.
+- Invalid event inputs, unknown result seats and invalid custom turn-order results
+  fail the transaction. Moves return void or `Invalid`; hooks return void.
+- `endIf` runs only after accepted moves, after all events, and sees the previous
+  `moveNumber`. Explicit `endGame` takes precedence. The accepted move increments
+  `moveNumber` exactly once, irrespective of how many events it queued.
+- Thrown parse errors use a fixed `INVALID_ARGS` message; thrown game/hook errors and
+  invalid output use a fixed `GAME_ERROR` message. Only explicitly returned `Invalid`
+  messages and codes are passed through to players.
+- `viewFor` invokes only `playerView` on a detached game/context, and returns only its
+  validated JSON output, public context and result. Invalid viewing seats and failures
+  throw a fixed error. `createMatch` failures also throw a fixed error. The isolation
+  host (T08) owns deadlines, global removal and containment of untrusted callbacks.
+- Replay requires consecutive 1-based sequence numbers and accepted intents; gaps,
+  duplicate sequences, malformed events and rejected intents throw a fixed error
+  (including the safe runtime rejection code where applicable).
+
 ## Rules for game code
 
 - Pure functions only. No `Date`, `Math.random`, timers, network, storage, DOM or Node APIs. The game worker and rules host remove them; code that relies on them fails.
