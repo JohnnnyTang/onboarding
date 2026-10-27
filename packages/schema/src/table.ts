@@ -281,7 +281,35 @@ export const SandboxStateSchema = z
     (state) => JsonSchema.safeParse(state).success,
     "Sandbox state must contain only integer JSON",
   );
-export type SandboxState = z.infer<typeof SandboxStateSchema>;
+export type SandboxState = {
+  items: {
+    id: string;
+    def: string;
+    zone: string;
+    index: number;
+    pos_mm?: [number, number];
+    rotation_deg: number;
+    face: "up" | "down";
+    value?: number;
+  }[];
+};
+/** Public sandbox data; hidden items omit identity and value. */
+export const SandboxViewSchema = z
+  .strictObject({
+    items: z.array(
+      SandboxStateSchema.shape.items.element.omit({ def: true }).extend({
+        def: DefinitionIdSchema.optional(),
+        back: DefinitionIdSchema.optional(),
+      }),
+    ),
+  })
+  .refine(
+    (view) => JsonSchema.safeParse(view).success,
+    "Sandbox view must contain only integer JSON",
+  );
+export type SandboxView = {
+  items: (Omit<SandboxState["items"][number], "def"> & { def?: string; back?: string })[];
+};
 export const ComponentsFileSchema = z
   .strictObject({
     schemaVersion: z.literal(1),
