@@ -34,7 +34,7 @@ Libraries and tools by area, each with a status. Phase 1 rows are the build list
 | Server data in the client  | TanStack Query                                                     | Default                             | —                                                                                                  | —                                                                | Deferred to T12                             |                                                          |
 | Styling                    | CSS Modules                                                        | Default                             | Tailwind CSS; a component library                                                                  | When a design system is introduced                               | Built-in                                    |                                                          |
 | OIDC client                | oidc-client-ts                                                     | Default                             | —                                                                                                  | —                                                                | Deferred to T12                             | Tokens in memory (D-007)                                 |
-| 2D table                   | PixiJS v8                                                          | Default                             | Three.js orthographic top-down (one engine for 2D and 3D); plain Canvas 2D                         | T13 spike                                                        | Deferred to T13 spike                       | Behind `TableRenderer`                                   |
+| 2D table                   | PixiJS v8                                                          | Default                             | Three.js orthographic top-down (one engine for 2D and 3D); plain Canvas 2D                         | T13 spike                                                        | 8.6.6                                       | Behind `TableRenderer`; retained 2D drawing              |
 | Local projects             | IndexedDB via `idb`                                                | Default                             | SQLite over OPFS **(WASM)**; Dexie                                                                 | Phase 3, when local data grows                                   | Deferred to T15                             | D-015                                                    |
 | Card faces                 | Canvas 2D (`OffscreenCanvas`)                                      | Decided                             | —                                                                                                  | —                                                                | Browser built-in                            | Browser built-in                                         |
 | CSV parsing                | Papa Parse                                                         | Default                             | —                                                                                                  | —                                                                | Deferred to T16                             |                                                          |
@@ -77,11 +77,20 @@ T01 installs only the tools needed by the empty workspace; runtime libraries are
 and pinned by their owning tasks above. Defaults remain defaults, including Drizzle and
 React; neither decision was changed by the scaffold.
 
-| Tool          | Version | Reason                                                                 |
-| ------------- | ------- | ---------------------------------------------------------------------- |
-| `@types/node` | 24.19.2 | Node 24 API types for tooling, server-side packages and tests          |
-| `tsx`         | 4.23.15 | Cross-platform TypeScript command runner and development watchers      |
-| TypeScript    | 6.0.3   | Strict compiler and JavaScript compiler API used by the boundary guard |
+| Tool           | Version | Reason                                                                                              |
+| -------------- | ------- | --------------------------------------------------------------------------------------------------- |
+| `@types/node`  | 24.19.2 | Node 24 API types for tooling, server-side packages and tests                                       |
+| `tsx`          | 4.23.15 | Cross-platform TypeScript command runner and development watchers                                   |
+| TypeScript     | 6.0.3   | Strict compiler and JavaScript compiler API used by the boundary guard                              |
+| `vite`         | 8.1.0   | T13 fixture server and bundle inspection, without introducing the T12 app shell                     |
+| `three`        | 0.186.1 | Development-only orthographic renderer comparison in the T13 spike; not imported by `@bgp/table-2d` |
+| `@types/three` | 0.183.1 | Type declarations for the development-only T13 comparison                                           |
+
+The T13 root development harness also links `@bgp/schema`, `@bgp/table-2d` and
+`pixi.js` 8.6.6 to compare the renderers against the same validated fixtures.
+Three.js and its optional loaders are excluded from the production renderer.
 
 Installed direct dependencies use exact versions and the lockfile records transitives.
 PostgreSQL and Keycloak image tags are deferred to T07, when Compose is added.
+
+PixiJS 8.6.6 is pinned deliberately: the inspected 8.14.3, 8.21.0 and 8.22.0 packages ship optional Basis/KTX `.wasm` binaries in the production dependency tree, violating AC-14 even though this renderer does not load those transcoders. 8.6.6 contains none. Re-run `pnpm check:wasm` for every renderer dependency update.

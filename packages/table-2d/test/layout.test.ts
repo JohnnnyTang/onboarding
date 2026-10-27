@@ -1,6 +1,7 @@
 import type { ComponentsFile, ItemPlacement, TableSnapshot, ZonePlacement } from "@bgp/schema";
 import { describe, expect, it } from "vitest";
 import {
+  dropGesture,
   fitViewport,
   hitItem,
   hitZone,
@@ -64,6 +65,51 @@ describe("zone layout", () => {
     });
     expect(result[0]).toMatchObject({ width: 63, height: 88 });
     expect(layoutZone(zone("row"), [], components)).toEqual([]);
+  });
+});
+
+describe("drop coordinates", () => {
+  const item: ItemPlacement = { id: "dragged", zone: "source", face: "up" };
+  function snapshot(layout: ZonePlacement["layout"]): TableSnapshot {
+    return {
+      table: { size_mm: [799, 599] },
+      zones: [
+        {
+          ...zone(layout),
+          droppable: true,
+          rect_mm: { x: 0, y: 0, w: 800, h: 600 },
+          ...(layout === "grid" ? { grid: { cols: 4, rows: 3 } } : {}),
+        },
+      ],
+      items: [],
+    };
+  }
+  it("rounds and clamps to integer positions inside odd-sized tables", () => {
+    expect(dropGesture(snapshot("free"), [], item, 399.9, 299.9)).toEqual({
+      kind: "drop",
+      item: "dragged",
+      from: "source",
+      to: "zone",
+      pos_mm: [399, 299],
+    });
+  });
+  it("uses the grid cell rather than counting items above the pointer", () => {
+    expect(dropGesture(snapshot("grid"), [], item, 150, -30)).toMatchObject({ index: 6 });
+    expect(dropGesture(snapshot("grid"), [], item, 400, -300)).toMatchObject({ index: 11 });
+  });
+  it("rejects drops outside zones or onto zones that do not accept them", () => {
+    expect(dropGesture(snapshot("row"), [], item, 500, 0)).toBeUndefined();
+    const blocked = snapshot("free");
+    blocked.zones[0] = { ...zone("free"), droppable: false };
+    expect(dropGesture(blocked, [], item, 0, 0)).toBeUndefined();
+  });
+  it("rotates a hand on the right to the bottom regardless of seat numbering", () => {
+    const table = snapshot("free");
+    table.zones = [{ ...zone("fan"), owner: "2", rect_mm: { x: 300, y: 0, w: 100, h: 100 } }];
+    const view = fitViewport(table, 800, 800, "2");
+    const [x, y] = tableToScreen(300, 0, view);
+    expect(x).toBeCloseTo(400);
+    expect(y).toBeGreaterThan(400);
   });
 });
 

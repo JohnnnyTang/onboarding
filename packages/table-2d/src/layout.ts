@@ -1,6 +1,7 @@
 import type {
   ComponentDef,
   ComponentsFile,
+  Gesture,
   ItemPlacement,
   TableSnapshot,
   ZonePlacement,
@@ -93,7 +94,15 @@ export function fitViewport(
     ...new Set(snapshot.zones.flatMap((zone) => (zone.owner === undefined ? [] : [zone.owner]))),
   ].sort();
   const seatIndex = seat === null ? -1 : owners.indexOf(seat);
-  const angle = seatIndex < 0 ? 0 : (-seatIndex * 2 * Math.PI) / owners.length;
+  const seatZone = snapshot.zones
+    .filter((zone) => zone.owner === seat)
+    .sort((a, b) => Math.hypot(b.rect_mm.x, b.rect_mm.y) - Math.hypot(a.rect_mm.x, a.rect_mm.y))[0];
+  const angle =
+    seatZone && (seatZone.rect_mm.x !== 0 || seatZone.rect_mm.y !== 0)
+      ? Math.atan2(seatZone.rect_mm.x, -seatZone.rect_mm.y)
+      : seatIndex < 0
+        ? 0
+        : (-seatIndex * 2 * Math.PI) / owners.length;
   const [w, h] = snapshot.table.size_mm;
   const rotatedW = Math.abs(w * Math.cos(angle)) + Math.abs(h * Math.sin(angle));
   const rotatedH = Math.abs(w * Math.sin(angle)) + Math.abs(h * Math.cos(angle));
@@ -141,4 +150,47 @@ export function hitItem(
       Math.abs(dx * Math.sin(angle) + dy * Math.cos(angle)) <= item.height / 2
     );
   });
+}
+
+export function dropGesture(
+  snapshot: TableSnapshot,
+  placements: readonly PlacedItem[],
+  item: ItemPlacement,
+  x: number,
+  y: number,
+): Gesture | undefined {
+  const zone = hitZone(snapshot, x, y);
+  if (!zone?.droppable) return undefined;
+  const gesture: Extract<Gesture, { kind: "drop" }> = {
+    kind: "drop",
+    item: item.id,
+    from: item.zone,
+    to: zone.id,
+  };
+  if (zone.layout === "free") {
+    const w = Math.floor(snapshot.table.size_mm[0] / 2);
+    const h = Math.floor(snapshot.table.size_mm[1] / 2);
+    gesture.pos_mm = [
+      Math.max(-w, Math.min(w, Math.round(x))),
+      Math.max(-h, Math.min(h, Math.round(y))),
+    ];
+  } else if (zone.layout === "grid") {
+    const cols =
+      zone.grid?.cols ??
+      Math.max(1, Math.ceil(Math.sqrt(snapshot.items.filter((p) => p.zone === zone.id).length)));
+    const rows =
+      zone.grid?.rows ??
+      Math.max(1, Math.ceil(snapshot.items.filter((p) => p.zone === zone.id).length / cols));
+    const r = zone.rect_mm;
+    const col = Math.max(0, Math.min(cols - 1, Math.floor((x - r.x + r.w / 2) / (r.w / cols))));
+    const row = Math.max(0, Math.min(rows - 1, Math.floor((r.y + r.h / 2 - y) / (r.h / rows))));
+    gesture.index = row * cols + col;
+  } else if (zone.layout === "stack") {
+    gesture.index = snapshot.items.filter((p) => p.zone === zone.id && p.id !== item.id).length;
+  } else {
+    gesture.index = placements.filter(
+      (p) => p.item.zone === zone.id && p.item.id !== item.id && p.x < x,
+    ).length;
+  }
+  return gesture;
 }

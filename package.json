@@ -11,6 +11,8 @@
   },
   "scripts": {
     "dev": "tsx scripts/dev.ts",
+    "dev:table": "pnpm --filter @bgp/table-2d... build && vite",
+    "build:table-dev": "pnpm --filter @bgp/table-2d... build && vite build",
     "build": "turbo run build",
     "typecheck": "turbo run typecheck && tsc --noEmit",
     "lint": "biome check . && tsx scripts/check-boundaries.ts",
@@ -25,12 +27,18 @@
     "perf": "tsx scripts/pending-task.ts T20 PERF-01"
   },
   "devDependencies": {
+    "@bgp/schema": "workspace:*",
+    "@bgp/table-2d": "workspace:*",
     "@biomejs/biome": "2.6.3",
     "@playwright/test": "1.64.1",
     "@types/node": "24.19.2",
+    "@types/three": "0.183.1",
+    "pixi.js": "8.6.6",
+    "three": "0.186.1",
     "tsx": "4.23.15",
     "turbo": "2.11.10",
     "typescript": "6.0.3",
+    "vite": "8.1.0",
     "vitest": "5.0.5"
   }
 }

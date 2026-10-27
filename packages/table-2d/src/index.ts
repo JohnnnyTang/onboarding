@@ -1,1 +1,1 @@
-export {};
+export { PixiTableRenderer } from "./renderer.js";
