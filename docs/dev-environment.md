@@ -9,35 +9,29 @@
 
 ## First run
 
-### T01 scaffold
+### Workspace and services
 
-The workspace currently contains empty packages. Use Node `24.22.1` (`.nvmrc`) and pnpm
-`11.9.0` (`packageManager`). Run `pnpm install --frozen-lockfile`, then `pnpm lint`,
-`pnpm typecheck`, `pnpm test`, `pnpm build` and `pnpm check:wasm`.
-Install Chromium with `pnpm exec playwright install chromium`, then run
-`pnpm test:e2e --project=chromium`. Install all browsers to run the full harness matrix.
+Use Node `24.22.1` (`.nvmrc`) and pnpm `11.9.0` (`packageManager`). Install dependencies
+with `pnpm install --frozen-lockfile`. PostgreSQL and Keycloak run through Docker Compose;
+`pnpm dev` waits for healthy services, applies development database migrations, then starts
+the app watchers. The API and web UI remain scaffold watchers until T10 and T12.
 
-`pnpm dev` currently runs two scaffold watchers; there is no HTTP API or web UI yet.
-Docker services, image pins, the realm and migrations arrive in T07. `db:generate` and
-`db:migrate` return a nonzero exit code with a T07 message until then. Schema export is
-pending T02 and PERF-01 is pending T20; their commands likewise fail explicitly.
-
-The root `.env.example` includes both server and web settings. The launcher reads root `.env`
-and passes its values to child processes. Per-app examples document each app's settings;
-the Vite app will load its own env files when implemented. Generate `GUEST_TOKEN_SECRET`
-locally using the command in the example; the checked-in value is deliberately empty.
+The root `.env.example` includes server and web settings. The launcher and migration
+command read root `.env`; server integration tests also read it. Existing process environment
+values take precedence. Generate `GUEST_TOKEN_SECRET` using the command in the example.
 
 ### Full development environment (from T07 onward)
 
 ```bash
 pnpm install
 cp .env.example .env                    # defaults work for local development
-docker compose -f infra/docker-compose.yml up -d
+docker compose -f infra/docker-compose.yml up -d --wait
 pnpm db:migrate
 pnpm dev                                # API :3000 from T10, web app :5173 from T12
 ```
 
-Open http://localhost:5173. Sign in with a test user from the Keycloak realm (below).
+From T12, open http://localhost:5173 for the web app. In T07, verify sign-in directly at
+http://localhost:8080/realms/bgp/account/ using a test user listed below.
 
 ## Services
 
@@ -48,32 +42,46 @@ Open http://localhost:5173. Sign in with a test user from the Keycloak realm (be
 | PostgreSQL        | 5432 | Databases `bgp` and `bgp_test` (created by an init script) |
 | Keycloak          | 8080 | Admin console at `/admin`, admin / admin locally           |
 
-`infra/docker-compose.yml` (pin image tags at scaffold time and record them in tech-stack.md):
+The checked-in [Compose file](../infra/docker-compose.yml) pins PostgreSQL `17.11` and
+Keycloak `26.8.0`, binds ports to loopback, and health-checks both services. See
+[infra/README.md](../infra/README.md) for credentials, persistence and reset behavior.
+The Compose project name is `bgp-local`, shared by worktrees on one machine. Coordinate
+resets; use a separate `TEST_DATABASE_URL` ending in `_test` when isolated test data is needed.
 
-```yaml
-services:
-  postgres:
-    image: postgres:17
-    environment:
-      POSTGRES_USER: bgp
-      POSTGRES_PASSWORD: bgp
-      POSTGRES_DB: bgp
-    ports: ["5432:5432"]
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-      - ./postgres/init:/docker-entrypoint-initdb.d:ro # creates bgp_test
-  keycloak:
-    image: quay.io/keycloak/keycloak:<pinned>
-    command: start-dev --import-realm
-    environment:
-      KC_BOOTSTRAP_ADMIN_USERNAME: admin
-      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
-    ports: ["8080:8080"]
-    volumes:
-      - ./keycloak:/opt/keycloak/data/import:ro
-volumes:
-  pgdata: {}
+## Database development and integration tests
+
+The schema lives in `apps/server/src/db/schema.ts`. The server owns Drizzle and the
+`postgres` driver behind `connectDatabase`; other packages must not import database code.
+After editing the schema, run `pnpm db:generate`, review the SQL and metadata under
+`apps/server/drizzle/`, then run `pnpm format` and `pnpm db:migrate`. Commit the schema,
+generated SQL and snapshots together. Custom SQL migrations (such as the append-only
+match-event guard) are created with `pnpm --filter @bgp/server exec drizzle-kit generate
+--custom --name=<name>` and reviewed alongside their tests.
+
+`pnpm db:migrate` loads the root `.env`, defaults to the local `bgp` database, and can
+safely run again. Migration startup uses a PostgreSQL advisory lock so simultaneous
+worktree and test startup cannot race. No migrations run merely by importing database code.
+
+`pnpm test` includes real PostgreSQL integration tests. Start Docker services first:
+
+```bash
+docker compose -f infra/docker-compose.yml up -d --wait
+pnpm test
+pnpm test:e2e --project=chromium
 ```
+
+The server's Vitest global setup automatically migrates `TEST_DATABASE_URL` before tests;
+no manual test-database migration is needed. It defaults to `bgp_test`, refuses development
+database URLs, and fails clearly if PostgreSQL is unavailable. Tests roll back their data
+instead of clearing shared tables. The Keycloak browser tests verify both account-page
+sign-ins, the web client's PKCE requirement and its `bgp-api` audience. Browser tests need
+healthy Keycloak and the Playwright browser installation, but do not yet need the app server.
+
+UUID v7 IDs are supplied by application code; the database does not substitute UUID v4.
+JSONB TypeScript types come from `@bgp/schema`; API/runtime/storage boundaries must still
+validate JSON with those schemas. Match readiness, manifest-specific seat counts, Phase 1
+visibility restrictions, and gapless event insertion with the `last_seq` update belong to
+T10/T11 transactions. PostgreSQL already enforces keys, numeric bounds and immutable events.
 
 ## Keycloak realm (`infra/keycloak/bgp-realm.json`)
 

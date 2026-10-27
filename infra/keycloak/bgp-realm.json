@@ -23,7 +23,9 @@
       "serviceAccountsEnabled": false,
       "redirectUris": ["http://localhost:5173/*"],
       "webOrigins": ["http://localhost:5173"],
-      "attributes": { "pkce.code.challenge.method": "S256" },
+      "attributes": {
+        "pkce.code.challenge.method": "S256"
+      },
       "defaultClientScopes": ["web-origins", "acr", "roles", "profile", "email"],
       "protocolMappers": [
         {
@@ -50,7 +52,14 @@
       "lastName": "One",
       "email": "designer1@example.test",
       "requiredActions": [],
-      "credentials": [{ "type": "password", "value": "designer1", "temporary": false }]
+      "credentials": [
+        {
+          "type": "password",
+          "value": "designer1",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["default-roles-bgp"]
     },
     {
       "username": "designer2",
@@ -60,7 +69,14 @@
       "lastName": "Two",
       "email": "designer2@example.test",
       "requiredActions": [],
-      "credentials": [{ "type": "password", "value": "designer2", "temporary": false }]
+      "credentials": [
+        {
+          "type": "password",
+          "value": "designer2",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["default-roles-bgp"]
     }
   ]
 }

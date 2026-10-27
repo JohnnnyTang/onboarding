@@ -50,9 +50,11 @@ Tests guard the three properties that must never break: **hidden information**, 
 ## CI pipeline
 
 T01 implements the pipeline in `.github/workflows/ci.yml`. It builds before the WASM scan
-so emitted binaries are included. Schema export, Docker integration services and PERF-01
-are conditional on the corresponding T02/T07/T20 artifacts being present. Until those
-tasks land, package tests and the browser test are explicitly scaffold tests only.
+so emitted binaries are included. Contract export and Docker integration services are enabled.
+CI checks Drizzle migration metadata and schema drift before starting the services. Server
+tests migrate the test database automatically and fail if PostgreSQL is unavailable;
+browser tests verify local Keycloak login. PERF-01 remains conditional until T20.
+Packages without implementations still have scaffold tests.
 
 The nightly job sets `BGP_PROPERTY_RUNS=1000` and `BGP_PRNG_DRAWS=100000`; property and
 distribution suites must read these settings when implemented. It runs the Chromium,

@@ -9,12 +9,22 @@ if (existsSync(envFile)) process.loadEnvFile(envFile);
 
 const composeFile = resolve(root, "infra/docker-compose.yml");
 if (existsSync(composeFile)) {
-  const result = spawnSync("docker", ["compose", "-f", composeFile, "up", "-d"], {
+  const result = spawnSync("docker", ["compose", "-f", composeFile, "up", "-d", "--wait"], {
     cwd: root,
     stdio: "inherit",
   });
   if (result.error) throw result.error;
   if (result.status !== 0) process.exit(result.status ?? 1);
+  const migration = spawnSync(
+    process.execPath,
+    ["--import", "tsx", resolve(root, "scripts/db-migrate.ts")],
+    {
+      cwd: root,
+      stdio: "inherit",
+    },
+  );
+  if (migration.error) throw migration.error;
+  if (migration.status !== 0) process.exit(migration.status ?? 1);
 } else {
   console.info(
     "T01 scaffold: Docker services arrive in T07; API and web services arrive in T10/T12.",

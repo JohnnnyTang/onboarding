@@ -34,8 +34,13 @@ jobs:
         run: |
           git diff --exit-code -- packages/schema/json
           test -z "$(git ls-files --others --exclude-standard packages/schema/json)"
-      - name: Start integration services (from T07)
-        if: hashFiles('infra/docker-compose.yml') != ''
+      - name: Verify database migration metadata and schema drift
+        run: |
+          pnpm --filter @bgp/server exec drizzle-kit check
+          pnpm db:generate
+          git diff --exit-code -- apps/server/drizzle
+          test -z "$(git ls-files --others --exclude-standard apps/server/drizzle)"
+      - name: Start integration services
         run: |
           cp .env.example .env
           docker compose -f infra/docker-compose.yml up -d --wait
@@ -70,8 +75,13 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - name: Start integration services (from T07)
-        if: hashFiles('infra/docker-compose.yml') != ''
+      - name: Verify database migration metadata and schema drift
+        run: |
+          pnpm --filter @bgp/server exec drizzle-kit check
+          pnpm db:generate
+          git diff --exit-code -- apps/server/drizzle
+          test -z "$(git ls-files --others --exclude-standard apps/server/drizzle)"
+      - name: Start integration services
         run: |
           cp .env.example .env
           docker compose -f infra/docker-compose.yml up -d --wait
