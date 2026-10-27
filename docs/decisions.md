@@ -144,6 +144,11 @@ The per-library view of the same choices, with alternatives, is in [tech-stack.m
 
 **Alternatives worth a look:** Svelte or SolidJS for the shell (decide once, before T12; switching later is expensive). For 2D: a top-down orthographic Three.js view (one engine for 2D and 3D) or plain Canvas 2D (no dependency).
 
+**T13 evidence:** [renderer comparison](spikes/t13-renderer-2d.md). The PixiJS adapter
+is implemented behind `TableRenderer`, with 8.6.6 pinned because inspected newer
+v8 distributions ship optional WASM transcoders that violate AC-14. The choice
+remains Default pending physical-phone performance evidence and human confirmation.
+
 ## D-010 Repository tooling
 
 **Status:** pnpm, Vitest, Playwright: Accepted. Turborepo, Biome, esbuild: Default.
@@ -225,3 +230,4 @@ Agents: add questions here with the option you chose for now and why.
 | Q-005 | Confirm the minimal public HTTP response envelopes and validation-error shape added in T02                      | Use the shapes in contracts/http-api.md; expose no database internals or match seed                                                                                                                                                     | T10 API implementation              |
 | Q-006 | Die face strings represent either labels or assets; how should extension-like labels be escaped?                | Treat image extensions as asset references and reject SVG paths; other strings are labels                                                                                                                                               | T16 authoring UI                    |
 | Q-007 | How should repeated event calls and events emitted by hooks compose?                                            | T03 uses last call per kind in ordered batches; hook events run in the next batch, with a 128-call transaction limit. This bounds accidental cascades and preserves the documented phase/active/turn/result ordering; see rules-api.md. | Revisit with T04/T06 game authoring |
+| Q-008 | Confirm the T13 renderer choice after physical-phone profiling and the headless Chromium cadence investigation  | Keep the WASM-free PixiJS v8 adapter behind TableRenderer; compare Canvas on hardware                                                                                                                                                   | T13 confirmation                    |
