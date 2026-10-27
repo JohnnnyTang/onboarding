@@ -1,0 +1,17 @@
+{
+  "name": "@bgp/schema",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc --project tsconfig.build.json",
+    "typecheck": "tsc --noEmit --project tsconfig.build.json && tsc --noEmit",
+    "test": "vitest run --config ../../vitest.package.config.ts"
+  }
+}

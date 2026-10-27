@@ -1,0 +1,81 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  schedule:
+    - cron: "0 7 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    env:
+      CI: "true"
+      TURBO_TELEMETRY_DISABLED: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm build
+      - run: pnpm check:wasm
+      - name: Export contract schemas (from T02)
+        if: hashFiles('packages/schema/json/**') != ''
+        run: pnpm json-schema
+      - name: Start integration services (from T07)
+        if: hashFiles('infra/docker-compose.yml') != ''
+        run: |
+          cp .env.example .env
+          docker compose -f infra/docker-compose.yml up -d --wait
+          pnpm db:migrate
+      - run: pnpm test
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm test:e2e --project=chromium
+      - name: Upload browser diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: browser-diagnostics
+          path: |
+            test-results/
+            playwright-report/
+          if-no-files-found: ignore
+
+  nightly:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    needs: checks
+    runs-on: ubuntu-latest
+    env:
+      CI: "true"
+      BGP_PROPERTY_RUNS: "1000"
+      BGP_PRNG_DRAWS: "100000"
+      TURBO_TELEMETRY_DISABLED: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Start integration services (from T07)
+        if: hashFiles('infra/docker-compose.yml') != ''
+        run: |
+          cp .env.example .env
+          docker compose -f infra/docker-compose.yml up -d --wait
+          pnpm db:migrate
+      - run: pnpm test
+      - run: pnpm exec playwright install --with-deps
+      - run: pnpm test:e2e
+      - name: Performance suite (from T20)
+        if: hashFiles('scripts/perf/*.ts') != ''
+        run: pnpm perf
