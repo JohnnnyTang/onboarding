@@ -15,6 +15,7 @@
     "test": "vitest run --config ../../vitest.package.config.ts"
   },
   "dependencies": {
-    "@bgp/schema": "workspace:*"
+    "@bgp/schema": "workspace:*",
+    "immer": "11.2.9"
   }
 }

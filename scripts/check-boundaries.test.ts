@@ -77,6 +77,18 @@ describe("package boundaries", () => {
     expect(check("packages/rules/src/index.test.ts", 'import "pixi.js";')).not.toEqual([]);
   });
 
+  test("only the hash adapter may use Web Crypto subtle; entropy stays forbidden", () => {
+    expect(check("packages/rules/src/hash.ts", 'crypto.subtle.digest("SHA-256", bytes);')).toEqual(
+      [],
+    );
+    expect(
+      check("packages/rules/src/index.ts", 'crypto.subtle.digest("SHA-256", bytes);'),
+    ).not.toEqual([]);
+    expect(check("packages/rules/src/hash.ts", "crypto.getRandomValues(bytes);")).not.toEqual([]);
+    expect(check("packages/rules/src/hash.ts", "Math.random();")).not.toEqual([]);
+    expect(check("packages/rules/src/index.ts", 'import { produce } from "immer";')).toEqual([]);
+  });
+
   test("data property names are not confused with globals", () => {
     expect(
       check("packages/schema/src/index.ts", 'const data = { process: "value" }; data.process;'),

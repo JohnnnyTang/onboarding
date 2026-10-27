@@ -15,7 +15,7 @@ interface Policy {
 // Test tooling is allowed only in test files, never in game/runtime sources.
 const POLICIES: Record<string, Policy> = {
   "packages/schema": { imports: ["zod"], pure: true },
-  "packages/rules": { imports: ["@bgp/schema"], pure: true },
+  "packages/rules": { imports: ["@bgp/schema", "immer"], pure: true },
   "packages/testing": { imports: ["@bgp/rules", "@bgp/schema"], node: true },
   "packages/rules-host": { imports: ["@bgp/schema", "quickjs-emscripten"], node: true },
   "packages/table-2d": { imports: ["@bgp/schema", "pixi.js"] },
@@ -147,7 +147,14 @@ export function checkSource(root: string, file: string, source: string): string[
         (ts.isPropertyAccessExpression(parent) && parent.name === node) ||
         (ts.isPropertyAssignment(parent) && parent.name === node) ||
         (ts.isPropertySignature(parent) && parent.name === node);
-      if (!propertyName) report(node, `Pure code must not access ${node.text}.`);
+      // D-006 permits the deterministic SHA-256 capability in this one module.
+      // No entropy APIs (including getRandomValues) are admitted by this exception.
+      const hashCapability =
+        path === "packages/rules/src/hash.ts" &&
+        node.text === "crypto" &&
+        ((ts.isVariableDeclaration(parent) && parent.name === node) ||
+          (ts.isPropertyAccessExpression(parent) && parent.name.text === "subtle"));
+      if (!propertyName && !hashCapability) report(node, `Pure code must not access ${node.text}.`);
     }
     if (
       policy.pure &&

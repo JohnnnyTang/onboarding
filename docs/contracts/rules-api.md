@@ -253,6 +253,32 @@ export type RejectCode =
 
 `invalid`, `defineGame` (identity function for type inference), `rekey` (fresh IDs for a list of instances), `countHidden` (replace an array with its length for views), `seatsAfter` (turn-order helper).
 
+```ts
+export function rekey<T extends { id: string }>(items: readonly T[], random: Random): T[];
+export function countHidden(items: readonly unknown[]): number;
+/** All other seats, in order starting immediately after seat and wrapping. */
+export function seatsAfter(seats: readonly SeatId[], seat: SeatId): SeatId[];
+export function canonicalJson(value: unknown): string; // validates integer JSON, then serializes
+```
+
+`rekey` copies the instances without changing their order or other fields. `seatsAfter`
+throws for an unknown seat. `Random.int` requires safe integer endpoints and a positive
+safe integer span; it samples without modulo bias, using 32 bits (or 53 bits for wider
+spans). Picking an empty array or rolling a nonpositive die throws. Shuffling returns a copy.
+
+The uint32 seed expands to three words using the integer mixer
+`x ^= x >>> 16; x = imul(x, 0x21f0aaad); x ^= x >>> 15;
+x = imul(x, 0x735a2d97); x ^= x >>> 15`, applied to seed plus
+`0x9e3779b9`, `0x3c6ef372` and `0xdaa66d2b` modulo 2^32. The fourth word starts
+at 1; twelve sfc32 steps warm up the state. `Random.id` uses four output words as
+an opaque 128-bit hexadecimal ID. These details are fixed for replay compatibility.
+
+Canonical JSON sorts object keys lexically by UTF-16 code units, including numeric-looking
+keys, and retains array order. Strings use JSON escaping, numbers normalize negative zero
+to zero, and no whitespace is emitted. `hashState` hashes its UTF-8 bytes with Web Crypto
+SHA-256 in Node and browsers. Only `hash.ts` may access this deterministic host capability;
+game callbacks and the rest of the runtime cannot access cryptographic entropy APIs.
+
 ## Validation example
 
 `MatchInitSchema` validates seats numbered from `"0"` in order (1–8 seats), a uint32
