@@ -76,6 +76,8 @@ flowchart LR
 
 ### T07 Database and local services
 
+**Status:** Complete. Local validation and scope: [t07-validation.md](t07-validation.md).
+
 **Deliverables:** `infra/docker-compose.yml`, PostgreSQL init script creating `bgp_test`, Keycloak realm export, Drizzle schema for every table in [data-model.md](data-model.md), first migration, `db:generate` and `db:migrate` scripts.
 
 **Done when:** a clean `docker compose up` plus `pnpm db:migrate` creates the schema; the test database is migrated automatically by integration tests; Keycloak test users can sign in at its account page.

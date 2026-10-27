@@ -6,6 +6,17 @@ const root = process.cwd();
 const check = (file: string, source: string) => checkSource(root, resolve(root, file), source);
 
 describe("package boundaries", () => {
+  test("database dependencies stay in the server and tooling stays in config files", () => {
+    for (const source of ['import "drizzle-orm";', 'import "postgres";']) {
+      expect(check("apps/server/src/db/connection.ts", source)).toEqual([]);
+      expect(check("packages/rules/src/index.ts", source)).not.toEqual([]);
+      expect(check("apps/web/src/index.ts", source)).not.toEqual([]);
+    }
+    expect(check("apps/server/drizzle.config.ts", 'import "drizzle-kit";')).toEqual([]);
+    expect(check("apps/server/vitest.config.ts", 'import "vitest/config";')).toEqual([]);
+    expect(check("apps/server/src/index.ts", 'import "drizzle-kit";')).not.toEqual([]);
+    expect(check("apps/server/src/index.ts", 'import "vitest/config";')).not.toEqual([]);
+  });
   test("admits public imports and same-package relative imports", () => {
     expect(
       check(

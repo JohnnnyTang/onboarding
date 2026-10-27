@@ -50,10 +50,11 @@ Tests guard the three properties that must never break: **hidden information**, 
 ## CI pipeline
 
 T01 implements the pipeline in `.github/workflows/ci.yml`. It builds before the WASM scan
-so emitted binaries are included. T02 exports and verifies contract schemas on every run;
-Docker integration services and PERF-01 are conditional on the T07/T20 artifacts.
-Schema and rules tests now exercise their implementations; other package tests remain
-scaffold tests until their owning tasks land.
+so emitted binaries are included. Contract export and Docker integration services are enabled.
+CI checks Drizzle migration metadata and schema drift before starting the services. Server
+tests migrate the test database automatically and fail if PostgreSQL is unavailable;
+browser tests verify local Keycloak login. PERF-01 remains conditional until T20.
+Packages without implementations still have scaffold tests.
 
 T03 adds `e2e/rules.spec.ts`, which loads the compiled runtime and the installed
 dependencies as ESM through Playwright request routing. It compares Node and browser
