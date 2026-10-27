@@ -98,4 +98,52 @@ describe("QuickJS rules sandbox", () => {
       bad.dispose();
     }
   });
+
+  it("sanitizes invalid inputs and discards the affected sandbox", async () => {
+    const sandbox = await QuickJsSandbox.load(GAME_SOURCE);
+    try {
+      await sandbox.create(INIT);
+      await expect(sandbox.apply("0", { move: "tick", args: 0.5 })).rejects.toMatchObject({
+        code: "GAME_ERROR",
+        message: "Game execution failed",
+      });
+      await expect(sandbox.hash()).rejects.toBeInstanceOf(GameError);
+    } finally {
+      sandbox.dispose();
+    }
+  });
+
+  it("rejects nonconsecutive restoration events", async () => {
+    const sandbox = await QuickJsSandbox.load(GAME_SOURCE);
+    try {
+      await sandbox.create(INIT);
+      const snapshot = await sandbox.exportState();
+      await expect(
+        sandbox.restore(snapshot, [{ seq: 2, seat: "0", intent: { move: "tick" } }]),
+      ).rejects.toThrow("Game execution failed");
+    } finally {
+      sandbox.dispose();
+    }
+  });
+
+  it("fails even direct reads of forbidden capabilities", async () => {
+    for (const expression of [
+      "globalThis.constructor",
+      "process",
+      "fetch",
+      "Date",
+      "Math.random",
+    ]) {
+      const sandbox = await QuickJsSandbox.load(hostile(`${expression};`));
+      try {
+        await sandbox.create(INIT);
+        expect(await sandbox.apply("0", { move: "tick" })).toMatchObject({
+          ok: false,
+          code: "GAME_ERROR",
+        });
+      } finally {
+        sandbox.dispose();
+      }
+    }
+  });
 });

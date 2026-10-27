@@ -16,6 +16,7 @@ interface Reply {
   value?: unknown;
   elapsedMs?: number;
   heapBytes?: number;
+  rssBytes?: number;
 }
 
 /** Disposable spike adapter, intentionally excluded from public exports. */
@@ -24,6 +25,7 @@ export class VmProcessSandbox implements RulesSandbox {
   private busy = false;
   elapsedMs = 0;
   heapBytes = 0;
+  rssBytes = 0;
   private constructor(
     private readonly child: ChildProcess,
     private readonly timeoutMs: number,
@@ -78,6 +80,7 @@ export class VmProcessSandbox implements RulesSandbox {
         const reply = raw as Reply;
         this.elapsedMs = reply.elapsedMs ?? 0;
         this.heapBytes = reply.heapBytes ?? 0;
+        this.rssBytes = reply.rssBytes ?? 0;
         resolve(reply.value);
       };
       const timer = setTimeout(failed, this.timeoutMs);

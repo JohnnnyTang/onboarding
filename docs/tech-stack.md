@@ -94,6 +94,12 @@ T08 installs `quickjs-emscripten-core` and `@jitl/quickjs-wasmfile-release-sync`
 0.32.0, behind `RulesSandbox`. These are the modular distribution of quickjs-emscripten;
 installing only the synchronous release variant avoids unused debug/async WASM binaries.
 The local package asset is loaded lazily by the server, with no third-party runtime fetch.
+
+| T08 runtime dependency                | Version | Reason                                                                                |
+| ------------------------------------- | ------- | ------------------------------------------------------------------------------------- |
+| `quickjs-emscripten-core`             | 0.32.0  | Interpreter API behind `RulesSandbox`, without importing unused WASM variants         |
+| `@jitl/quickjs-wasmfile-release-sync` | 0.32.0  | Self-hosted synchronous release interpreter; the single server-only D-002 WASM binary |
+
 T08 also pins esbuild 0.28.2 as development tooling to bundle the trusted rules runtime
 for evaluation inside the interpreter and to build the disposable VM comparison worker.
 

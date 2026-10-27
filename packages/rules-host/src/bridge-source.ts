@@ -57,8 +57,8 @@ export const LOCKDOWN_SOURCE = `
     "EventSource", "process", "require", "console", "setTimeout", "setInterval",
     "setImmediate", "queueMicrotask", "SharedArrayBuffer", "Atomics", "WebAssembly",
     "Worker", "WeakRef", "FinalizationRegistry"
-  ]) Object.defineProperty(globalThis, key, { value: undefined, configurable: false });
-  Object.defineProperty(Math, "random", { value: undefined, configurable: false });
-  Object.defineProperty(globalThis, "constructor", { value: undefined, configurable: false });
+  ]) Object.defineProperty(globalThis, key, { get() { throw Error(); }, configurable: false });
+  Object.defineProperty(Math, "random", { get() { throw Error(); }, configurable: false });
+  Object.defineProperty(globalThis, "constructor", { get() { throw Error(); }, configurable: false });
 })()
 `;

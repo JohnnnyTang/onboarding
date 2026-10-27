@@ -70,6 +70,11 @@ export class QuickJsSandbox implements RulesSandbox {
       (!Number.isInteger(options.timeoutMs) || options.timeoutMs < 1)
     )
       throw new GameError();
+    if (
+      options.memoryLimitBytes !== undefined &&
+      (!Number.isSafeInteger(options.memoryLimitBytes) || options.memoryLimitBytes < 1)
+    )
+      throw new GameError();
     const engine = await quickjs();
     const runtime = engine.newRuntime();
     const sandbox = new QuickJsSandbox(runtime, runtime.newContext(), options);
@@ -150,10 +155,14 @@ export class QuickJsSandbox implements RulesSandbox {
   }
 
   async create(init: MatchInit): Promise<void> {
-    this.call({ op: "create", init: MatchInitSchema.parse(init) });
+    this.checked(() => this.call({ op: "create", init: MatchInitSchema.parse(init) }));
   }
 
   async apply(seat: SeatId, intent: MoveIntent): Promise<MoveOutcome> {
+    return this.checked(() => this.applyChecked(seat, intent));
+  }
+
+  private applyChecked(seat: SeatId, intent: MoveIntent): MoveOutcome {
     const result = this.call({
       op: "apply",
       seat: SeatIdSchema.parse(seat),
@@ -176,6 +185,10 @@ export class QuickJsSandbox implements RulesSandbox {
   }
 
   async views(): Promise<Record<SeatId, ClientView>> {
+    return this.checked(() => this.viewsChecked());
+  }
+
+  private viewsChecked(): Record<SeatId, ClientView> {
     const value = this.call({ op: "views" });
     if (typeof value !== "object" || value === null || Array.isArray(value)) throw new GameError();
     const result: Record<SeatId, ClientView> = {};
@@ -185,21 +198,36 @@ export class QuickJsSandbox implements RulesSandbox {
   }
 
   async hash(): Promise<string> {
+    return this.checked(() => this.hashChecked());
+  }
+
+  private hashChecked(): string {
     const canonical = this.call({ op: "canonical" });
     if (typeof canonical !== "string") throw new GameError();
     return createHash("sha256").update(canonical).digest("hex");
   }
 
   async exportState(): Promise<MatchState> {
-    return MatchStateSchema.parse(this.call({ op: "export" }));
+    return this.checked(() => MatchStateSchema.parse(this.call({ op: "export" })));
   }
 
   async restore(snapshot: MatchState, events: AcceptedEvent[]): Promise<void> {
-    this.call({
-      op: "restore",
-      snapshot: MatchStateSchema.parse(snapshot),
-      events: events.map((event) => AcceptedEventSchema.parse(event)),
-    });
+    this.checked(() =>
+      this.call({
+        op: "restore",
+        snapshot: MatchStateSchema.parse(snapshot),
+        events: events.map((event) => AcceptedEventSchema.parse(event)),
+      }),
+    );
+  }
+
+  private checked<T>(run: () => T): T {
+    try {
+      return run();
+    } catch {
+      this.dispose();
+      throw new GameError();
+    }
   }
 
   /** Interpreter heap statistics for the spike; not an IPC/client API. */

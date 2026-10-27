@@ -84,6 +84,11 @@ flowchart LR
 
 ### T08 `@bgp/rules-host`: isolation for game code
 
+**Status:** In progress on `codex/t08-rules-host`. QuickJS and restricted Node VM
+prototypes, fixture isolation/determinism tests and initial measurements are ready;
+Harbor Market measurements, human confirmation and production host/IPC/recovery
+remain. Evidence and remaining gates: [spikes/t08-sandbox.md](spikes/t08-sandbox.md).
+
 **Starts with a spike (2–3 days):** implement a minimal `RulesSandbox` with QuickJS (quickjs-emscripten) and with the Node `vm` + process alternative; run Harbor Market and the INT-ISOLATION suite on both; measure against the spike criteria in [D-008](decisions.md#d-008-server-side-isolation-of-game-code); write `docs/spikes/t08-sandbox.md`; get the choice confirmed.
 
 **Deliverables:** a host process started with the permission flags in D-008; the `RulesSandbox` interface with the chosen implementation (one sandbox per match, holding the `@bgp/rules` runtime bundle plus the game bundle, with memory and time limits); an IPC API: `load(buildHash)`, `create(matchId, init)`, `apply(matchId, seat, intent)`, `views(matchId)`, `hash(matchId)`, `exportState(matchId)`, `restore(matchId, snapshot, events)`, `dispose(matchId)`; a client library the server uses, which restarts crashed hosts; the QuickJS module recorded in `wasm-inventory.json`.

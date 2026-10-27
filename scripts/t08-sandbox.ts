@@ -19,6 +19,7 @@ async function benchmark(load: (source: string) => Promise<RulesSandbox>) {
   const idle: RulesSandbox[] = [];
   let heap: unknown;
   let childHeap: number | undefined;
+  let childRss: number | undefined;
   try {
     for (let i = 0; i < 21; i++) {
       const started = performance.now();
@@ -29,7 +30,10 @@ async function benchmark(load: (source: string) => Promise<RulesSandbox>) {
       if (i === 0) coldMs = elapsed;
       else loads.push(elapsed);
       if (match instanceof QuickJsSandbox) heap = match.memoryUsage();
-      if (match instanceof VmProcessSandbox) childHeap = match.heapBytes;
+      if (match instanceof VmProcessSandbox) {
+        childHeap = match.heapBytes;
+        childRss = match.rssBytes;
+      }
     }
     const rssDeltaPerMatch = (process.memoryUsage().rss - rssBefore) / idle.length;
     const match = idle[0];
@@ -55,6 +59,7 @@ async function benchmark(load: (source: string) => Promise<RulesSandbox>) {
       parentRssDeltaPerMatchBytes: rssDeltaPerMatch,
       quickjsHeap: heap,
       vmChildHeapBytes: childHeap,
+      vmChildRssBytes: childRss,
       deterministicSteps: 500,
       warmLoadSamples: loads.length,
     };

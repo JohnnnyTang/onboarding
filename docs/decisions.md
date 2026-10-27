@@ -134,6 +134,12 @@ The per-library view of the same choices, with alternatives, is in [tech-stack.m
 
 **Phase 4 gate:** before public listing, add an outer layer (containers or microVMs) and an external security review (Q-003).
 
+**T08 evidence:** [fixture sandbox comparison](spikes/t08-sandbox.md) records both
+QuickJS and a permission-restricted Node VM process prototype. QuickJS fixture move
+p95 is 1.69 ms and its interpreter heap is about 2.05 MiB per idle match. These are
+not Harbor Market results; D-008 remains Default until that workload is measured
+and a human confirms the choice. Production process hosting and recovery remain.
+
 ## D-009 Client frameworks and rendering
 
 **Status:** Three.js for 3D: Accepted. React: Default, confirm before T12. PixiJS for 2D: Default, spike at T13.
@@ -231,3 +237,4 @@ Agents: add questions here with the option you chose for now and why.
 | Q-006 | Die face strings represent either labels or assets; how should extension-like labels be escaped?                | Treat image extensions as asset references and reject SVG paths; other strings are labels                                                                                                                                               | T16 authoring UI                    |
 | Q-007 | How should repeated event calls and events emitted by hooks compose?                                            | T03 uses last call per kind in ordered batches; hook events run in the next batch, with a 128-call transaction limit. This bounds accidental cascades and preserves the documented phase/active/turn/result ordering; see rules-api.md. | Revisit with T04/T06 game authoring |
 | Q-008 | Confirm the T13 renderer choice after physical-phone profiling and the headless Chromium cadence investigation  | Keep the WASM-free PixiJS v8 adapter behind TableRenderer; compare Canvas on hardware                                                                                                                                                   | T13 confirmation                    |
+| Q-009 | T08 depends on T03, but its spike requires Harbor Market from T06; how should work proceed before T06 exists?   | Use a small hidden-information fixture for the initial comparison, retain QuickJS as Default, and keep Harbor Market measurements and human confirmation as explicit gates. Do not waive the workload or mark T08 complete.             | T08 confirmation                    |

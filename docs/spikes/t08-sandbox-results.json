@@ -1,0 +1,164 @@
+{
+  "measuredAt": "2026-10-27T14:16:40.515Z",
+  "node": "v24.12.0",
+  "platform": "win32 x64",
+  "cpu": "Intel(R) Core(TM) Ultra 7 258V",
+  "fixture": "Two-seat hidden-counter fixture; Harbor Market is not implemented at this base revision",
+  "quickjs": {
+    "coldLoadAndCreateMs": 148.2529,
+    "warmLoadAndCreateP95Ms": 71.41890000000001,
+    "moveP95Ms": 1.6864000000000487,
+    "parentRssDeltaPerMatchBytes": 4001792,
+    "quickjsHeap": {
+      "malloc_limit": 67108864,
+      "memory_used_size": 2146359,
+      "malloc_count": 57260,
+      "memory_used_count": 51860,
+      "atom_count": 3303,
+      "atom_size": 143036,
+      "str_count": 512,
+      "str_size": 34043,
+      "obj_count": 12117,
+      "obj_size": 581616,
+      "prop_count": 31159,
+      "prop_size": 294888,
+      "shape_count": 898,
+      "shape_size": 121256,
+      "js_func_count": 1744,
+      "js_func_size": 762926,
+      "js_func_code_size": 127259,
+      "js_func_pc2line_count": 1744,
+      "js_func_pc2line_size": 62411,
+      "c_func_count": 271,
+      "array_count": 433,
+      "fast_array_count": 433,
+      "fast_array_elements": 567,
+      "binary_object_count": 0,
+      "binary_object_size": 0
+    },
+    "deterministicSteps": 500,
+    "warmLoadSamples": 20,
+    "isolation": [
+      {
+        "name": "infinite loop",
+        "code": "GAME_ERROR",
+        "elapsedMs": 1006.9180999999999,
+        "healthyMatchContinued": true
+      },
+      {
+        "name": "allocation",
+        "code": "GAME_ERROR",
+        "elapsedMs": 1344.2684,
+        "healthyMatchContinued": true
+      },
+      {
+        "name": "fetch",
+        "code": "GAME_ERROR",
+        "elapsedMs": 4.917100000000573,
+        "healthyMatchContinued": true
+      },
+      {
+        "name": "process",
+        "code": "GAME_ERROR",
+        "elapsedMs": 6.622299999999996,
+        "healthyMatchContinued": true
+      },
+      {
+        "name": "require",
+        "code": "GAME_ERROR",
+        "elapsedMs": 6.805100000000493,
+        "healthyMatchContinued": true
+      },
+      {
+        "name": "global constructor",
+        "code": "GAME_ERROR",
+        "elapsedMs": 6.8432999999995445,
+        "healthyMatchContinued": true
+      },
+      {
+        "name": "dynamic import",
+        "code": "GAME_ERROR",
+        "elapsedMs": 4.764199999999619,
+        "healthyMatchContinued": true
+      },
+      {
+        "name": "date",
+        "code": "GAME_ERROR",
+        "elapsedMs": 4.081599999999526,
+        "healthyMatchContinued": true
+      },
+      {
+        "name": "random",
+        "code": "GAME_ERROR",
+        "elapsedMs": 6.6359999999995125,
+        "healthyMatchContinued": true
+      }
+    ]
+  },
+  "vmProcess": {
+    "coldLoadAndCreateMs": 88.1842999999999,
+    "warmLoadAndCreateP95Ms": 89.47929999999997,
+    "moveP95Ms": 0.7137999999995372,
+    "parentRssDeltaPerMatchBytes": -446854.09523809527,
+    "vmChildHeapBytes": 13664488,
+    "vmChildRssBytes": 69632000,
+    "deterministicSteps": 500,
+    "warmLoadSamples": 20,
+    "isolation": [
+      {
+        "name": "infinite loop",
+        "code": "GAME_ERROR",
+        "elapsedMs": 1003.3127999999997,
+        "healthyMatchContinued": true
+      },
+      {
+        "name": "allocation",
+        "code": "GAME_ERROR",
+        "elapsedMs": 125.96130000000085,
+        "healthyMatchContinued": true
+      },
+      {
+        "name": "fetch",
+        "code": "GAME_ERROR",
+        "elapsedMs": 1.2705999999998312,
+        "healthyMatchContinued": true
+      },
+      {
+        "name": "process",
+        "code": "GAME_ERROR",
+        "elapsedMs": 1.2556000000004133,
+        "healthyMatchContinued": true
+      },
+      {
+        "name": "require",
+        "code": "GAME_ERROR",
+        "elapsedMs": 1.788300000000163,
+        "healthyMatchContinued": true
+      },
+      {
+        "name": "global constructor",
+        "code": "GAME_ERROR",
+        "elapsedMs": 1.3901999999998225,
+        "healthyMatchContinued": true
+      },
+      {
+        "name": "dynamic import",
+        "code": "GAME_ERROR",
+        "elapsedMs": 2.644899999999325,
+        "healthyMatchContinued": true
+      },
+      {
+        "name": "date",
+        "code": "GAME_ERROR",
+        "elapsedMs": 1.7512000000006083,
+        "healthyMatchContinued": true
+      },
+      {
+        "name": "random",
+        "code": "GAME_ERROR",
+        "elapsedMs": 1.3058000000000902,
+        "healthyMatchContinued": true
+      }
+    ]
+  }
+}

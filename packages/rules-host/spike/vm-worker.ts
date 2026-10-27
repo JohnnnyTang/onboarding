@@ -43,6 +43,7 @@ process.on("message", async (message: { source?: string; request?: unknown }) =>
         value,
         elapsedMs: performance.now() - started,
         heapBytes: process.memoryUsage().heapUsed,
+        rssBytes: process.memoryUsage().rss,
       });
     }
   } catch {
