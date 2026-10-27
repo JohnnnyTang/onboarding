@@ -58,6 +58,8 @@ flowchart LR
 
 ### T04 Sandbox mode
 
+**Status:** Complete. Local validation and scope: [t04-validation.md](t04-validation.md).
+
 **Deliverables:** `createSandboxDefinition(components)` with `SandboxSetup`, `SandboxState`, all `ManualOp`s, visibility rules and re-keying on shuffle, as in [components-and-table.md](contracts/components-and-table.md#sandbox-state-and-manual-operations); its `present` producing a `TableSnapshot` from declarations.
 
 **Done when:** each operation has tests, including rejection cases; dealing into `owner` zones hides identities from other seats; after a shuffle no pre-shuffle ID of a hidden item appears in any view.
