@@ -23,7 +23,15 @@ const POLICIES: Record<string, Policy> = {
   "packages/cli": { imports: ["@bgp/rules", "@bgp/schema", "@bgp/testing", "esbuild"], node: true },
   "apps/web": { imports: ["@bgp/schema", "@bgp/table-2d", "@bgp/card-generator"] },
   "apps/server": {
-    imports: ["@bgp/schema", "@bgp/rules-host", "drizzle-orm", "postgres"],
+    imports: [
+      "@bgp/schema",
+      "@bgp/rules-host",
+      "drizzle-orm",
+      "postgres",
+      "fastify",
+      "fastify-plugin",
+      "jose",
+    ],
     node: true,
   },
 };

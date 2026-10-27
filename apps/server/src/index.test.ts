@@ -1,6 +1,8 @@
 import { expect, test } from "vitest";
-import * as scaffold from "./index.js";
+import { authPlugin, createAuthService, createUserStore, requireMatchScope } from "./index.js";
 
-test("the package scaffold loads", () => {
-  expect(Object.keys(scaffold)).toEqual([]);
+test("the server exports the authentication integration points", () => {
+  for (const entry of [authPlugin, createAuthService, createUserStore, requireMatchScope]) {
+    expect(typeof entry).toBe("function");
+  }
 });
