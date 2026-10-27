@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "$ref": "#/$defs/__schema0"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["lobby", "active", "finished", "abandoned"]
+          },
+          "versionId": {
+            "$ref": "#/$defs/__schema0"
+          },
+          "buildHash": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "seats": {
+            "maxItems": 8,
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/__schema1"
+            }
+          }
+        },
+        "required": ["id", "status", "versionId", "buildHash", "seats"],
+        "additionalProperties": false
+      }
+    },
+    "cursor": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/__schema0"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "required": ["items", "cursor"],
+  "additionalProperties": false,
+  "$defs": {
+    "__schema0": {
+      "type": "string",
+      "minLength": 1
+    },
+    "__schema1": {
+      "type": "object",
+      "properties": {
+        "seat": {
+          "type": "string",
+          "pattern": "^(0|[1-9][0-9]*)$"
+        },
+        "name": {
+          "type": "string"
+        },
+        "connected": {
+          "type": "boolean"
+        },
+        "guest": {
+          "type": "boolean"
+        }
+      },
+      "required": ["seat", "name", "connected", "guest"],
+      "additionalProperties": false
+    }
+  },
+  "title": "MatchListResponse"
+}

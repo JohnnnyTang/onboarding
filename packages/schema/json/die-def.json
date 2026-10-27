@@ -1,0 +1,144 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "id": {
+      "$ref": "#/$defs/__schema0"
+    },
+    "name": {
+      "$ref": "#/$defs/__schema1"
+    },
+    "mass_g": {
+      "$ref": "#/$defs/__schema2"
+    },
+    "material": {
+      "$ref": "#/$defs/__schema3"
+    },
+    "kind": {
+      "$ref": "#/$defs/__schema4"
+    },
+    "sides": {
+      "$ref": "#/$defs/__schema5"
+    },
+    "size_mm": {
+      "$ref": "#/$defs/__schema6"
+    },
+    "faces": {
+      "$ref": "#/$defs/__schema7"
+    },
+    "color": {
+      "$ref": "#/$defs/__schema8"
+    }
+  },
+  "required": ["id", "kind", "sides", "size_mm"],
+  "additionalProperties": false,
+  "$defs": {
+    "__schema0": {
+      "type": "string",
+      "pattern": "^[a-z0-9-]+$"
+    },
+    "__schema1": {
+      "type": "string"
+    },
+    "__schema2": {
+      "type": "number",
+      "minimum": 0
+    },
+    "__schema3": {
+      "type": "object",
+      "properties": {
+        "preset": {
+          "type": "string",
+          "minLength": 1
+        },
+        "params": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {
+            "$ref": "#/$defs/IntegerJson"
+          }
+        }
+      },
+      "required": ["preset"],
+      "additionalProperties": false
+    },
+    "__schema4": {
+      "type": "string",
+      "const": "die"
+    },
+    "__schema5": {
+      "anyOf": [
+        {
+          "type": "number",
+          "const": 4
+        },
+        {
+          "type": "number",
+          "const": 6
+        },
+        {
+          "type": "number",
+          "const": 8
+        },
+        {
+          "type": "number",
+          "const": 10
+        },
+        {
+          "type": "number",
+          "const": 12
+        },
+        {
+          "type": "number",
+          "const": 20
+        }
+      ]
+    },
+    "__schema6": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "__schema7": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "__schema8": {
+      "type": "string"
+    },
+    "IntegerJson": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        },
+        {
+          "type": "string"
+        },
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/IntegerJson"
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/IntegerJson"
+          }
+        }
+      ]
+    }
+  },
+  "title": "DieDef"
+}

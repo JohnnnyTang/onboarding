@@ -28,9 +28,12 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm build
       - run: pnpm check:wasm
-      - name: Export contract schemas (from T02)
-        if: hashFiles('packages/schema/json/**') != ''
+      - name: Export contract schemas
         run: pnpm json-schema
+      - name: Verify committed contract schemas
+        run: |
+          git diff --exit-code -- packages/schema/json
+          test -z "$(git ls-files --others --exclude-standard packages/schema/json)"
       - name: Start integration services (from T07)
         if: hashFiles('infra/docker-compose.yml') != ''
         run: |

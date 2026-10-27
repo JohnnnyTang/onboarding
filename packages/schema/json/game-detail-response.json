@@ -1,0 +1,381 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "id": {
+      "$ref": "#/$defs/__schema0"
+    },
+    "slug": {
+      "$ref": "#/$defs/__schema1"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 80
+    },
+    "visibility": {
+      "type": "string",
+      "enum": ["private", "unlisted"]
+    },
+    "versions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "$ref": "#/$defs/__schema0"
+          },
+          "gameId": {
+            "$ref": "#/$defs/__schema0"
+          },
+          "manifest": {
+            "$ref": "#/$defs/__schema2"
+          },
+          "status": {
+            "$ref": "#/$defs/__schema24"
+          },
+          "buildHash": {
+            "$ref": "#/$defs/__schema25"
+          },
+          "validationErrors": {
+            "$ref": "#/$defs/__schema26"
+          }
+        },
+        "required": ["id", "gameId", "manifest", "status", "buildHash", "validationErrors"],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": ["id", "slug", "name", "visibility", "versions"],
+  "additionalProperties": false,
+  "$defs": {
+    "__schema0": {
+      "type": "string",
+      "minLength": 1
+    },
+    "__schema1": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]{2,47}$"
+    },
+    "__schema2": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "schemaVersion": {
+              "$ref": "#/$defs/__schema3"
+            },
+            "id": {
+              "$ref": "#/$defs/__schema1"
+            },
+            "name": {
+              "$ref": "#/$defs/__schema4"
+            },
+            "version": {
+              "$ref": "#/$defs/__schema5"
+            },
+            "sdk": {
+              "$ref": "#/$defs/__schema6"
+            },
+            "players": {
+              "$ref": "#/$defs/__schema7"
+            },
+            "components": {
+              "$ref": "#/$defs/__schema11"
+            },
+            "options": {
+              "$ref": "#/$defs/__schema12"
+            },
+            "description": {
+              "$ref": "#/$defs/__schema21"
+            },
+            "authors": {
+              "$ref": "#/$defs/__schema22"
+            },
+            "license": {
+              "$ref": "#/$defs/__schema23"
+            },
+            "mode": {
+              "type": "string",
+              "const": "enforced"
+            },
+            "entry": {
+              "$ref": "#/$defs/__schema11"
+            }
+          },
+          "required": [
+            "schemaVersion",
+            "id",
+            "name",
+            "version",
+            "sdk",
+            "players",
+            "components",
+            "mode",
+            "entry"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "schemaVersion": {
+              "$ref": "#/$defs/__schema3"
+            },
+            "id": {
+              "$ref": "#/$defs/__schema1"
+            },
+            "name": {
+              "$ref": "#/$defs/__schema4"
+            },
+            "version": {
+              "$ref": "#/$defs/__schema5"
+            },
+            "sdk": {
+              "$ref": "#/$defs/__schema6"
+            },
+            "players": {
+              "$ref": "#/$defs/__schema7"
+            },
+            "components": {
+              "$ref": "#/$defs/__schema11"
+            },
+            "options": {
+              "$ref": "#/$defs/__schema12"
+            },
+            "description": {
+              "$ref": "#/$defs/__schema21"
+            },
+            "authors": {
+              "$ref": "#/$defs/__schema22"
+            },
+            "license": {
+              "$ref": "#/$defs/__schema23"
+            },
+            "mode": {
+              "type": "string",
+              "const": "sandbox"
+            }
+          },
+          "required": [
+            "schemaVersion",
+            "id",
+            "name",
+            "version",
+            "sdk",
+            "players",
+            "components",
+            "mode"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "__schema3": {
+      "type": "number",
+      "const": 1
+    },
+    "__schema4": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 80
+    },
+    "__schema5": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(?:-(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*)(?:\\.(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*))*)?(?:\\+[0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*)?$"
+    },
+    "__schema6": {
+      "type": "number",
+      "const": 1
+    },
+    "__schema7": {
+      "type": "object",
+      "properties": {
+        "min": {
+          "$ref": "#/$defs/__schema8"
+        },
+        "max": {
+          "$ref": "#/$defs/__schema10"
+        }
+      },
+      "required": ["min", "max"],
+      "additionalProperties": false
+    },
+    "__schema8": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 8,
+      "$ref": "#/$defs/__schema9"
+    },
+    "__schema9": {
+      "type": "integer",
+      "minimum": -9007199254740991,
+      "maximum": 9007199254740991
+    },
+    "__schema10": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 8,
+      "$ref": "#/$defs/__schema9"
+    },
+    "__schema11": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9._-]+(?:\\/[A-Za-z0-9._-]+)*$"
+    },
+    "__schema12": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/__schema13"
+      }
+    },
+    "__schema13": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "id": {
+              "$ref": "#/$defs/__schema0"
+            },
+            "label": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "const": "boolean"
+            },
+            "default": {
+              "type": "boolean"
+            }
+          },
+          "required": ["id", "label", "type", "default"],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "id": {
+              "$ref": "#/$defs/__schema0"
+            },
+            "label": {
+              "$ref": "#/$defs/__schema14"
+            },
+            "type": {
+              "$ref": "#/$defs/__schema15"
+            },
+            "default": {
+              "$ref": "#/$defs/__schema9"
+            },
+            "min": {
+              "$ref": "#/$defs/__schema9"
+            },
+            "max": {
+              "$ref": "#/$defs/__schema9"
+            }
+          },
+          "required": ["id", "label", "type", "default", "min", "max"],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "id": {
+              "$ref": "#/$defs/__schema0"
+            },
+            "label": {
+              "$ref": "#/$defs/__schema16"
+            },
+            "type": {
+              "$ref": "#/$defs/__schema17"
+            },
+            "default": {
+              "$ref": "#/$defs/__schema18"
+            },
+            "choices": {
+              "$ref": "#/$defs/__schema19"
+            }
+          },
+          "required": ["id", "label", "type", "default", "choices"],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "__schema14": {
+      "type": "string"
+    },
+    "__schema15": {
+      "type": "string",
+      "const": "integer"
+    },
+    "__schema16": {
+      "type": "string"
+    },
+    "__schema17": {
+      "type": "string",
+      "const": "choice"
+    },
+    "__schema18": {
+      "type": "string"
+    },
+    "__schema19": {
+      "minItems": 1,
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/__schema20"
+      }
+    },
+    "__schema20": {
+      "type": "string"
+    },
+    "__schema21": {
+      "type": "string"
+    },
+    "__schema22": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "__schema23": {
+      "type": "string"
+    },
+    "__schema24": {
+      "type": "string",
+      "enum": ["draft", "ready", "failed"]
+    },
+    "__schema25": {
+      "anyOf": [
+        {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "__schema26": {
+      "anyOf": [
+        {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "path": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "required": ["path", "message"],
+            "additionalProperties": false
+          }
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "title": "GameDetailResponse"
+}

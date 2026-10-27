@@ -1,0 +1,163 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "t": {
+      "type": "string",
+      "const": "snapshot"
+    },
+    "seq": {
+      "$ref": "#/$defs/__schema0"
+    },
+    "view": {
+      "type": "object",
+      "properties": {
+        "ctx": {
+          "type": "object",
+          "properties": {
+            "seats": {
+              "$ref": "#/$defs/__schema2"
+            },
+            "currentSeat": {
+              "$ref": "#/$defs/__schema3"
+            },
+            "activeSeats": {
+              "$ref": "#/$defs/__schema4"
+            },
+            "phase": {
+              "$ref": "#/$defs/__schema5"
+            },
+            "turn": {
+              "$ref": "#/$defs/__schema6"
+            },
+            "moveNumber": {
+              "$ref": "#/$defs/__schema0"
+            },
+            "options": {
+              "$ref": "#/$defs/IntegerJson"
+            }
+          },
+          "required": [
+            "seats",
+            "currentSeat",
+            "activeSeats",
+            "phase",
+            "turn",
+            "moveNumber",
+            "options"
+          ],
+          "additionalProperties": false
+        },
+        "game": {
+          "$ref": "#/$defs/IntegerJson"
+        },
+        "result": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "winners": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/$defs/__schema3"
+                  }
+                },
+                "scores": {
+                  "type": "object",
+                  "propertyNames": {
+                    "$ref": "#/$defs/__schema3"
+                  },
+                  "additionalProperties": {
+                    "type": "integer",
+                    "minimum": -9007199254740991,
+                    "maximum": 9007199254740991
+                  }
+                },
+                "reason": {
+                  "type": "string"
+                }
+              },
+              "required": ["winners"],
+              "additionalProperties": false
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": ["ctx", "game", "result"],
+      "additionalProperties": false
+    }
+  },
+  "required": ["t", "seq", "view"],
+  "additionalProperties": false,
+  "$defs": {
+    "__schema0": {
+      "minimum": 0,
+      "$ref": "#/$defs/__schema1"
+    },
+    "__schema1": {
+      "type": "integer",
+      "minimum": -9007199254740991,
+      "maximum": 9007199254740991
+    },
+    "__schema2": {
+      "minItems": 1,
+      "maxItems": 8,
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/__schema3"
+      }
+    },
+    "__schema3": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)$"
+    },
+    "__schema4": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/__schema3"
+      }
+    },
+    "__schema5": {
+      "type": "string",
+      "minLength": 1
+    },
+    "__schema6": {
+      "exclusiveMinimum": 0,
+      "$ref": "#/$defs/__schema1"
+    },
+    "IntegerJson": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        },
+        {
+          "type": "string"
+        },
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/IntegerJson"
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/IntegerJson"
+          }
+        }
+      ]
+    }
+  },
+  "title": "SnapshotMessage"
+}

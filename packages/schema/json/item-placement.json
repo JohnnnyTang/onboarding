@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "id": {
+      "$ref": "#/$defs/__schema0"
+    },
+    "zone": {
+      "$ref": "#/$defs/__schema0"
+    },
+    "index": {
+      "minimum": 0,
+      "$ref": "#/$defs/__schema1"
+    },
+    "pos_mm": {
+      "type": "array",
+      "prefixItems": [
+        {
+          "$ref": "#/$defs/__schema1"
+        },
+        {
+          "$ref": "#/$defs/__schema1"
+        }
+      ],
+      "items": false,
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "rotation_deg": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 359,
+      "$ref": "#/$defs/__schema1"
+    },
+    "face": {
+      "type": "string",
+      "enum": ["up", "down"]
+    },
+    "def": {
+      "$ref": "#/$defs/__schema2"
+    },
+    "back": {
+      "$ref": "#/$defs/__schema2"
+    },
+    "value": {
+      "exclusiveMinimum": 0,
+      "$ref": "#/$defs/__schema1"
+    },
+    "selectable": {
+      "type": "boolean"
+    },
+    "draggable": {
+      "type": "boolean"
+    },
+    "highlight": {
+      "type": "string",
+      "enum": ["legal", "selected", "warning"]
+    },
+    "badge": {
+      "type": "string"
+    }
+  },
+  "required": ["id", "zone", "face"],
+  "additionalProperties": false,
+  "$defs": {
+    "__schema0": {
+      "type": "string",
+      "minLength": 1
+    },
+    "__schema1": {
+      "type": "integer",
+      "minimum": -9007199254740991,
+      "maximum": 9007199254740991
+    },
+    "__schema2": {
+      "type": "string",
+      "pattern": "^[a-z0-9-]+$"
+    }
+  },
+  "title": "ItemPlacement"
+}

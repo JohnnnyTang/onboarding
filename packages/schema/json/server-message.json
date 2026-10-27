@@ -1,0 +1,594 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "oneOf": [
+    {
+      "type": "object",
+      "properties": {
+        "t": {
+          "type": "string",
+          "const": "welcome"
+        },
+        "protocol": {
+          "type": "number",
+          "const": 1
+        },
+        "seat": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/__schema0"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "match": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "$ref": "#/$defs/__schema1"
+            },
+            "status": {
+              "type": "string",
+              "enum": ["lobby", "active", "finished", "abandoned"]
+            },
+            "versionId": {
+              "$ref": "#/$defs/__schema1"
+            },
+            "buildHash": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "seats": {
+              "$ref": "#/$defs/__schema2"
+            }
+          },
+          "required": ["id", "status", "versionId", "buildHash", "seats"],
+          "additionalProperties": false
+        },
+        "seq": {
+          "$ref": "#/$defs/__schema4"
+        },
+        "view": {
+          "$ref": "#/$defs/__schema6"
+        }
+      },
+      "required": ["t", "protocol", "seat", "match", "seq", "view"],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "t": {
+          "type": "string",
+          "const": "patch"
+        },
+        "seq": {
+          "$ref": "#/$defs/__schema9"
+        },
+        "ops": {
+          "type": "array",
+          "items": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "op": {
+                    "type": "string",
+                    "const": "add"
+                  },
+                  "path": {
+                    "$ref": "#/$defs/__schema11"
+                  },
+                  "value": {
+                    "$ref": "#/$defs/IntegerJson"
+                  }
+                },
+                "required": ["op", "path", "value"],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "op": {
+                    "type": "string",
+                    "const": "remove"
+                  },
+                  "path": {
+                    "$ref": "#/$defs/__schema11"
+                  }
+                },
+                "required": ["op", "path"],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "op": {
+                    "type": "string",
+                    "const": "replace"
+                  },
+                  "path": {
+                    "$ref": "#/$defs/__schema11"
+                  },
+                  "value": {
+                    "$ref": "#/$defs/IntegerJson"
+                  }
+                },
+                "required": ["op", "path", "value"],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "op": {
+                    "type": "string",
+                    "const": "move"
+                  },
+                  "path": {
+                    "$ref": "#/$defs/__schema11"
+                  },
+                  "from": {
+                    "$ref": "#/$defs/__schema11"
+                  }
+                },
+                "required": ["op", "path", "from"],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "op": {
+                    "type": "string",
+                    "const": "copy"
+                  },
+                  "path": {
+                    "$ref": "#/$defs/__schema11"
+                  },
+                  "from": {
+                    "$ref": "#/$defs/__schema11"
+                  }
+                },
+                "required": ["op", "path", "from"],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "op": {
+                    "type": "string",
+                    "const": "test"
+                  },
+                  "path": {
+                    "$ref": "#/$defs/__schema11"
+                  },
+                  "value": {
+                    "$ref": "#/$defs/IntegerJson"
+                  }
+                },
+                "required": ["op", "path", "value"],
+                "additionalProperties": false
+              }
+            ]
+          }
+        },
+        "cause": {
+          "type": "object",
+          "properties": {
+            "seat": {
+              "$ref": "#/$defs/__schema0"
+            },
+            "clientSeq": {
+              "$ref": "#/$defs/__schema4"
+            },
+            "move": {
+              "$ref": "#/$defs/__schema1"
+            }
+          },
+          "required": ["seat", "move"],
+          "additionalProperties": false
+        }
+      },
+      "required": ["t", "seq", "ops", "cause"],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "t": {
+          "type": "string",
+          "const": "snapshot"
+        },
+        "seq": {
+          "$ref": "#/$defs/__schema4"
+        },
+        "view": {
+          "$ref": "#/$defs/__schema6"
+        }
+      },
+      "required": ["t", "seq", "view"],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "t": {
+          "type": "string",
+          "const": "rejected"
+        },
+        "clientSeq": {
+          "$ref": "#/$defs/__schema4"
+        },
+        "code": {
+          "$ref": "#/$defs/__schema12"
+        },
+        "gameCode": {
+          "type": "string",
+          "pattern": "^[A-Z][A-Z0-9]*(?:_[A-Z0-9]+)*$"
+        },
+        "message": {
+          "type": "string"
+        }
+      },
+      "required": ["t", "clientSeq", "code", "message"],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "t": {
+          "type": "string",
+          "const": "presence"
+        },
+        "seats": {
+          "$ref": "#/$defs/__schema2"
+        }
+      },
+      "required": ["t", "seats"],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "t": {
+          "type": "string",
+          "const": "ephemeral"
+        },
+        "from": {
+          "$ref": "#/$defs/__schema0"
+        },
+        "data": {
+          "oneOf": [
+            {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "type": "string",
+                  "const": "drag"
+                },
+                "item": {
+                  "$ref": "#/$defs/__schema1"
+                },
+                "pos_mm": {
+                  "$ref": "#/$defs/__schema13"
+                }
+              },
+              "required": ["kind", "item", "pos_mm"],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "type": "string",
+                  "const": "pointer"
+                },
+                "pos_mm": {
+                  "$ref": "#/$defs/__schema13"
+                }
+              },
+              "required": ["kind", "pos_mm"],
+              "additionalProperties": false
+            }
+          ]
+        }
+      },
+      "required": ["t", "from", "data"],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "t": {
+          "type": "string",
+          "const": "chat"
+        },
+        "from": {
+          "$ref": "#/$defs/__schema0"
+        },
+        "name": {
+          "type": "string"
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        },
+        "at": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+        }
+      },
+      "required": ["t", "from", "name", "text", "at"],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "t": {
+          "type": "string",
+          "const": "ended"
+        },
+        "result": {
+          "$ref": "#/$defs/__schema10"
+        }
+      },
+      "required": ["t", "result"],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "t": {
+          "type": "string",
+          "const": "error"
+        },
+        "code": {
+          "$ref": "#/$defs/__schema12"
+        },
+        "message": {
+          "type": "string"
+        },
+        "fatal": {
+          "type": "boolean"
+        }
+      },
+      "required": ["t", "code", "message", "fatal"],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "t": {
+          "type": "string",
+          "const": "pong"
+        },
+        "ts": {
+          "$ref": "#/$defs/__schema4"
+        }
+      },
+      "required": ["t", "ts"],
+      "additionalProperties": false
+    }
+  ],
+  "$defs": {
+    "__schema0": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)$"
+    },
+    "__schema1": {
+      "type": "string",
+      "minLength": 1
+    },
+    "__schema2": {
+      "maxItems": 8,
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/__schema3"
+      }
+    },
+    "__schema3": {
+      "type": "object",
+      "properties": {
+        "seat": {
+          "$ref": "#/$defs/__schema0"
+        },
+        "name": {
+          "type": "string"
+        },
+        "connected": {
+          "type": "boolean"
+        },
+        "guest": {
+          "type": "boolean"
+        }
+      },
+      "required": ["seat", "name", "connected", "guest"],
+      "additionalProperties": false
+    },
+    "__schema4": {
+      "minimum": 0,
+      "$ref": "#/$defs/__schema5"
+    },
+    "__schema5": {
+      "type": "integer",
+      "minimum": -9007199254740991,
+      "maximum": 9007199254740991
+    },
+    "__schema6": {
+      "type": "object",
+      "properties": {
+        "ctx": {
+          "type": "object",
+          "properties": {
+            "seats": {
+              "$ref": "#/$defs/__schema7"
+            },
+            "currentSeat": {
+              "$ref": "#/$defs/__schema0"
+            },
+            "activeSeats": {
+              "$ref": "#/$defs/__schema8"
+            },
+            "phase": {
+              "$ref": "#/$defs/__schema1"
+            },
+            "turn": {
+              "$ref": "#/$defs/__schema9"
+            },
+            "moveNumber": {
+              "$ref": "#/$defs/__schema4"
+            },
+            "options": {
+              "$ref": "#/$defs/IntegerJson"
+            }
+          },
+          "required": [
+            "seats",
+            "currentSeat",
+            "activeSeats",
+            "phase",
+            "turn",
+            "moveNumber",
+            "options"
+          ],
+          "additionalProperties": false
+        },
+        "game": {
+          "$ref": "#/$defs/IntegerJson"
+        },
+        "result": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/__schema10"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": ["ctx", "game", "result"],
+      "additionalProperties": false
+    },
+    "__schema7": {
+      "minItems": 1,
+      "maxItems": 8,
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/__schema0"
+      }
+    },
+    "__schema8": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/__schema0"
+      }
+    },
+    "__schema9": {
+      "exclusiveMinimum": 0,
+      "$ref": "#/$defs/__schema5"
+    },
+    "__schema10": {
+      "type": "object",
+      "properties": {
+        "winners": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/__schema0"
+          }
+        },
+        "scores": {
+          "type": "object",
+          "propertyNames": {
+            "$ref": "#/$defs/__schema0"
+          },
+          "additionalProperties": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          }
+        },
+        "reason": {
+          "type": "string"
+        }
+      },
+      "required": ["winners"],
+      "additionalProperties": false
+    },
+    "__schema11": {
+      "type": "string",
+      "pattern": "^(?:\\/(?:[^~/]|~[01])*)*$"
+    },
+    "__schema12": {
+      "type": "string",
+      "enum": [
+        "PROTOCOL_VERSION",
+        "BAD_MESSAGE",
+        "UNAUTHORIZED",
+        "FORBIDDEN",
+        "MATCH_NOT_FOUND",
+        "MATCH_NOT_ACTIVE",
+        "MATCH_FINISHED",
+        "NOT_YOUR_TURN",
+        "MOVE_NOT_ALLOWED",
+        "UNKNOWN_MOVE",
+        "INVALID_ARGS",
+        "INVALID_MOVE",
+        "GAME_ERROR",
+        "RATE_LIMITED",
+        "SEAT_TAKEN_OVER",
+        "VALIDATION_FAILED",
+        "NOT_FOUND",
+        "CONFLICT",
+        "INTERNAL"
+      ]
+    },
+    "__schema13": {
+      "type": "array",
+      "prefixItems": [
+        {
+          "$ref": "#/$defs/__schema5"
+        },
+        {
+          "$ref": "#/$defs/__schema5"
+        }
+      ],
+      "items": false,
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "IntegerJson": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        },
+        {
+          "type": "string"
+        },
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/IntegerJson"
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/IntegerJson"
+          }
+        }
+      ]
+    }
+  },
+  "title": "ServerMessage"
+}

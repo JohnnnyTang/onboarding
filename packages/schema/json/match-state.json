@@ -1,0 +1,183 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "v": {
+      "$ref": "#/$defs/__schema0"
+    },
+    "game": {
+      "$ref": "#/$defs/IntegerJson"
+    },
+    "ctx": {
+      "$ref": "#/$defs/__schema1"
+    },
+    "rng": {
+      "$ref": "#/$defs/__schema9"
+    },
+    "result": {
+      "$ref": "#/$defs/__schema11"
+    }
+  },
+  "required": ["v", "game", "ctx", "rng", "result"],
+  "additionalProperties": false,
+  "$defs": {
+    "__schema0": {
+      "type": "number",
+      "const": 1
+    },
+    "__schema1": {
+      "type": "object",
+      "properties": {
+        "seats": {
+          "$ref": "#/$defs/__schema2"
+        },
+        "currentSeat": {
+          "$ref": "#/$defs/__schema3"
+        },
+        "activeSeats": {
+          "$ref": "#/$defs/__schema4"
+        },
+        "phase": {
+          "$ref": "#/$defs/__schema5"
+        },
+        "turn": {
+          "$ref": "#/$defs/__schema6"
+        },
+        "moveNumber": {
+          "$ref": "#/$defs/__schema8"
+        },
+        "options": {
+          "$ref": "#/$defs/IntegerJson"
+        }
+      },
+      "required": ["seats", "currentSeat", "activeSeats", "phase", "turn", "moveNumber", "options"],
+      "additionalProperties": false
+    },
+    "__schema2": {
+      "minItems": 1,
+      "maxItems": 8,
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/__schema3"
+      }
+    },
+    "__schema3": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)$"
+    },
+    "__schema4": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/__schema3"
+      }
+    },
+    "__schema5": {
+      "type": "string",
+      "minLength": 1
+    },
+    "__schema6": {
+      "exclusiveMinimum": 0,
+      "$ref": "#/$defs/__schema7"
+    },
+    "__schema7": {
+      "type": "integer",
+      "minimum": -9007199254740991,
+      "maximum": 9007199254740991
+    },
+    "__schema8": {
+      "minimum": 0,
+      "$ref": "#/$defs/__schema7"
+    },
+    "__schema9": {
+      "type": "array",
+      "prefixItems": [
+        {
+          "$ref": "#/$defs/__schema10"
+        },
+        {
+          "$ref": "#/$defs/__schema10"
+        },
+        {
+          "$ref": "#/$defs/__schema10"
+        },
+        {
+          "$ref": "#/$defs/__schema10"
+        }
+      ],
+      "items": false,
+      "minItems": 4,
+      "maxItems": 4
+    },
+    "__schema10": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 4294967295,
+      "$ref": "#/$defs/__schema7"
+    },
+    "__schema11": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "winners": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/__schema3"
+              }
+            },
+            "scores": {
+              "type": "object",
+              "propertyNames": {
+                "$ref": "#/$defs/__schema3"
+              },
+              "additionalProperties": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              }
+            },
+            "reason": {
+              "type": "string"
+            }
+          },
+          "required": ["winners"],
+          "additionalProperties": false
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "IntegerJson": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        },
+        {
+          "type": "string"
+        },
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/IntegerJson"
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/IntegerJson"
+          }
+        }
+      ]
+    }
+  },
+  "title": "MatchState"
+}

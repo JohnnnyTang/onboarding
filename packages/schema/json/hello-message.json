@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "t": {
+      "type": "string",
+      "const": "hello"
+    },
+    "protocol": {
+      "type": "number",
+      "const": 1
+    },
+    "matchId": {
+      "$ref": "#/$defs/__schema0"
+    },
+    "auth": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": ["user", "guest"]
+        },
+        "token": {
+          "$ref": "#/$defs/__schema0"
+        }
+      },
+      "required": ["kind", "token"],
+      "additionalProperties": false
+    },
+    "lastSeq": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    }
+  },
+  "required": ["t", "protocol", "matchId", "auth"],
+  "additionalProperties": false,
+  "$defs": {
+    "__schema0": {
+      "type": "string",
+      "minLength": 1
+    }
+  },
+  "title": "HelloMessage"
+}

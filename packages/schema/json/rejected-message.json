@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "t": {
+      "type": "string",
+      "const": "rejected"
+    },
+    "clientSeq": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "code": {
+      "type": "string",
+      "enum": [
+        "PROTOCOL_VERSION",
+        "BAD_MESSAGE",
+        "UNAUTHORIZED",
+        "FORBIDDEN",
+        "MATCH_NOT_FOUND",
+        "MATCH_NOT_ACTIVE",
+        "MATCH_FINISHED",
+        "NOT_YOUR_TURN",
+        "MOVE_NOT_ALLOWED",
+        "UNKNOWN_MOVE",
+        "INVALID_ARGS",
+        "INVALID_MOVE",
+        "GAME_ERROR",
+        "RATE_LIMITED",
+        "SEAT_TAKEN_OVER",
+        "VALIDATION_FAILED",
+        "NOT_FOUND",
+        "CONFLICT",
+        "INTERNAL"
+      ]
+    },
+    "gameCode": {
+      "type": "string",
+      "pattern": "^[A-Z][A-Z0-9]*(?:_[A-Z0-9]+)*$"
+    },
+    "message": {
+      "type": "string"
+    }
+  },
+  "required": ["t", "clientSeq", "code", "message"],
+  "additionalProperties": false,
+  "title": "RejectedMessage"
+}

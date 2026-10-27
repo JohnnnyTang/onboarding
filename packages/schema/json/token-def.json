@@ -1,0 +1,111 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9-]+$"
+    },
+    "name": {
+      "type": "string"
+    },
+    "mass_g": {
+      "type": "number",
+      "minimum": 0
+    },
+    "material": {
+      "type": "object",
+      "properties": {
+        "preset": {
+          "type": "string",
+          "minLength": 1
+        },
+        "params": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {
+            "$ref": "#/$defs/IntegerJson"
+          }
+        }
+      },
+      "required": ["preset"],
+      "additionalProperties": false
+    },
+    "kind": {
+      "type": "string",
+      "const": "token"
+    },
+    "shape": {
+      "type": "string",
+      "enum": ["circle", "square", "rect", "hex"]
+    },
+    "size_mm": {
+      "type": "array",
+      "prefixItems": [
+        {
+          "$ref": "#/$defs/__schema0"
+        },
+        {
+          "$ref": "#/$defs/__schema0"
+        }
+      ],
+      "items": false,
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "thickness_mm": {
+      "$ref": "#/$defs/__schema0"
+    },
+    "front": {
+      "$ref": "#/$defs/__schema1"
+    },
+    "back": {
+      "$ref": "#/$defs/__schema1"
+    }
+  },
+  "required": ["id", "kind", "shape", "size_mm", "front"],
+  "additionalProperties": false,
+  "$defs": {
+    "__schema0": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "__schema1": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9._-]+(?:\\/[A-Za-z0-9._-]+)*$"
+    },
+    "IntegerJson": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        },
+        {
+          "type": "string"
+        },
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/IntegerJson"
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/IntegerJson"
+          }
+        }
+      ]
+    }
+  },
+  "title": "TokenDef"
+}

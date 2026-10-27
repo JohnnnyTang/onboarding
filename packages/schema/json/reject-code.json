@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "string",
+  "enum": [
+    "MATCH_FINISHED",
+    "NOT_YOUR_TURN",
+    "MOVE_NOT_ALLOWED",
+    "UNKNOWN_MOVE",
+    "INVALID_ARGS",
+    "INVALID_MOVE",
+    "GAME_ERROR"
+  ],
+  "title": "RejectCode"
+}

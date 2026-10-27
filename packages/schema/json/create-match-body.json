@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "versionId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "seatCount": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 8
+    },
+    "options": {
+      "$ref": "#/$defs/IntegerJson"
+    }
+  },
+  "required": ["versionId", "seatCount", "options"],
+  "additionalProperties": false,
+  "$defs": {
+    "IntegerJson": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        },
+        {
+          "type": "string"
+        },
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/IntegerJson"
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/IntegerJson"
+          }
+        }
+      ]
+    }
+  },
+  "title": "CreateMatchBody"
+}

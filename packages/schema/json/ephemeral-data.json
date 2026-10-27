@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "oneOf": [
+    {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "const": "drag"
+        },
+        "item": {
+          "type": "string",
+          "minLength": 1
+        },
+        "pos_mm": {
+          "$ref": "#/$defs/__schema0"
+        }
+      },
+      "required": ["kind", "item", "pos_mm"],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "const": "pointer"
+        },
+        "pos_mm": {
+          "$ref": "#/$defs/__schema0"
+        }
+      },
+      "required": ["kind", "pos_mm"],
+      "additionalProperties": false
+    }
+  ],
+  "$defs": {
+    "__schema0": {
+      "type": "array",
+      "prefixItems": [
+        {
+          "$ref": "#/$defs/__schema1"
+        },
+        {
+          "$ref": "#/$defs/__schema1"
+        }
+      ],
+      "items": false,
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "__schema1": {
+      "type": "integer",
+      "minimum": -9007199254740991,
+      "maximum": 9007199254740991
+    }
+  },
+  "title": "EphemeralData"
+}

@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "id": {
+      "$ref": "#/$defs/__schema0"
+    },
+    "label": {
+      "$ref": "#/$defs/__schema1"
+    },
+    "type": {
+      "$ref": "#/$defs/__schema2"
+    },
+    "default": {
+      "$ref": "#/$defs/__schema3"
+    },
+    "choices": {
+      "$ref": "#/$defs/__schema4"
+    }
+  },
+  "required": ["id", "label", "type", "default", "choices"],
+  "additionalProperties": false,
+  "$defs": {
+    "__schema0": {
+      "type": "string",
+      "minLength": 1
+    },
+    "__schema1": {
+      "type": "string"
+    },
+    "__schema2": {
+      "type": "string",
+      "const": "choice"
+    },
+    "__schema3": {
+      "type": "string"
+    },
+    "__schema4": {
+      "minItems": 1,
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/__schema5"
+      }
+    },
+    "__schema5": {
+      "type": "string"
+    }
+  },
+  "title": "ChoiceOption"
+}

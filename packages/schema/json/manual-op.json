@@ -1,0 +1,160 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "oneOf": [
+    {
+      "type": "object",
+      "properties": {
+        "op": {
+          "type": "string",
+          "const": "move"
+        },
+        "item": {
+          "$ref": "#/$defs/__schema0"
+        },
+        "to": {
+          "$ref": "#/$defs/__schema0"
+        },
+        "index": {
+          "minimum": 0,
+          "$ref": "#/$defs/__schema1"
+        },
+        "pos_mm": {
+          "type": "array",
+          "prefixItems": [
+            {
+              "$ref": "#/$defs/__schema1"
+            },
+            {
+              "$ref": "#/$defs/__schema1"
+            }
+          ],
+          "items": false,
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "face": {
+          "$ref": "#/$defs/__schema2"
+        }
+      },
+      "required": ["op", "item", "to"],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "op": {
+          "type": "string",
+          "const": "flip"
+        },
+        "item": {
+          "$ref": "#/$defs/__schema0"
+        }
+      },
+      "required": ["op", "item"],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "op": {
+          "type": "string",
+          "const": "rotate"
+        },
+        "item": {
+          "$ref": "#/$defs/__schema0"
+        },
+        "deg": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 359,
+          "$ref": "#/$defs/__schema1"
+        }
+      },
+      "required": ["op", "item", "deg"],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "op": {
+          "type": "string",
+          "const": "shuffle"
+        },
+        "zone": {
+          "$ref": "#/$defs/__schema0"
+        }
+      },
+      "required": ["op", "zone"],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "op": {
+          "type": "string",
+          "const": "deal"
+        },
+        "from": {
+          "$ref": "#/$defs/__schema0"
+        },
+        "to": {
+          "minItems": 1,
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/__schema0"
+          }
+        },
+        "count": {
+          "exclusiveMinimum": 0,
+          "$ref": "#/$defs/__schema1"
+        },
+        "face": {
+          "$ref": "#/$defs/__schema2"
+        }
+      },
+      "required": ["op", "from", "to", "count"],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "op": {
+          "type": "string",
+          "const": "roll"
+        },
+        "item": {
+          "$ref": "#/$defs/__schema0"
+        }
+      },
+      "required": ["op", "item"],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "op": {
+          "type": "string",
+          "const": "endTurn"
+        }
+      },
+      "required": ["op"],
+      "additionalProperties": false
+    }
+  ],
+  "$defs": {
+    "__schema0": {
+      "type": "string",
+      "minLength": 1
+    },
+    "__schema1": {
+      "type": "integer",
+      "minimum": -9007199254740991,
+      "maximum": 9007199254740991
+    },
+    "__schema2": {
+      "type": "string",
+      "enum": ["up", "down"]
+    }
+  },
+  "title": "ManualOp"
+}

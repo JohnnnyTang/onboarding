@@ -1,0 +1,224 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "t": {
+      "type": "string",
+      "const": "welcome"
+    },
+    "protocol": {
+      "type": "number",
+      "const": 1
+    },
+    "seat": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/__schema0"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "match": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/__schema1"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["lobby", "active", "finished", "abandoned"]
+        },
+        "versionId": {
+          "$ref": "#/$defs/__schema1"
+        },
+        "buildHash": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "seats": {
+          "maxItems": 8,
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/__schema2"
+          }
+        }
+      },
+      "required": ["id", "status", "versionId", "buildHash", "seats"],
+      "additionalProperties": false
+    },
+    "seq": {
+      "$ref": "#/$defs/__schema3"
+    },
+    "view": {
+      "type": "object",
+      "properties": {
+        "ctx": {
+          "type": "object",
+          "properties": {
+            "seats": {
+              "$ref": "#/$defs/__schema5"
+            },
+            "currentSeat": {
+              "$ref": "#/$defs/__schema0"
+            },
+            "activeSeats": {
+              "$ref": "#/$defs/__schema6"
+            },
+            "phase": {
+              "$ref": "#/$defs/__schema1"
+            },
+            "turn": {
+              "$ref": "#/$defs/__schema7"
+            },
+            "moveNumber": {
+              "$ref": "#/$defs/__schema3"
+            },
+            "options": {
+              "$ref": "#/$defs/IntegerJson"
+            }
+          },
+          "required": [
+            "seats",
+            "currentSeat",
+            "activeSeats",
+            "phase",
+            "turn",
+            "moveNumber",
+            "options"
+          ],
+          "additionalProperties": false
+        },
+        "game": {
+          "$ref": "#/$defs/IntegerJson"
+        },
+        "result": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "winners": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/$defs/__schema0"
+                  }
+                },
+                "scores": {
+                  "type": "object",
+                  "propertyNames": {
+                    "$ref": "#/$defs/__schema0"
+                  },
+                  "additionalProperties": {
+                    "type": "integer",
+                    "minimum": -9007199254740991,
+                    "maximum": 9007199254740991
+                  }
+                },
+                "reason": {
+                  "type": "string"
+                }
+              },
+              "required": ["winners"],
+              "additionalProperties": false
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": ["ctx", "game", "result"],
+      "additionalProperties": false
+    }
+  },
+  "required": ["t", "protocol", "seat", "match", "seq", "view"],
+  "additionalProperties": false,
+  "$defs": {
+    "__schema0": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)$"
+    },
+    "__schema1": {
+      "type": "string",
+      "minLength": 1
+    },
+    "__schema2": {
+      "type": "object",
+      "properties": {
+        "seat": {
+          "$ref": "#/$defs/__schema0"
+        },
+        "name": {
+          "type": "string"
+        },
+        "connected": {
+          "type": "boolean"
+        },
+        "guest": {
+          "type": "boolean"
+        }
+      },
+      "required": ["seat", "name", "connected", "guest"],
+      "additionalProperties": false
+    },
+    "__schema3": {
+      "minimum": 0,
+      "$ref": "#/$defs/__schema4"
+    },
+    "__schema4": {
+      "type": "integer",
+      "minimum": -9007199254740991,
+      "maximum": 9007199254740991
+    },
+    "__schema5": {
+      "minItems": 1,
+      "maxItems": 8,
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/__schema0"
+      }
+    },
+    "__schema6": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/__schema0"
+      }
+    },
+    "__schema7": {
+      "exclusiveMinimum": 0,
+      "$ref": "#/$defs/__schema4"
+    },
+    "IntegerJson": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        },
+        {
+          "type": "string"
+        },
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/IntegerJson"
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/IntegerJson"
+          }
+        }
+      ]
+    }
+  },
+  "title": "WelcomeMessage"
+}

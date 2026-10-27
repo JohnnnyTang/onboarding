@@ -1,0 +1,183 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "t": {
+      "type": "string",
+      "const": "patch"
+    },
+    "seq": {
+      "exclusiveMinimum": 0,
+      "$ref": "#/$defs/__schema0"
+    },
+    "ops": {
+      "type": "array",
+      "items": {
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "op": {
+                "type": "string",
+                "const": "add"
+              },
+              "path": {
+                "$ref": "#/$defs/__schema1"
+              },
+              "value": {
+                "$ref": "#/$defs/IntegerJson"
+              }
+            },
+            "required": ["op", "path", "value"],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "op": {
+                "type": "string",
+                "const": "remove"
+              },
+              "path": {
+                "$ref": "#/$defs/__schema1"
+              }
+            },
+            "required": ["op", "path"],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "op": {
+                "type": "string",
+                "const": "replace"
+              },
+              "path": {
+                "$ref": "#/$defs/__schema1"
+              },
+              "value": {
+                "$ref": "#/$defs/IntegerJson"
+              }
+            },
+            "required": ["op", "path", "value"],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "op": {
+                "type": "string",
+                "const": "move"
+              },
+              "path": {
+                "$ref": "#/$defs/__schema1"
+              },
+              "from": {
+                "$ref": "#/$defs/__schema1"
+              }
+            },
+            "required": ["op", "path", "from"],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "op": {
+                "type": "string",
+                "const": "copy"
+              },
+              "path": {
+                "$ref": "#/$defs/__schema1"
+              },
+              "from": {
+                "$ref": "#/$defs/__schema1"
+              }
+            },
+            "required": ["op", "path", "from"],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "op": {
+                "type": "string",
+                "const": "test"
+              },
+              "path": {
+                "$ref": "#/$defs/__schema1"
+              },
+              "value": {
+                "$ref": "#/$defs/IntegerJson"
+              }
+            },
+            "required": ["op", "path", "value"],
+            "additionalProperties": false
+          }
+        ]
+      }
+    },
+    "cause": {
+      "type": "object",
+      "properties": {
+        "seat": {
+          "type": "string",
+          "pattern": "^(0|[1-9][0-9]*)$"
+        },
+        "clientSeq": {
+          "minimum": 0,
+          "$ref": "#/$defs/__schema0"
+        },
+        "move": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": ["seat", "move"],
+      "additionalProperties": false
+    }
+  },
+  "required": ["t", "seq", "ops", "cause"],
+  "additionalProperties": false,
+  "$defs": {
+    "__schema0": {
+      "type": "integer",
+      "minimum": -9007199254740991,
+      "maximum": 9007199254740991
+    },
+    "__schema1": {
+      "type": "string",
+      "pattern": "^(?:\\/(?:[^~/]|~[01])*)*$"
+    },
+    "IntegerJson": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        },
+        {
+          "type": "string"
+        },
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/IntegerJson"
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/IntegerJson"
+          }
+        }
+      ]
+    }
+  },
+  "title": "PatchMessage"
+}

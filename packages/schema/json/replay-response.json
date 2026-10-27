@@ -1,0 +1,102 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "buildHash": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "seats": {
+      "minItems": 1,
+      "maxItems": 8,
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/__schema0"
+      }
+    },
+    "seed": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 4294967295,
+      "$ref": "#/$defs/__schema1"
+    },
+    "options": {
+      "$ref": "#/$defs/IntegerJson"
+    },
+    "events": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "seq": {
+            "exclusiveMinimum": 0,
+            "$ref": "#/$defs/__schema1"
+          },
+          "seat": {
+            "$ref": "#/$defs/__schema0"
+          },
+          "intent": {
+            "type": "object",
+            "properties": {
+              "move": {
+                "type": "string",
+                "minLength": 1
+              },
+              "args": {
+                "$ref": "#/$defs/IntegerJson"
+              }
+            },
+            "required": ["move"],
+            "additionalProperties": false
+          }
+        },
+        "required": ["seq", "seat", "intent"],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": ["buildHash", "seats", "seed", "options", "events"],
+  "additionalProperties": false,
+  "$defs": {
+    "__schema0": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)$"
+    },
+    "__schema1": {
+      "type": "integer",
+      "minimum": -9007199254740991,
+      "maximum": 9007199254740991
+    },
+    "IntegerJson": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        },
+        {
+          "type": "string"
+        },
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/IntegerJson"
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/IntegerJson"
+          }
+        }
+      ]
+    }
+  },
+  "title": "ReplayResponse"
+}
