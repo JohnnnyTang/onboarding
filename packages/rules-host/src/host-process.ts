@@ -8,6 +8,7 @@ import {
 } from "@bgp/schema";
 import { GameError } from "./errors.js";
 import { MAX_IPC_BYTES } from "./host-constants.js";
+import { validHostReply } from "./host-reply.js";
 import type { SandboxOptions } from "./sandbox.js";
 
 /** One process per match also contains native WASM crashes and allocator stalls. */
@@ -19,6 +20,7 @@ export class HostProcess {
         resolve(value: unknown): void;
         reject(error: GameError): void;
         id: number;
+        op: HostCommand["op"];
         timer: ReturnType<typeof setTimeout>;
       }
     | undefined;
@@ -57,7 +59,13 @@ export class HostProcess {
       if (Buffer.byteLength(JSON.stringify(raw)) > MAX_IPC_BYTES) throw new GameError();
       const reply = HostResponseSchema.parse(raw);
       const pending = this.pending;
-      if (!pending || pending.id !== reply.id || !reply.ok) throw new GameError();
+      if (
+        !pending ||
+        pending.id !== reply.id ||
+        !reply.ok ||
+        !validHostReply(pending.op, reply.value)
+      )
+        throw new GameError();
       clearTimeout(pending.timer);
       this.pending = undefined;
       pending.resolve(reply.value);
@@ -78,7 +86,7 @@ export class HostProcess {
         if (Buffer.byteLength(JSON.stringify(request)) > MAX_IPC_BYTES) throw new GameError();
         if (timeoutMs < 1) throw new GameError();
         const timer = setTimeout(() => this.dispose(), Math.min(timeoutMs, this.options.timeoutMs));
-        this.pending = { resolve, reject, id: request.id, timer };
+        this.pending = { resolve, reject, id: request.id, op: command.op, timer };
         this.child.send(request, (error) => {
           if (error) this.dispose();
         });

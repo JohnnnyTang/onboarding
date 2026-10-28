@@ -50,6 +50,13 @@ Failures are exactly `{ v: 1, id, ok: false, code: "GAME_ERROR", message:
 "Game execution failed" }`. Malformed envelopes disconnect the child. Neither
 exceptions nor stdout/stderr cross into the server or browser response.
 
+Request IDs must strictly increase; reused or decreasing IDs disconnect the
+child. The parent validates the success payload for the outstanding operation,
+including `null` acknowledgements. An `apply` result with `code: "GAME_ERROR"`
+also uses exactly `message: "Game execution failed"` and omits `gameCode`.
+Game-controlled serialization must never supply error text or metadata for this
+code. Other move rejection codes retain their documented game messages.
+
 IPC envelopes have an 8 MiB serialized UTF-8 cap in both directions. A parent
 watchdog kills the child at `timeoutMs` (default/maximum 1000 ms). The QuickJS
 interrupt uses the same limit. Default/maximum interpreter heap: 64 MiB; stack:

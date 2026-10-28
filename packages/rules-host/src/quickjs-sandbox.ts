@@ -187,7 +187,10 @@ export class QuickJsSandbox implements RulesSandbox {
       return { ok: true, event: AcceptedEventSchema.parse(result.event) };
     const rejection = ApplyResultSchema.parse(result);
     if (rejection.ok) throw new GameError();
-    if (rejection.code === "GAME_ERROR") this.dispose();
+    if (rejection.code === "GAME_ERROR") {
+      this.dispose();
+      return { ok: false, code: "GAME_ERROR", message: "Game execution failed" };
+    }
     return {
       ok: false,
       code: rejection.code,
