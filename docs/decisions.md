@@ -153,7 +153,11 @@ and a human confirms the choice. Production process hosting and recovery remain.
 **T13 evidence:** [renderer comparison](spikes/t13-renderer-2d.md). The PixiJS adapter
 is implemented behind `TableRenderer`, with 8.6.6 pinned because inspected newer
 v8 distributions ship optional WASM transcoders that violate AC-14. The choice
-remains Default pending physical-phone performance evidence and human confirmation.
+remains Default pending human confirmation of the desktop spike recommendation.
+The owner deferred physical-phone qualification to T20 on 2026-10-27; the
+300-item/60 fps target and AC-12 still require physical-device evidence there.
+The Chromium follow-up records 8.4 ms Pixi p95 frame intervals on Intel D3D11 at
+both fixture widths and separately records slower headless SwiftShader results.
 
 ## D-010 Repository tooling
 
@@ -212,7 +216,7 @@ What to decide, when, and how to judge it. Record each outcome as a new entry or
 | Before T07              | ORM                                                  | Drizzle, Kysely, Prisma                                                   | Migration workflow, typed queries, team familiarity                                                  |
 | T08 spike               | Server sandbox (D-008)                               | QuickJS, `vm` + process, isolated-vm, Deno                                | Spike criteria in D-008                                                                              |
 | Before T12              | App shell framework (D-009)                          | React, Svelte, SolidJS                                                    | Team familiarity, ecosystem for editors, agent reliability                                           |
-| T13 spike               | 2D renderer (D-009)                                  | PixiJS, Three.js orthographic, Canvas 2D                                  | 300 draggable items at 60 fps on a mid-range phone; crisp text; reuse in Phase 2                     |
+| T13 spike               | 2D renderer (D-009)                                  | PixiJS, Three.js orthographic, Canvas 2D                                  | Desktop fixture comparison, text and Phase 2 reuse; phone 300-item/60 fps qualification at T20       |
 | Before first deployment | Hosting, storage provider, identity provider (Q-002) | University infrastructure, cloud providers                                | Cost, data location rules, SSO, operations effort                                                    |
 | Phase 2 spike           | Physics                                              | Rapier, cannon-es, Jolt                                                   | 200 bodies at 60 fps on a mid-range phone; believable dice; deterministic replay for dexterity shots |
 | Phase 2                 | Texture and model formats                            | KTX2 + Meshopt, WebP/AVIF + plain glTF                                    | GPU memory and load time on the device matrix                                                        |
@@ -236,6 +240,6 @@ Agents: add questions here with the option you chose for now and why.
 | Q-005 | Confirm the minimal public HTTP response envelopes and validation-error shape added in T02                      | Use the shapes in contracts/http-api.md; expose no database internals or match seed                                                                                                                                                     | T10 API implementation              |
 | Q-006 | Die face strings represent either labels or assets; how should extension-like labels be escaped?                | Treat image extensions as asset references and reject SVG paths; other strings are labels                                                                                                                                               | T16 authoring UI                    |
 | Q-007 | How should repeated event calls and events emitted by hooks compose?                                            | T03 uses last call per kind in ordered batches; hook events run in the next batch, with a 128-call transaction limit. This bounds accidental cascades and preserves the documented phase/active/turn/result ordering; see rules-api.md. | Revisit with T04/T06 game authoring |
-| Q-008 | Confirm the T13 renderer choice after physical-phone profiling and the headless Chromium cadence investigation  | Keep the WASM-free PixiJS v8 adapter behind TableRenderer; compare Canvas on hardware                                                                                                                                                   | T13 confirmation                    |
+| Q-008 | Confirm the T13 PixiJS recommendation from desktop profiling; physical-phone qualification moves to T20         | Keep the WASM-free PixiJS v8 adapter behind TableRenderer; desktop GPU comparison recorded, phone comparison tracked at T20                                                                                                             | T13 confirmation                    |
 | Q-009 | Confirm sandbox table dimensions and manual-operation defaults                                                  | Minimum 800 by 600 mm table grows for zones; each-owned rectangles overlap; deals are top-first with count per target. Shuffle removes rotation/position marks. State-aware parsers return INVALID_ARGS. See components-and-table.md.   | T15 authoring UI                    |
 | Q-010 | T08 depends on T03, but its spike requires Harbor Market from T06; how should work proceed before T06 exists?   | Use a small hidden-information fixture for the initial comparison, retain QuickJS as Default, and keep Harbor Market measurements and human confirmation as explicit gates. Do not waive the workload or mark T08 complete.             | T08 confirmation                    |

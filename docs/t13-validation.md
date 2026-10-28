@@ -1,8 +1,9 @@
-# T13 validation and remaining acceptance gate
+# T13 table renderer validation
 
-The renderer implementation was developed on `codex/t13-table-2d`, based on
-`39259b7`, and integrated into `main` with T03 and T07 after review. T13 uses the
-completed T02 contracts and remains independent of the app shell.
+Implementation and desktop validation are complete. The renderer recommendation
+is PixiJS 8.6.6 behind `TableRenderer`; human confirmation of D-009 is the only
+remaining T13 gate. The project owner deferred physical-phone qualification to
+T20 on 2026-10-27. This is a scheduling change, not a physical-device pass.
 
 ## Scope
 
@@ -16,63 +17,81 @@ completed T02 contracts and remains independent of the app shell.
   no speculative match-state change. Only visible art or explicit backs load.
 - A standalone `/dev/table/` fixture route and three-engine spike harness run
   with `pnpm dev:table`. The T12 shell can reuse the renderer later.
-- PixiJS 8.6.6 is pinned to avoid optional WASM files in newer inspected versions;
-  the production dependency scan finds no WASM modules. All added dependencies
-  and development tools are recorded in `tech-stack.md`.
+- PixiJS 8.6.6 is pinned to avoid optional WASM files in newer inspected versions.
+  All dependencies and development tools are recorded in `tech-stack.md`.
 
-## Validation
+## Worktree validation (2026-10-27)
 
-Local environment: Windows, Node 24.12.0, pnpm 11.9.0, Playwright 1.64.1.
+Branch: `codex/t13-renderer-validation`, based on `b40f329`. Local environment:
+Windows, Intel Arc 140V / driver 32.0.101.8860, Node 24.12.0, pnpm 11.9.0,
+Playwright 1.64.1. Timestamps in the raw evidence are UTC; the local date is
+October 27 in America/New_York.
 
-| Check                       | Result                                                    |
-| --------------------------- | --------------------------------------------------------- |
-| `pnpm lint`                 | Pass, including package boundaries                        |
-| `pnpm typecheck`            | Pass across the workspace and development harness         |
-| `pnpm test`                 | Pass, including 12 table layout/drop tests                |
-| `pnpm build`                | Pass across all 10 packages/apps                          |
-| `pnpm build:table-dev`      | Pass; inspectable fixture bundle in `.scratch/table-dev/` |
-| `pnpm check:wasm`           | Pass, zero production modules                             |
-| `pnpm test:e2e --workers=1` | Pass, Chromium/Firefox/WebKit matrix                      |
+| Check                                            | Result                                                             |
+| ------------------------------------------------ | ------------------------------------------------------------------ |
+| `pnpm install --frozen-lockfile`                 | Pass                                                               |
+| `pnpm lint`                                      | Pass, including package boundaries                                 |
+| `pnpm typecheck`                                 | Pass across the workspace and development harness                  |
+| `pnpm test`                                      | Pass, 359 tests including 14 layout/drop tests                     |
+| `pnpm build`                                     | Pass, all 10 packages/apps                                         |
+| `pnpm build:table-dev`                           | Pass; fixture bundle in `.scratch/table-dev/`                      |
+| `pnpm check:wasm`                                | Pass; only the inventoried server-side QuickJS module, no web WASM |
+| `pnpm test:e2e e2e/table-2d.spec.ts --workers=1` | Pass, 18 tests across Chromium/Firefox/WebKit                      |
+| Headed/headless Chromium spike                   | Pass, 12 measurements, no page errors                              |
+| Invalid spike `--browser`                        | Rejected before browser launch                                     |
+
+The first concurrent workspace test run hit two existing rules-host timing
+failures (VM startup and QuickJS allocation). A subsequent unmodified `pnpm test`
+run passed all 359 tests. No rules-host code, limits or tests were changed.
 
 The table suite has six tests per browser and 24 reviewed PNG baselines:
-360/1440 px table fit and 300-item stress fixtures, drag feedback, seat-1 rotation, the next authoritative
-snapshot, and mobile pinch/pan. It checks contract-valid click/zone/drop payloads,
-integer drop coordinates after camera transforms, return after unconfirmed
-drops, repeated snapshot transitions, hidden-back-only asset resolution,
-selection pruning/unsubscription, repeated destruction/remount and page errors.
-Synthetic touch PointerEvents exercise the common input path on every engine;
-physical touch hardware remains part of the phone qualification below.
+360/1440 px table fit and 300-item stress fixtures, drag feedback, seat-1 rotation,
+the next authoritative snapshot, and mobile pinch/pan. Existing baselines passed
+without regeneration; representative table and stress images were inspected.
+The suite checks contract-valid click/zone/drop payloads, integer coordinates
+after camera transforms, return after unconfirmed drops, repeated transitions,
+hidden-back-only asset resolution, selection pruning/unsubscription, repeated
+destruction/remount and page errors. Synthetic touch PointerEvents exercise the
+common input path across engines; physical touch qualification belongs to T20.
 
 Screenshot comparisons permit at most 100 differing pixels. Windows CI owns the
 visual baselines; Linux runs interactions without comparing Windows rasterization.
-The Windows CI job is configured but has not been run remotely from this worktree.
+The Windows CI job is configured but was not run remotely from this worktree.
 
-## Remaining acceptance gate
+## Spike evidence and recommendation
 
-T13 is **not marked Complete**. The [spike report](spikes/t13-renderer-2d.md) and
-[raw measurements](spikes/t13-renderer-2d-results.json) compare all three renderers
-at 300 items. These desktop headless measurements do not prove 60 fps on a
-mid-range phone. Chromium reports SwiftShader software rendering; do not treat
-its timings as accelerated phone results. Physical Android/iOS profiling and
-human confirmation of D-009 are still required by the task and AGENTS.md.
-Pixi remains the reversible existing Default, with no new accepted decision.
+The [spike report](spikes/t13-renderer-2d.md) and
+[original measurements](spikes/t13-renderer-2d-results.json) compare PixiJS,
+Three.js orthographic and Canvas 2D at 300 items across all three browsers.
+The [Chromium follow-up](spikes/t13-renderer-2d-chromium-results.json) separates
+headed Intel D3D11 from headless SwiftShader. Pixi frame p95 is 8.4 ms at both
+360 and 1440 px on the accelerated desktop; headless p95 is 33.4/116.7 ms.
+The backend comparison explains why the earlier software-rendered cadence
+should not be read as a measured phone or hardware-GPU regression.
 
-No contract, determinism, hidden-information or WASM rule was relaxed to finish
-the implementation.
+Confirm PixiJS 8.6.6 for Phase 1, retaining `TableRenderer` as the adapter boundary
+and Canvas as an alternative. Desktop screenshots cover text and zoomed detail;
+this evidence does not establish phone text readability or 60 fps on a phone.
 
-## Integration review (2026-10-27)
+## Deferred physical-device qualification: T20
 
-- Preserved both branches' dependency pins and CI checks, including database
-  migration drift checks, runtime browser determinism and Windows table visuals.
-- Kept the runtime event question as Q-007 and numbered the renderer confirmation
-  question Q-008. D-009 remains Default, and T13's acceptance gate stays open.
-- Fixed grid layouts collapsing empty cells: a piece with index 3 now stays in
-  cell 3. Rendering and drop hit testing share inferred grid dimensions. Two
-  regression tests cover sparse declared and inferred grids; 14 layout tests pass.
-- Combined workspace lint, typecheck, tests (290 total), all 10 builds, fixture
-  build and WASM inventory pass. Contract generation produces no schema changes.
-- T07 migrations apply successfully, migration metadata checks pass and generation
-  finds no database schema drift. Real PostgreSQL integration tests pass.
-- All 33 browser tests pass across Chromium, Firefox and WebKit, including existing
-  screenshot baselines, Node/browser runtime hashes and Keycloak account/PKCE tests.
-  No screenshots or generated contract schemas were changed during integration.
+The project owner's 2026-10-27 instruction moves real-phone tests out of T13's
+gates. `tasks.md`, `testing.md` and D-009 now carry that follow-up explicitly:
+
+- Profile the three-engine fixture and production `/dev/table/?stress=1` on
+  identified mid-range Android and iPhone devices with 300 draggable items.
+- Record model, OS/browser version, DPR, graphics backend where exposed, and
+  p50/p95 frame intervals against the 60 fps target.
+- Check text at fit/zoom, real-touch drag/drop, pinch/pan, seat rotation and
+  viewport resizing from 360 px upwards. AC-12 remains a T20 acceptance gate.
+
+No contract, determinism, hidden-information, isolation or WASM rule was relaxed.
+
+## Integration history
+
+The renderer was developed on `codex/t13-table-2d`, based on `39259b7`, and merged
+into `main` with T03/T07. The 2026-10-27 integration review preserved dependency
+pins, database drift checks, browser determinism and Windows visuals. It fixed
+sparse grids collapsing empty cells with two regression tests. At that point all
+33 browser tests passed, including runtime hashes and Keycloak account/PKCE tests;
+no visual baselines or generated contract schemas changed during integration.

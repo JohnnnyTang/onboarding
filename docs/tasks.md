@@ -125,9 +125,10 @@ remain. Evidence and remaining gates: [spikes/t08-sandbox.md](spikes/t08-sandbox
 
 ### T13 `@bgp/table-2d`
 
-**Status:** Implementation and desktop browser validation ready for review. Physical-phone
-profiling and human confirmation of the renderer spike remain pending; D-009 stays
-Default. Scope and evidence: [t13-validation.md](t13-validation.md).
+**Status:** Implementation and desktop validation complete; human confirmation of
+the PixiJS spike recommendation remains. Physical-phone qualification was deferred
+to T20 by the project owner on 2026-10-27. Scope and evidence:
+[t13-validation.md](t13-validation.md).
 
 **Starts with a spike (2 days):** render the same fixture snapshot with PixiJS, a top-down orthographic Three.js view, and plain Canvas 2D; measure against the T13 criteria in [decisions.md](decisions.md#decision-points-by-stage); write `docs/spikes/t13-renderer-2d.md`; get the choice confirmed. The deliverables below assume PixiJS, the default.
 
@@ -173,6 +174,12 @@ Default. Scope and evidence: [t13-validation.md](t13-validation.md).
 
 ### T20 Hardening and handoff check
 
-**Deliverables:** PERF-01 script and results; full browser matrix run; keyboard operation of selection and the action bar; error and empty states reviewed; README and dev-environment.md verified on a clean machine; the acceptance criteria table in [phase-1-spec.md](phase-1-spec.md#acceptance-criteria) checked off with links to passing runs.
+**Deliverables:** PERF-01 script and results; physical-device table qualification
+(deferred from T13 by the project owner on 2026-10-27), including the three-engine
+comparison and production renderer with 300 draggable items targeting 60 fps on
+identified mid-range Android and iPhone hardware; record device model, OS/browser,
+DPR, p50/p95 frame intervals, actual graphics backend where exposed, text clarity,
+and real-touch drag/drop, pinch/pan, seat rotation and resizing from 360 px up;
+full browser matrix run; keyboard operation of selection and the action bar; error and empty states reviewed; README and dev-environment.md verified on a clean machine; the acceptance criteria table in [phase-1-spec.md](phase-1-spec.md#acceptance-criteria) checked off with links to passing runs.
 
 **Done when:** every acceptance criterion AC-01 to AC-15 passes.
