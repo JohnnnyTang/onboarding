@@ -37,9 +37,77 @@ Tests guard the three properties that must never break: **hidden information**, 
 
 `packages/testing/golden/*.json` hold recorded matches: `{ game, buildHash, seats, seed, options, events, expectedHashes: { "<seq>": "<hash>" } }`. A test replays each and checks the hashes at the recorded steps. Add a golden file for every bug fixed in the runtime. Regenerating golden files is allowed only when a contract version changes, and the change must say so.
 
+`parseGoldenReplay(unknown)` validates the exact fields using the shared contract
+validators: game slug, SHA-256 build/hash strings, match init, contiguous accepted
+events from participating seats, and at least one hash at a canonical decimal
+sequence between 0 and the final event. Sequence 0 means setup. Sparse checkpoints
+and setup-only recordings are supported.
+
+`checkGoldenReplay(def, fixture, { game, buildHash })` checks the caller's pinned
+game/build identity, replays all events, compares every recorded checkpoint and
+returns the final state. Callers load JSON themselves, allowing the harness to
+run without filesystem APIs. Tests enumerate every committed golden file and fail
+on an unregistered game. Initial T05 fixtures cover tic-tac-toe and sample sandbox;
+their build identifier is the SHA-256 of the test definitions when recorded. They
+are test fixtures, not published game versions. Tests never rewrite recordings.
+
 ## Random bot
 
 `@bgp/testing` exports `randomBot(def, state, seat, random)`, which picks uniformly from `legalMoves`. It drives property tests, `bgp validate` and performance scripts. It is a test tool, not a product feature.
+
+`state` is a full `MatchState`. The bot returns `null` when the seat has no legal
+moves or the match has finished; missing `legalMoves` is an error. A sandbox has
+no built-in move enumeration, so callers supply a custom bot or wrap its
+definition with a bounded `legalMoves` adapter. Bot randomness uses its own seeded
+RNG and never consumes the match RNG.
+
+`runMatch(def, init, { maxMoves?, botSeed?, bot?, onStep? })` returns the init,
+accepted events, setup and per-event state/hash trace, and a stop reason:
+`finished`, `no-legal-moves`, or `move-limit` (default limit: 1,000 moves).
+The runner tries the current seat then other seats to support simultaneous and
+`anySeat` moves. A bot proposing a rejected move fails the run. `onStep` runs on
+setup and each accepted move with detached state; it can attach game-specific
+assertions. Traces contain authoritative state and are trusted test artifacts.
+
+`checkDeterminism(def, run)` recreates setup and compares the recorded hash at
+every step, then checks the public runtime `replay` result. It validates the
+integer-only states and contiguous event sequence. Comparing the initial and
+intermediate hashes catches divergence even when final states converge.
+
+## Reusable leak checks
+
+`checkLeaks(def, state, { components, oracle })` runs `viewFor` and `present` for
+every participating seat. Attach it to `runMatch`'s `onStep` to check setup and
+every move. The trusted `oracle(state, seat)` receives detached authoritative
+state and returns independently derived knowledge:
+
+- `forbiddenStrings`: identities/secret markers and retired opaque IDs that must
+  not appear in any output string or property name, including embedded text.
+- `canIdentify(id)`: whether the seat may identify this instance.
+- `isOpaqueId(id)`: verify a hidden ID's provenance against authoritative state
+  or an independent registry. A matching regular expression alone is insufficient.
+- `isCard(id)`: whether the instance is a card, so hidden cards require a back.
+
+The checker validates snapshots against `tableSnapshotForSeatSchema`, rejects
+`def` and die values on hidden items, checks hidden IDs, and scans both outputs
+recursively. It also checks item-like `{ id, zone, ... }` objects in arbitrary
+`ClientView.game` JSON, even if presentation later strips their `def`. Failure
+messages identify the sequence, seat and output without echoing secrets.
+
+The oracle is necessary: an arbitrary game's hidden data cannot be inferred from
+its JSON shape. It must describe that game's secrets independently of the code
+under test. Use unique secret markers and enough forbidden strings to cover its
+view representation; these checks do not prove noninterference or detect arbitrary
+encodings. Shared component defs may be public elsewhere while their hidden
+instances still must omit `def`. Opaque instance IDs can appear on hidden items;
+IDs replaced by a shuffle must disappear everywhere. Track retired IDs across
+steps and add them to `forbiddenStrings`, as in the sample sandbox property test.
+
+T05 runs PROP-DET and UNIT-LEAK against tic-tac-toe and a three-seat sample sandbox
+with fast-check. `BGP_PROPERTY_RUNS` controls each property's run count (20 locally,
+1,000 nightly). Deliberately leaky fixtures exercise both view and presentation
+failures. Rules-host and Harbor Market coverage belongs to T08/T06; these headless
+checks do not replace INT-LEAK or isolation tests.
 
 ## Coverage expectations
 

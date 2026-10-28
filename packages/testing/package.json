@@ -17,5 +17,8 @@
   "dependencies": {
     "@bgp/rules": "workspace:*",
     "@bgp/schema": "workspace:*"
+  },
+  "devDependencies": {
+    "fast-check": "4.10.2"
   }
 }

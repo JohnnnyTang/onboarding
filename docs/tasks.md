@@ -66,6 +66,8 @@ flowchart LR
 
 ### T05 `@bgp/testing`
 
+**Status:** Complete. Local validation and scope: [t05-validation.md](t05-validation.md).
+
 **Deliverables:** headless match runner; `randomBot`; determinism checker (replay and compare hashes at every step); leak checker (UNIT-LEAK logic, reusable for any game); golden replay harness and file format ([testing.md](testing.md#golden-replays)).
 
 **Done when:** PROP-DET and UNIT-LEAK run against tic-tac-toe and a sample sandbox game; a deliberately leaky test game is caught by the leak checker.
