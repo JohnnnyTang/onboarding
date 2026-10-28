@@ -26,11 +26,14 @@ await build({
 
 await build({
   entryPoints: ["packages/rules-host/src/host-worker.ts"],
-  outfile: "packages/rules-host/dist/host-worker.js",
+  // Keep this separate from tsc's unbundled dist/host-worker.js. Turbo can build
+  // dependencies while a package test prepares its worker distribution.
+  outfile: "packages/rules-host/dist/host-entry.js",
   bundle: true,
   format: "esm",
   platform: "node",
   target: "node24",
+  minify: true,
   banner: {
     js: 'import { createRequire as hostCreateRequire } from "node:module"; const require = hostCreateRequire(import.meta.url);',
   },

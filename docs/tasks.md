@@ -86,10 +86,12 @@ flowchart LR
 
 ### T08 `@bgp/rules-host`: isolation for game code
 
-**Status:** In progress on `codex/t08-rules-host`. QuickJS and restricted Node VM
-prototypes, fixture isolation/determinism tests and initial measurements are ready;
-Harbor Market measurements, human confirmation and production host/IPC/recovery
-remain. Evidence and remaining gates: [spikes/t08-sandbox.md](spikes/t08-sandbox.md).
+**Status:** Production host, validated IPC and restart/recovery client implemented
+on `codex/t08-host-completion`; fixture isolation and deterministic crash recovery
+pass. Closure remains gated on the T06 Harbor Market benchmark, the production
+idle-memory budget and human confirmation of D-008. Validation and exact remaining
+gates: [t08-validation.md](t08-validation.md),
+[spikes/t08-sandbox.md](spikes/t08-sandbox.md).
 
 **Starts with a spike (2–3 days):** implement a minimal `RulesSandbox` with QuickJS (quickjs-emscripten) and with the Node `vm` + process alternative; run Harbor Market and the INT-ISOLATION suite on both; measure against the spike criteria in [D-008](decisions.md#d-008-server-side-isolation-of-game-code); write `docs/spikes/t08-sandbox.md`; get the choice confirmed.
 

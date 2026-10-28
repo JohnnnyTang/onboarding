@@ -1,0 +1,109 @@
+{
+  "measuredAt": "2026-10-28T02:12:35.339Z",
+  "node": "v24.12.0",
+  "platform": "win32 x64",
+  "cpu": "Intel(R) Core(TM) Ultra 7 258V",
+  "workload": "Hidden-counter fixture, not Harbor Market (T06 remains a scaffold)",
+  "production": {
+    "samples": {
+      "idleMatches": 21,
+      "warmLoads": 20,
+      "moves": 500
+    },
+    "coldCreateMs": 254.25639999999999,
+    "warmCreateP95Ms": 274.59630000000016,
+    "moveP95Ms": 2.649199999999837,
+    "childRssBytes": [
+      74289152, 74444800, 73920512, 73961472, 73027584, 74530816, 73068544, 73818112, 74215424,
+      74174464, 73695232, 74317824, 73801728, 73830400, 73326592, 73601024, 73822208, 74280960,
+      74088448, 73363456, 73687040
+    ],
+    "childRssMeanBytes": 73869799.61904761,
+    "interpreterHeap": {
+      "malloc_limit": 67108864,
+      "memory_used_size": 2298414,
+      "malloc_count": 63698,
+      "memory_used_count": 57383,
+      "atom_count": 3356,
+      "atom_size": 144569,
+      "str_count": 549,
+      "str_size": 35083,
+      "obj_count": 13627,
+      "obj_size": 654096,
+      "prop_count": 34847,
+      "prop_size": 330520,
+      "shape_count": 957,
+      "shape_size": 127824,
+      "js_func_count": 1803,
+      "js_func_size": 789642,
+      "js_func_code_size": 131605,
+      "js_func_pc2line_count": 1803,
+      "js_func_pc2line_size": 64679,
+      "c_func_count": 271,
+      "array_count": 500,
+      "fast_array_count": 500,
+      "fast_array_elements": 640,
+      "binary_object_count": 0,
+      "binary_object_size": 0
+    },
+    "deterministicSteps": 500,
+    "recoveryMs": 234.52399999999943,
+    "recoveryHashMatched": true
+  },
+  "isolation": [
+    {
+      "name": "infinite loop",
+      "code": "GAME_ERROR",
+      "elapsedMs": 1006.8364000000001,
+      "healthyMoveMs": 5.491700000000492
+    },
+    {
+      "name": "allocation",
+      "code": "GAME_ERROR",
+      "elapsedMs": 1006.4861000000001,
+      "healthyMoveMs": 2.8628000000007887
+    },
+    {
+      "name": "fetch",
+      "code": "GAME_ERROR",
+      "elapsedMs": 10.747300000000905,
+      "healthyMoveMs": 3.0291999999990367
+    },
+    {
+      "name": "process",
+      "code": "GAME_ERROR",
+      "elapsedMs": 8.251999999998588,
+      "healthyMoveMs": 2.602899999999863
+    },
+    {
+      "name": "require",
+      "code": "GAME_ERROR",
+      "elapsedMs": 10.703400000000329,
+      "healthyMoveMs": 2.558499999999185
+    },
+    {
+      "name": "global constructor",
+      "code": "GAME_ERROR",
+      "elapsedMs": 15.991799999999785,
+      "healthyMoveMs": 2.665499999999156
+    },
+    {
+      "name": "dynamic import",
+      "code": "GAME_ERROR",
+      "elapsedMs": 9.518799999999828,
+      "healthyMoveMs": 2.9988999999986845
+    },
+    {
+      "name": "date",
+      "code": "GAME_ERROR",
+      "elapsedMs": 8.218799999998737,
+      "healthyMoveMs": 2.5477999999984604
+    },
+    {
+      "name": "random",
+      "code": "GAME_ERROR",
+      "elapsedMs": 8.335300000000643,
+      "healthyMoveMs": 2.6576999999997497
+    }
+  ]
+}

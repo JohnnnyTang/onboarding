@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import { describe, expect, it } from "vitest";
-import { GameError, QuickJsSandbox } from "../src/index.js";
+import { GameError } from "../src/index.js";
+import { QuickJsSandbox } from "../src/quickjs-sandbox.js";
 import { GAME_SOURCE, HOSTILE_CASES, hostile, INIT } from "./fixtures.js";
 
 describe("QuickJS rules sandbox", () => {

@@ -1,7 +1,8 @@
 import { createHash } from "node:crypto";
 import type { HostBuild, MatchState } from "@bgp/schema";
 import { describe, expect, it, vi } from "vitest";
-import { GameError, QuickJsSandbox, RulesHostClient } from "../src/index.js";
+import { GameError, RulesHostClient } from "../src/index.js";
+import { QuickJsSandbox } from "../src/quickjs-sandbox.js";
 import { GAME_SOURCE, HOSTILE_CASES, hostile, INIT } from "./fixtures.js";
 
 function fixture(sources: string[], options = {}) {

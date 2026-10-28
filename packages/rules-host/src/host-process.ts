@@ -26,7 +26,7 @@ export class HostProcess {
 
   constructor(private readonly options: Required<SandboxOptions>) {
     const dist = fileURLToPath(new URL("../dist/", import.meta.url));
-    this.child = fork(new URL("../dist/host-worker.js", import.meta.url), [], {
+    this.child = fork(new URL("../dist/host-entry.js", import.meta.url), [], {
       execArgv: ["--permission", `--allow-fs-read=${dist}`, "--max-old-space-size=128"],
       env: {},
       windowsHide: true,
