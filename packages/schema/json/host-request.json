@@ -1,0 +1,357 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "v": {
+      "type": "number",
+      "const": 1
+    },
+    "id": {
+      "$ref": "#/$defs/__schema0"
+    },
+    "command": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "type": "string",
+              "const": "load"
+            },
+            "source": {
+              "type": "string",
+              "maxLength": 2097152
+            },
+            "timeoutMs": {
+              "type": "integer",
+              "maximum": 1000,
+              "$ref": "#/$defs/__schema0"
+            },
+            "memoryLimitBytes": {
+              "type": "integer",
+              "maximum": 67108864,
+              "$ref": "#/$defs/__schema0"
+            }
+          },
+          "required": ["op", "source", "timeoutMs", "memoryLimitBytes"],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "type": "string",
+              "const": "create"
+            },
+            "init": {
+              "type": "object",
+              "properties": {
+                "seats": {
+                  "$ref": "#/$defs/__schema2"
+                },
+                "seed": {
+                  "$ref": "#/$defs/__schema4"
+                },
+                "options": {
+                  "$ref": "#/$defs/IntegerJson"
+                }
+              },
+              "required": ["seats", "seed", "options"],
+              "additionalProperties": false
+            }
+          },
+          "required": ["op", "init"],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "type": "string",
+              "const": "apply"
+            },
+            "seat": {
+              "$ref": "#/$defs/__schema3"
+            },
+            "intent": {
+              "$ref": "#/$defs/__schema5"
+            }
+          },
+          "required": ["op", "seat", "intent"],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "type": "string",
+              "const": "views"
+            }
+          },
+          "required": ["op"],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "type": "string",
+              "const": "hash"
+            }
+          },
+          "required": ["op"],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "type": "string",
+              "const": "exportState"
+            }
+          },
+          "required": ["op"],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "type": "string",
+              "const": "restore"
+            },
+            "snapshot": {
+              "type": "object",
+              "properties": {
+                "v": {
+                  "$ref": "#/$defs/__schema7"
+                },
+                "game": {
+                  "$ref": "#/$defs/IntegerJson"
+                },
+                "ctx": {
+                  "$ref": "#/$defs/__schema8"
+                },
+                "rng": {
+                  "$ref": "#/$defs/__schema11"
+                },
+                "result": {
+                  "$ref": "#/$defs/__schema12"
+                }
+              },
+              "required": ["v", "game", "ctx", "rng", "result"],
+              "additionalProperties": false
+            },
+            "events": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "seq": {
+                    "$ref": "#/$defs/__schema0"
+                  },
+                  "seat": {
+                    "$ref": "#/$defs/__schema3"
+                  },
+                  "intent": {
+                    "$ref": "#/$defs/__schema5"
+                  }
+                },
+                "required": ["seq", "seat", "intent"],
+                "additionalProperties": false
+              }
+            }
+          },
+          "required": ["op", "snapshot", "events"],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "type": "string",
+              "const": "dispose"
+            }
+          },
+          "required": ["op"],
+          "additionalProperties": false
+        }
+      ]
+    }
+  },
+  "required": ["v", "id", "command"],
+  "additionalProperties": false,
+  "$defs": {
+    "__schema0": {
+      "exclusiveMinimum": 0,
+      "$ref": "#/$defs/__schema1"
+    },
+    "__schema1": {
+      "type": "integer",
+      "minimum": -9007199254740991,
+      "maximum": 9007199254740991
+    },
+    "__schema2": {
+      "minItems": 1,
+      "maxItems": 8,
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/__schema3"
+      }
+    },
+    "__schema3": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)$"
+    },
+    "__schema4": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 4294967295,
+      "$ref": "#/$defs/__schema1"
+    },
+    "__schema5": {
+      "type": "object",
+      "properties": {
+        "move": {
+          "$ref": "#/$defs/__schema6"
+        },
+        "args": {
+          "$ref": "#/$defs/IntegerJson"
+        }
+      },
+      "required": ["move"],
+      "additionalProperties": false
+    },
+    "__schema6": {
+      "type": "string",
+      "minLength": 1
+    },
+    "__schema7": {
+      "type": "number",
+      "const": 1
+    },
+    "__schema8": {
+      "type": "object",
+      "properties": {
+        "seats": {
+          "$ref": "#/$defs/__schema2"
+        },
+        "currentSeat": {
+          "$ref": "#/$defs/__schema3"
+        },
+        "activeSeats": {
+          "$ref": "#/$defs/__schema9"
+        },
+        "phase": {
+          "$ref": "#/$defs/__schema6"
+        },
+        "turn": {
+          "$ref": "#/$defs/__schema0"
+        },
+        "moveNumber": {
+          "$ref": "#/$defs/__schema10"
+        },
+        "options": {
+          "$ref": "#/$defs/IntegerJson"
+        }
+      },
+      "required": ["seats", "currentSeat", "activeSeats", "phase", "turn", "moveNumber", "options"],
+      "additionalProperties": false
+    },
+    "__schema9": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/__schema3"
+      }
+    },
+    "__schema10": {
+      "minimum": 0,
+      "$ref": "#/$defs/__schema1"
+    },
+    "__schema11": {
+      "type": "array",
+      "prefixItems": [
+        {
+          "$ref": "#/$defs/__schema4"
+        },
+        {
+          "$ref": "#/$defs/__schema4"
+        },
+        {
+          "$ref": "#/$defs/__schema4"
+        },
+        {
+          "$ref": "#/$defs/__schema4"
+        }
+      ],
+      "items": false,
+      "minItems": 4,
+      "maxItems": 4
+    },
+    "__schema12": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "winners": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/__schema3"
+              }
+            },
+            "scores": {
+              "type": "object",
+              "propertyNames": {
+                "$ref": "#/$defs/__schema3"
+              },
+              "additionalProperties": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              }
+            },
+            "reason": {
+              "type": "string"
+            }
+          },
+          "required": ["winners"],
+          "additionalProperties": false
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "IntegerJson": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        },
+        {
+          "type": "string"
+        },
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/IntegerJson"
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/IntegerJson"
+          }
+        }
+      ]
+    }
+  },
+  "title": "HostRequest"
+}
