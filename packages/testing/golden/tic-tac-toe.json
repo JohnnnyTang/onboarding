@@ -1,0 +1,57 @@
+{
+  "game": "tic-tac-toe",
+  "buildHash": "0af9a42f6c34073d37e74db67432d4af2b4ae95c33c2da1cc695bb6ae5e5ab2a",
+  "seats": ["0", "1"],
+  "seed": 42,
+  "options": {},
+  "events": [
+    {
+      "seq": 1,
+      "seat": "0",
+      "intent": {
+        "args": 4,
+        "move": "place"
+      }
+    },
+    {
+      "seq": 2,
+      "seat": "1",
+      "intent": {
+        "args": 0,
+        "move": "place"
+      }
+    },
+    {
+      "seq": 3,
+      "seat": "0",
+      "intent": {
+        "args": 2,
+        "move": "place"
+      }
+    },
+    {
+      "seq": 4,
+      "seat": "1",
+      "intent": {
+        "args": 7,
+        "move": "place"
+      }
+    },
+    {
+      "seq": 5,
+      "seat": "0",
+      "intent": {
+        "args": 6,
+        "move": "place"
+      }
+    }
+  ],
+  "expectedHashes": {
+    "0": "a4d8e798386df28e5c8bd80d41f973eeea0da777d86d573811dc2b68f60c72df",
+    "1": "70ee1236bb1377039f6de31b9271aabf75f66fa735915398aa14b0e9aa12788b",
+    "2": "de65a9c27491e1a24019b31275e96c509acd778702ca4fd4f7a74579caf89d07",
+    "3": "ecdd3def990e572d6447fd270827f9289ba91ad318a938d7f051df92f66429ea",
+    "4": "8915a171f2231fa41f28f62280612ea1c4504841e5c4d93ac50f75a9a6447221",
+    "5": "c8d0bd6b378ef040184168a72186918753ae1a9dad1ebe99343e153920619267"
+  }
+}

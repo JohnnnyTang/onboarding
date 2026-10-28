@@ -1,0 +1,167 @@
+{
+  "game": "sample-sandbox",
+  "buildHash": "0af9a42f6c34073d37e74db67432d4af2b4ae95c33c2da1cc695bb6ae5e5ab2a",
+  "seats": ["0", "1", "2"],
+  "seed": 42,
+  "options": {},
+  "events": [
+    {
+      "seq": 1,
+      "seat": "0",
+      "intent": {
+        "args": {
+          "item": "i87c77cd48536d1a7c3a22626946db9a0",
+          "op": "flip"
+        },
+        "move": "manual"
+      }
+    },
+    {
+      "seq": 2,
+      "seat": "0",
+      "intent": {
+        "args": {
+          "op": "shuffle",
+          "zone": "deck"
+        },
+        "move": "manual"
+      }
+    },
+    {
+      "seq": 3,
+      "seat": "0",
+      "intent": {
+        "args": {
+          "deg": 90,
+          "item": "i87c77cd48536d1a7c3a22626946db9a0",
+          "op": "rotate"
+        },
+        "move": "manual"
+      }
+    },
+    {
+      "seq": 4,
+      "seat": "0",
+      "intent": {
+        "args": {
+          "item": "i458a85b06334c41b5a1c6385258b74c9",
+          "op": "flip"
+        },
+        "move": "manual"
+      }
+    },
+    {
+      "seq": 5,
+      "seat": "0",
+      "intent": {
+        "args": {
+          "face": "up",
+          "item": "ifce3de85dfa179f004717fe31f149440",
+          "op": "move",
+          "to": "market"
+        },
+        "move": "manual"
+      }
+    },
+    {
+      "seq": 6,
+      "seat": "0",
+      "intent": {
+        "args": {
+          "item": "i458a85b06334c41b5a1c6385258b74c9",
+          "op": "flip"
+        },
+        "move": "manual"
+      }
+    },
+    {
+      "seq": 7,
+      "seat": "0",
+      "intent": {
+        "args": {
+          "face": "up",
+          "item": "ibec0777116f8c9b6ed2f58e010c05edf",
+          "op": "move",
+          "to": "market"
+        },
+        "move": "manual"
+      }
+    },
+    {
+      "seq": 8,
+      "seat": "0",
+      "intent": {
+        "args": {
+          "face": "up",
+          "item": "i2e2106a779108aa8f9ce9f120b8939bd",
+          "op": "move",
+          "to": "market"
+        },
+        "move": "manual"
+      }
+    },
+    {
+      "seq": 9,
+      "seat": "0",
+      "intent": {
+        "args": {
+          "item": "ifce3de85dfa179f004717fe31f149440",
+          "op": "flip"
+        },
+        "move": "manual"
+      }
+    },
+    {
+      "seq": 10,
+      "seat": "0",
+      "intent": {
+        "args": {
+          "item": "ie76709ab251cf81749580c3c41007af9",
+          "op": "roll"
+        },
+        "move": "manual"
+      }
+    },
+    {
+      "seq": 11,
+      "seat": "0",
+      "intent": {
+        "args": {
+          "face": "up",
+          "item": "i458a85b06334c41b5a1c6385258b74c9",
+          "op": "move",
+          "to": "market"
+        },
+        "move": "manual"
+      }
+    },
+    {
+      "seq": 12,
+      "seat": "0",
+      "intent": {
+        "args": {
+          "face": "up",
+          "item": "ibec0777116f8c9b6ed2f58e010c05edf",
+          "op": "move",
+          "to": "market"
+        },
+        "move": "manual"
+      }
+    }
+  ],
+  "expectedHashes": {
+    "0": "76e1671dae290b9171fe519e76bc4690c486dd634afa331f182fe98e40e9a3fc",
+    "1": "f518126398c32bdac99cb99c70222bfff71fb3106aa9ded0257e45472465f17c",
+    "2": "91b464a03a6a65f2bb956f6f070b173a3c755af8e1424f57e5a7e38d86d9bb1d",
+    "3": "474aa51cdfca711ebd4650cb781aa86658dce85503bca98943b53ce73bd7ab30",
+    "4": "242b53b7aac540aaa965cab4bbf5f8db1d6a402c9ae5339b67865af9fd768856",
+    "5": "f69fd743a3edd11f0fdda9b9d949072cecbb9c4d36d42d0334baf6ea53ae8041",
+    "6": "57b77e4ae8e7a89c7a8014d9aa3007034730d00bc7ea2d64ffc6a9aa94cbcdb3",
+    "7": "d0bd930f74042ed5401ed34dce8770acbe88b445dc7728d51695ae4da582aef6",
+    "8": "3f52f43157c73df773e57a2faddb378122abff6f83014868b64a62899b4b7e2b",
+    "9": "bb37b5232bbcd9bdc23830c2ac0cbdaeff173019edbc6df7dce002c88a5b45d8",
+    "10": "c8c9af175458da96b891794d6c397ee5e6d5e36b8b9940a3c9ed54196762e169",
+    "11": "d4b14e736d113b711512c94c4bc86b65d5de356fa2042278ae98e41a66a841ef",
+    "12": "2f53d4ddd6d7c2ce1329fd9b506ae8f0ade5692e08177cc3479c39cf691d588b"
+  }
+}
