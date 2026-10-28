@@ -5,7 +5,12 @@ Run `pnpm build` and then `pnpm check:wasm`. The check reads
 paths and scans workspace files (including build outputs). Development-only dependency
 binaries are excluded. A malformed inventory or failed dependency listing fails the check.
 
-`wasm-inventory.json` starts empty in T01. T08 adds the approved QuickJS module after the spike.
+`wasm-inventory.json` starts empty in T01. The T08 spike adds the approved synchronous
+QuickJS release module (0.32.0, 503,134 bytes), with an explicit pinned `.pnpm` path
+because recursive wildcards do not match dot-prefixed store directories.
+The modular `quickjs-emscripten-core` + `@jitl/quickjs-wasmfile-release-sync`
+distribution installs only that one WASM variant. It is loaded lazily from the local
+package in the rules-host process and is never included in web output.
 Each module uses this structure:
 
 ```json

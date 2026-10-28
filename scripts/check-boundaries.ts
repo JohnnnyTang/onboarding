@@ -17,7 +17,10 @@ const POLICIES: Record<string, Policy> = {
   "packages/schema": { imports: ["zod"], pure: true },
   "packages/rules": { imports: ["@bgp/schema", "immer"], pure: true },
   "packages/testing": { imports: ["@bgp/rules", "@bgp/schema"], node: true },
-  "packages/rules-host": { imports: ["@bgp/schema", "quickjs-emscripten"], node: true },
+  "packages/rules-host": {
+    imports: ["@bgp/schema", "quickjs-emscripten-core", "@jitl/quickjs-wasmfile-release-sync"],
+    node: true,
+  },
   "packages/table-2d": { imports: ["@bgp/schema", "pixi.js"] },
   "packages/card-generator": { imports: ["@bgp/schema"] },
   "packages/cli": { imports: ["@bgp/rules", "@bgp/schema", "@bgp/testing", "esbuild"], node: true },
