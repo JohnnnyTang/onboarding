@@ -143,6 +143,13 @@ avoid comparing Windows font/GPU rasterization on Linux. Review every changed
 PNG before accepting `--update-snapshots`. The fixture server starts automatically
 through Playwright and needs neither Docker nor the T12 app shell.
 
+Physical Android/iPhone renderer profiling is a T20 gate, deferred from T13 by
+the project owner on 2026-10-27. Run both the three-engine spike and production
+`/dev/table/?stress=1` on identified hardware. Record 300-item frame cadence
+against the 60 fps target, DPR/backend, readable text after zooming and actual
+touch drag/drop, pinch/pan, seat rotation and viewport resizing. Desktop WebKit
+and synthetic touch events do not establish AC-12 on iOS or Android.
+
 1. Install with a frozen lockfile.
 2. `pnpm lint`, `pnpm typecheck`.
 3. CI-WASM-INVENTORY.

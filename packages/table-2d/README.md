@@ -55,5 +55,6 @@ Reviewed visual baselines use Windows. Linux CI runs interaction tests with
 `--ignore-snapshots`; the dedicated Windows CI job compares all three browsers.
 Update with `--update-snapshots` only after reviewing the actual images.
 
-The renderer choice remains Default until the T13 spike receives human
-confirmation. See `docs/spikes/t13-renderer-2d.md` for measurements and limits.
+The project owner confirmed PixiJS 8.6.6 at T13 on 2026-10-27; D-009 for 2D is
+Accepted. Physical-phone qualification is tracked at T20. See
+`docs/spikes/t13-renderer-2d.md` for measurements and limits.
