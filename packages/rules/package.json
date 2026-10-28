@@ -17,5 +17,6 @@
   "dependencies": {
     "@bgp/schema": "workspace:*",
     "immer": "11.2.9"
-  }
+  },
+  "sideEffects": false
 }

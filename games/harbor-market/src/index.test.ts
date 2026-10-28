@@ -1,20 +1,10 @@
-import { applyIntent, createMatch, defineGame, viewFor } from "@bgp/rules";
+import { applyIntent, createMatch, viewFor } from "@bgp/rules";
 import type { MatchState, MoveIntent } from "@bgp/schema";
 import { describe, expect, test } from "vitest";
+import game from "./index.js";
 import { type HarborState, required } from "./model.js";
-import { beginTurn, legalMoves, moves, phases, playerView, setup } from "./rules.js";
+import { legalMoves } from "./rules.js";
 
-const game = defineGame({
-  sdk: 1,
-  setup,
-  moves,
-  phases,
-  startPhase: "main",
-  turn: { onBegin: beginTurn },
-  playerView,
-  legalMoves,
-  present: () => ({ table: { size_mm: [900, 900] }, zones: [], items: [] }),
-});
 function fresh(count = 4, shortGame = false) {
   return createMatch(game, {
     seats: Array.from({ length: count }, (_, i) => String(i)),

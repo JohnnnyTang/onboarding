@@ -102,6 +102,13 @@ importers:
       '@bgp/schema':
         specifier: workspace:*
         version: link:../../packages/schema
+    devDependencies:
+      '@bgp/testing':
+        specifier: workspace:*
+        version: link:../../packages/testing
+      fast-check:
+        specifier: 4.10.2
+        version: 4.10.2
 
   packages/card-generator:
     dependencies:

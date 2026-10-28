@@ -1,6 +1,6 @@
 {
   "name": "harbor-market",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "private": true,
   "type": "module",
   "exports": {
@@ -10,12 +10,16 @@
     }
   },
   "scripts": {
-    "build": "tsc --project tsconfig.build.json",
+    "build": "tsc --project tsconfig.build.json && esbuild src/index.ts --bundle --format=esm --platform=neutral --target=es2022 --outfile=dist/game.js",
     "typecheck": "tsc --noEmit --project tsconfig.build.json && tsc --noEmit",
     "test": "vitest run --config ../../vitest.package.config.ts"
   },
   "dependencies": {
     "@bgp/rules": "workspace:*",
     "@bgp/schema": "workspace:*"
+  },
+  "devDependencies": {
+    "@bgp/testing": "workspace:*",
+    "fast-check": "4.10.2"
   }
 }

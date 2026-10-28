@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "id": "harbor-market",
+  "name": "Harbor Market",
+  "version": "0.1.0",
+  "mode": "enforced",
+  "sdk": 1,
+  "players": {
+    "min": 2,
+    "max": 4
+  },
+  "entry": "dist/game.js",
+  "components": "components.json",
+  "options": [
+    {
+      "id": "shortGame",
+      "label": "Short game",
+      "type": "boolean",
+      "default": false
+    }
+  ],
+  "description": "Trade goods and ship sets before the deck runs out."
+}

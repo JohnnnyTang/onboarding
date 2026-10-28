@@ -115,3 +115,14 @@ describe("package boundaries", () => {
     ).toEqual([]);
   });
 });
+
+test("game tests may use the public harness and validators without widening game imports", () => {
+  for (const source of [
+    'import { runMatch } from "@bgp/testing";',
+    'import { TableSnapshotSchema } from "@bgp/schema";',
+  ]) {
+    expect(check("games/harbor-market/test/game.test.ts", source)).toEqual([]);
+    expect(check("games/harbor-market/src/index.ts", source)).not.toEqual([]);
+  }
+  expect(check("games/harbor-market/test/game.test.ts", 'import "@bgp/table-2d";')).not.toEqual([]);
+});

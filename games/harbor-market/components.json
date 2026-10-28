@@ -1,0 +1,139 @@
+{
+  "schemaVersion": 1,
+  "defs": [
+    {
+      "id": "goods-back",
+      "kind": "cardBack",
+      "name": "Goods",
+      "image": "assets/goods-back.png"
+    },
+    {
+      "id": "fish-1",
+      "name": "Fish 1",
+      "kind": "card",
+      "size_mm": [63, 88],
+      "front": "assets/fish-1.png",
+      "back": "goods-back"
+    },
+    {
+      "id": "fish-2",
+      "name": "Fish 2",
+      "kind": "card",
+      "size_mm": [63, 88],
+      "front": "assets/fish-2.png",
+      "back": "goods-back"
+    },
+    {
+      "id": "fish-3",
+      "name": "Fish 3",
+      "kind": "card",
+      "size_mm": [63, 88],
+      "front": "assets/fish-3.png",
+      "back": "goods-back"
+    },
+    {
+      "id": "salt-1",
+      "name": "Salt 1",
+      "kind": "card",
+      "size_mm": [63, 88],
+      "front": "assets/salt-1.png",
+      "back": "goods-back"
+    },
+    {
+      "id": "salt-2",
+      "name": "Salt 2",
+      "kind": "card",
+      "size_mm": [63, 88],
+      "front": "assets/salt-2.png",
+      "back": "goods-back"
+    },
+    {
+      "id": "salt-3",
+      "name": "Salt 3",
+      "kind": "card",
+      "size_mm": [63, 88],
+      "front": "assets/salt-3.png",
+      "back": "goods-back"
+    },
+    {
+      "id": "silk-1",
+      "name": "Silk 1",
+      "kind": "card",
+      "size_mm": [63, 88],
+      "front": "assets/silk-1.png",
+      "back": "goods-back"
+    },
+    {
+      "id": "silk-2",
+      "name": "Silk 2",
+      "kind": "card",
+      "size_mm": [63, 88],
+      "front": "assets/silk-2.png",
+      "back": "goods-back"
+    },
+    {
+      "id": "silk-3",
+      "name": "Silk 3",
+      "kind": "card",
+      "size_mm": [63, 88],
+      "front": "assets/silk-3.png",
+      "back": "goods-back"
+    },
+    {
+      "id": "spice-1",
+      "name": "Spice 1",
+      "kind": "card",
+      "size_mm": [63, 88],
+      "front": "assets/spice-1.png",
+      "back": "goods-back"
+    },
+    {
+      "id": "spice-2",
+      "name": "Spice 2",
+      "kind": "card",
+      "size_mm": [63, 88],
+      "front": "assets/spice-2.png",
+      "back": "goods-back"
+    },
+    {
+      "id": "spice-3",
+      "name": "Spice 3",
+      "kind": "card",
+      "size_mm": [63, 88],
+      "front": "assets/spice-3.png",
+      "back": "goods-back"
+    },
+    {
+      "id": "tea-1",
+      "name": "Tea 1",
+      "kind": "card",
+      "size_mm": [63, 88],
+      "front": "assets/tea-1.png",
+      "back": "goods-back"
+    },
+    {
+      "id": "tea-2",
+      "name": "Tea 2",
+      "kind": "card",
+      "size_mm": [63, 88],
+      "front": "assets/tea-2.png",
+      "back": "goods-back"
+    },
+    {
+      "id": "tea-3",
+      "name": "Tea 3",
+      "kind": "card",
+      "size_mm": [63, 88],
+      "front": "assets/tea-3.png",
+      "back": "goods-back"
+    },
+    {
+      "id": "tide",
+      "name": "Tide",
+      "kind": "die",
+      "sides": 6,
+      "size_mm": 16,
+      "faces": ["Fish", "Salt", "Silk", "Spice", "Tea", "Calm"]
+    }
+  ]
+}
