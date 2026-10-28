@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "matchId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "seat": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)$"
+    }
+  },
+  "required": ["matchId", "seat"],
+  "additionalProperties": false,
+  "title": "GuestScope"
+}

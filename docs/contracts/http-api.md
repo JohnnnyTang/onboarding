@@ -102,3 +102,34 @@ limits and match-specific constraints remain server responsibilities.
   }
 }
 ```
+
+## Authentication token claims (T09)
+
+OIDC tokens are verified with the configured issuer, `bgp-api` audience and trusted
+`OIDC_JWKS_URL` (locally the Keycloak realm certificate endpoint). The initial
+provider uses RS256. `sub` and `exp` are required; signature, issuer, audience,
+expiry and any `nbf` are checked before claims reach the user store. `OidcClaimsSchema`
+validates the verified payload. Users are keyed by `(iss, sub)` and their display
+name and email are refreshed at sign-in. Display name uses `name`, then
+`preferred_username`, then `sub`, capped at 80 characters. Missing email becomes null.
+
+Guest JWTs use HS256 with a distinct `typ` of `bgp-guest+jwt`, issuer `bgp:guest`,
+audience `bgp:api`, and claims `{ sub, matchId, seat, iat, exp }`.
+`GuestClaimsSchema` validates those claims; `GuestScopeSchema` validates the scope
+before issuance. `sub` is a server-generated UUID v7 and `exp - iat` is exactly
+30 days. `GUEST_TOKEN_SECRET` must contain at least 32 UTF-8 bytes. Only a successful
+invite claim may call the server-side token issuer (wired in T10); no public mint
+endpoint exists. Guest tokens never create `users` rows.
+
+The Fastify auth plugin supplies `request.identity`: null for anonymous calls,
+`{ kind: "user", user: UserResponse }` for designers, or
+`{ kind: "guest", subject, matchId, seat }` for guests. Routes default to user-only.
+A route can declare `config.auth` as `none` (public), `optional` (anonymous or a valid user
+bearer), `user`, or `match` (checks guest scope against `params.matchId`).
+Optional authentication rejects invalid supplied credentials. Match routes must
+also check user ownership/seat membership in the database; scope alone does not
+give a designer access to a match. `requireMatchScope` also accepts a seat for room
+server checks. Guest access to version files needs a separate seat lookup (T10).
+Missing/invalid/expired credentials return HTTP 401 `UNAUTHORIZED`; an authenticated
+guest outside its scope or at a user-only route gets HTTP 403 `FORBIDDEN`.
+Cookies and query parameters are never accepted as HTTP authentication.

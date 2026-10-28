@@ -99,6 +99,8 @@ remain. Evidence and remaining gates: [spikes/t08-sandbox.md](spikes/t08-sandbox
 
 ### T09 Authentication
 
+**Status:** Complete. Local validation and integration notes: [t09-validation.md](t09-validation.md).
+
 **Deliverables:** Fastify auth plugin verifying OIDC access tokens (issuer, audience, signature via JWKS, expiry) and upserting `users`; guest token issue and verification ([http-api.md](contracts/http-api.md#authentication)); request context with the caller's identity.
 
 **Done when:** tests cover valid user token, expired, wrong audience, wrong issuer, tampered signature, valid guest token for the right match, guest token used on another match (`FORBIDDEN`).
