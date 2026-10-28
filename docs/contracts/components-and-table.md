@@ -224,6 +224,11 @@ export interface SandboxState {
   }[];
 }
 
+/** Public playerView output, passed directly to present. Never contains RNG state. */
+export type SandboxView = {
+  items: (Omit<SandboxState["items"][number], "def"> & { def?: string; back?: string })[];
+};
+
 /** Sent as { move: "manual", args: ManualOp }. Any seat may act at any time. */
 export type ManualOp =
   | {
@@ -250,6 +255,44 @@ export type ManualOp =
 Otherwise the view omits `def` (cards show their back). Moving an item between zones does not change its face unless `face` is given; dealing defaults to face down into `owner` zones.
 
 **Validation.** Unknown items or zones, a `pos_mm` outside the table, and taking an item out of another seat's `owner` zone are rejected as `INVALID_ARGS`. Giving an item to another seat's `owner` zone is allowed, as at a real table.
+
+### SDK 1 sandbox operation details
+
+- Sandbox declarations require both zones and setup (either may be empty). Setup
+  defaults to one instance, face up, rotation zero; dice initially show 1.
+  A card back is a definition used by cards, not a standalone setup instance.
+- An each-owned zone expands in seat order without changing its rectangle.
+  A setup entry naming that base zone creates its count in every expansion;
+  an entry naming a concrete suffixed zone creates instances only there.
+  Unknown owners, absent-seat suffixes and expanded ID collisions fail initialization.
+- Any setup entry with shuffle marks its entire destination zone for one shuffle
+  after all instances have been created. Shuffling always replaces every ID, even
+  on visible items. It also resets rotations and free positions to zero to remove
+  tracking marks. Arrays in views follow expanded zone order and current index,
+  rather than preserving original instance-array positions.
+- Move inserts at index in the destination after removing the source item;
+  omitted index appends. Indices beyond the destination length are invalid.
+  Every affected zone is reindexed contiguously from zero.
+- Deal takes the highest source index first and gives count items to each target,
+  one round at a time in target order. Targets must be distinct and exclude the
+  source; insufficient items reject the entire operation. An omitted face preserves
+  the existing face for public targets and defaults down for owner targets.
+- Only the owner may manipulate items in an owner-visible zone, including flip,
+  rotate, roll, shuffle and deal from that zone. Giving to another owner is allowed.
+  A public zone remains accessible regardless of its optional owner field.
+- Hidden items omit both def and die value; hidden cards include back. Other seats
+  and spectators see items in private zones face down even if stored face up.
+  Spectators see public face-up items and cannot manipulate the table.
+- present reads only SandboxView and public context. It copies zone declarations,
+  rounds rectangle coordinates and dimensions to whole millimeters (dimensions
+  at least 1), and emits a HUD whose active seat follows currentSeat. All
+  participating seats may still make manual moves outside the HUD turn.
+- Until declarations gain table dimensions, the table is at least 800 by 600 mm,
+  enlarged to contain every declared zone rectangle, with dimensions rounded up.
+  Dimensions beyond safe integers are rejected. Free items start at their rounded
+  zone center; entering a free zone without pos_mm uses that center, while moving
+  within it preserves position. Leaving a free zone removes pos_mm.
+  These defaults are tracked in decisions.md, Q-009.
 
 ## Schema validation
 

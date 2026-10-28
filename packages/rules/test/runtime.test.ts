@@ -652,3 +652,35 @@ describe("tic-tac-toe and replay", () => {
     );
   });
 });
+
+test("parsers validate state-dependent arguments with detached input", () => {
+  const def = game({
+    moves: {
+      checked: {
+        anySeat: true,
+        parse(args, context) {
+          if (!context || args !== context.state.count || context.seat !== "1") {
+            return invalid("BAD_CONTEXT", "Invalid arguments");
+          }
+          context.state.count = 100;
+          context.ctx.currentSeat = "2";
+          context.ctx.options = { changed: true };
+          return args;
+        },
+        apply(state) {
+          state.count += 1;
+        },
+      },
+    },
+  });
+  const state = createMatch(def, init);
+  expect(applyIntent(def, state, "1", { move: "checked", args: 1 })).toMatchObject({
+    ok: false,
+    code: "INVALID_ARGS",
+  });
+  const next = accepted(applyIntent(def, state, "1", { move: "checked", args: 0 }));
+  expect(next.game.count).toBe(1);
+  expect(next.ctx.currentSeat).toBe("0");
+  expect(next.ctx.options).toEqual({});
+  expect(state.game.count).toBe(0);
+});

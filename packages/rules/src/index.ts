@@ -4,3 +4,4 @@ export { hashState } from "./hash.js";
 export { countHidden, defineGame, invalid, rekey, seatsAfter } from "./helpers.js";
 export { createRandom, nextUint32, type RandomState, seedRandom } from "./random.js";
 export { applyIntent, createMatch, replay, viewFor } from "./runtime.js";
+export { createSandboxDefinition } from "./sandbox.js";

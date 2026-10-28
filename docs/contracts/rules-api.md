@@ -87,9 +87,16 @@ export interface Invalid {
 /** SDK helper */
 export function invalid(code: string, message: string): Invalid;
 
+/** Optional detached input for state-dependent argument validation. No random or events. */
+export interface MoveParseContext<S extends Json> {
+  state: S;
+  ctx: Ctx;
+  seat: SeatId;
+}
+
 export interface MoveDefinition<S extends Json, A extends Json = Json> {
   /** Validate and narrow untrusted args. Throw or return Invalid to reject. */
-  parse?(args: Json | undefined): A | Invalid;
+  parse?(args: Json | undefined, context?: MoveParseContext<S>): A | Invalid;
   /** Mutate the Immer draft. Return Invalid to reject; the draft is discarded. */
   apply(state: S, ctx: MoveContext, args: A): void | Invalid;
   /** Allow seats outside ctx.activeSeats to make this move. Default false. */
@@ -231,7 +238,7 @@ export type RejectCode =
 2. Look up `intent.move` → else `UNKNOWN_MOVE`.
 3. If the current phase lists allowed moves and this is not one → `MOVE_NOT_ALLOWED`.
 4. If `seat` is not in `ctx.activeSeats` and the move is not `anySeat` → `NOT_YOUR_TURN`.
-5. `parse(args)` → `Invalid` or throw → `INVALID_ARGS`.
+5. `parse(args, { state, ctx, seat })` → `Invalid` or throw → `INVALID_ARGS`.
 6. Create an Immer draft of `{ game, rng }`; run `apply`. `Invalid` → `INVALID_MOVE` (carry `gameCode` and message); throw → `GAME_ERROR`.
 7. Apply queued events in this order: `setPhase` (old phase `onEnd`, new phase `onBegin`), `setActiveSeats`, `endTurn` (`turn.onEnd`, advance seat, `turn += 1`, reset `activeSeats`, `turn.onBegin`), `endGame`.
 8. If no result yet, call `endIf`; a result finishes the match.
@@ -244,6 +251,9 @@ Runtime details for SDK 1 (reversible defaults tracked in Q-007):
 
 - A seat must belong to the match even for `anySeat` moves. Omitted args are passed to
   `parse` as `undefined`; without a parser, `apply` receives `null`.
+- Parsers receive an optional detached state/context/acting-seat snapshot for checks
+  such as sandbox ownership. Parser mutations are discarded, and parsers have no
+  random or event capabilities. Existing one-argument parsers continue to work.
 - Each callback receives a detached context snapshot. The move sees the acting seat;
   hooks see the current seat at the time they run. Writes to that snapshot do not
   change runtime context. State, intents, options and returned views are detached
