@@ -159,3 +159,56 @@ describe("coordinates and hit testing", () => {
     expect(hitItem(placements, 300, 300)).toBeUndefined();
   });
 });
+
+describe("rotated seat zones", () => {
+  it.each([90, 180, 270])("rotates row cards and drop axes by %i degrees", (rotation_deg) => {
+    const target = { ...zone("row"), rotation_deg, droppable: true };
+    const placed = layoutZone(target, items, components);
+    const original = layoutZone(zone("row"), items, components);
+    const angle = (rotation_deg * Math.PI) / 180;
+    const snapshot: TableSnapshot = { table: { size_mm: [900, 900] }, zones: [target], items };
+    for (const [i, p] of placed.entries()) {
+      const source = original[i];
+      if (!source) throw new Error("Missing placement");
+      expect(p.x).toBeCloseTo(source.x * Math.cos(angle));
+      expect(p.y).toBeCloseTo(-source.x * Math.sin(angle));
+      expect(p.rotation).toBe(rotation_deg);
+      expect(hitZone(snapshot, p.x, p.y)?.id).toBe("zone");
+    }
+    const incoming: ItemPlacement = { id: "incoming", zone: "hand", face: "down", back: "back" };
+    expect(
+      dropGesture(snapshot, placed, incoming, 35 * Math.cos(angle), -35 * Math.sin(angle)),
+    ).toMatchObject({ index: 2 });
+  });
+  it("uses rotated rectangles and grid cells for hit testing", () => {
+    const target = {
+      ...zone("grid"),
+      grid: { cols: 2, rows: 2 },
+      rotation_deg: 90,
+      droppable: true,
+    };
+    const snapshot: TableSnapshot = { table: { size_mm: [900, 900] }, zones: [target], items };
+    expect(hitZone(snapshot, 150, 0)).toBeUndefined();
+    expect(hitZone(snapshot, 0, 150)?.id).toBe("zone");
+    const incoming: ItemPlacement = { id: "incoming", zone: "hand", face: "down", back: "back" };
+    expect(dropGesture(snapshot, [], incoming, -50, -100)).toMatchObject({ index: 3 });
+  });
+  it("rotates fan positions and angles but keeps free item coordinates absolute", () => {
+    const fan = layoutZone({ ...zone("fan"), rotation_deg: 90 }, items, components);
+    expect(fan[0]?.rotation).toBe(78);
+    expect(fan[0]?.y).toBeGreaterThan(0);
+    const item: ItemPlacement = {
+      id: "free",
+      zone: "zone",
+      face: "down",
+      back: "back",
+      pos_mm: [17, 23],
+      rotation_deg: 12,
+    };
+    expect(layoutZone({ ...zone("free"), rotation_deg: 90 }, [item], components)[0]).toMatchObject({
+      x: 17,
+      y: 23,
+      rotation: 12,
+    });
+  });
+});

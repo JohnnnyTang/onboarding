@@ -228,16 +228,20 @@ export class PixiTableRenderer implements TableRenderer<HTMLElement> {
     for (const zone of this.snapshot.zones) {
       const r = zone.rect_mm,
         active = this.dropZone === zone.id;
-      this.zones.addChild(
+      const container = new Container();
+      container.position.set(r.x, -r.y);
+      container.rotation = ((zone.rotation_deg ?? 0) * Math.PI) / 180;
+      this.zones.addChild(container);
+      container.addChild(
         new Graphics()
-          .roundRect(r.x - r.w / 2, -r.y - r.h / 2, r.w, r.h, 7)
+          .roundRect(-r.w / 2, -r.h / 2, r.w, r.h, 7)
           .fill({ color: active ? 0x427f60 : 0x214c3d, alpha: 0.8 })
           .stroke({ color: active ? COLORS.legal : COLORS.line, width: active ? 3 : 1 }),
       );
       const label = this.label(zone.label ?? zone.id, 11, COLORS.muted);
       label.style.wordWrapWidth = r.w - 12;
-      label.position.set(r.x, -r.y - r.h / 2 + 10);
-      this.zones.addChild(label);
+      label.position.set(0, -r.h / 2 + 10);
+      container.addChild(label);
     }
   }
 

@@ -120,6 +120,7 @@ export interface ZonePlacement {
   owner?: SeatId;
   label?: string;
   droppable?: boolean; // renderer allows drops here
+  rotation_deg?: number; // clockwise 0..359 around the zone center, default 0
   grid?: { cols: number; rows: number };
 }
 
@@ -149,6 +150,12 @@ export interface HudEntry {
 ```
 
 **Hidden-information invariant:** for every item a seat may not identify, the snapshot has no `def`, and the item's `id` is opaque. A test asserts this for the reference game and for sandbox mode (docs/testing.md).
+
+Zone rotation rotates the rectangle, label and automatic stack/row/fan/grid layout
+about its center. Item rotations in those layouts are relative to the zone. Free-zone
+positions and item rotations remain absolute table coordinates; only the zone
+rectangle and label rotate. Drop hit-testing uses the same rotated rectangle and
+local layout axes. This optional SDK 1 field leaves existing snapshots unchanged.
 
 ## Gestures
 

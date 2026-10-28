@@ -22,6 +22,9 @@
     },
     "droppable": {
       "$ref": "#/$defs/__schema8"
+    },
+    "rotation_deg": {
+      "$ref": "#/$defs/__schema9"
     }
   },
   "required": ["id", "layout", "rect_mm"],
@@ -85,6 +88,12 @@
     },
     "__schema8": {
       "type": "boolean"
+    },
+    "__schema9": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 359,
+      "$ref": "#/$defs/__schema5"
     }
   },
   "title": "ZonePlacement"
