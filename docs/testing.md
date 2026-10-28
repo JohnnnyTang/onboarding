@@ -41,6 +41,25 @@ Tests guard the three properties that must never break: **hidden information**, 
 
 `@bgp/testing` exports `randomBot(def, state, seat, random)`, which picks uniformly from `legalMoves`. It drives property tests, `bgp validate` and performance scripts. It is a test tool, not a product feature.
 
+`state` is a full `MatchState`. The bot returns `null` when the seat has no legal
+moves or the match has finished; missing `legalMoves` is an error. A sandbox has
+no built-in move enumeration, so callers supply a custom bot or wrap its
+definition with a bounded `legalMoves` adapter. Bot randomness uses its own seeded
+RNG and never consumes the match RNG.
+
+`runMatch(def, init, { maxMoves?, botSeed?, bot?, onStep? })` returns the init,
+accepted events, setup and per-event state/hash trace, and a stop reason:
+`finished`, `no-legal-moves`, or `move-limit` (default limit: 1,000 moves).
+The runner tries the current seat then other seats to support simultaneous and
+`anySeat` moves. A bot proposing a rejected move fails the run. `onStep` runs on
+setup and each accepted move with detached state; it can attach game-specific
+assertions. Traces contain authoritative state and are trusted test artifacts.
+
+`checkDeterminism(def, run)` recreates setup and compares the recorded hash at
+every step, then checks the public runtime `replay` result. It validates the
+integer-only states and contiguous event sequence. Comparing the initial and
+intermediate hashes catches divergence even when final states converge.
+
 ## Coverage expectations
 
 - `@bgp/rules`: every branch of the order of operations in `applyIntent`, every sandbox operation, PRNG and shuffle distribution sanity (chi-squared on 100,000 draws, nightly).
