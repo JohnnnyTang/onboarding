@@ -1,0 +1,71 @@
+{
+  "measuredAt": "2026-10-28T02:29:03.967Z",
+  "node": "v24.12.0",
+  "platform": "win32 x64",
+  "cpu": "Intel(R) Core(TM) Ultra 7 258V",
+  "label": "baseline",
+  "samplesPerProfile": 5,
+  "bareNodeRssBytes": [51064832, 50925568, 50999296, 51040256, 50966528],
+  "profiles": [
+    {
+      "name": "original",
+      "flags": ["--max-old-space-size=128"],
+      "coldCreateMs": 239.10660000000001,
+      "warmCreateP95Ms": 269.7646,
+      "moveP95Ms": 2.8640000000000327,
+      "childRssBytes": [73019392, 73588736, 73129984, 72871936, 72515584],
+      "childRssMeanBytes": 73025126.4,
+      "deterministicSteps": 100
+    },
+    {
+      "name": "compact-64",
+      "flags": ["--max-old-space-size=64", "--max-semi-space-size=1", "--optimize-for-size"],
+      "coldCreateMs": 256.4639000000002,
+      "warmCreateP95Ms": 254.1857,
+      "moveP95Ms": 2.4774999999999636,
+      "childRssBytes": [70258688, 69726208, 70119424, 70295552, 70516736],
+      "childRssMeanBytes": 70183321.6,
+      "deterministicSteps": 100
+    },
+    {
+      "name": "compact-32",
+      "flags": ["--max-old-space-size=32", "--max-semi-space-size=1", "--optimize-for-size"],
+      "coldCreateMs": 271.42729999999983,
+      "warmCreateP95Ms": 258.41220000000067,
+      "moveP95Ms": 2.1474000000007436,
+      "childRssBytes": [70701056, 70733824, 70627328, 70709248, 70594560],
+      "childRssMeanBytes": 70673203.2,
+      "deterministicSteps": 100
+    },
+    {
+      "name": "baseline-js",
+      "flags": [
+        "--max-old-space-size=64",
+        "--max-semi-space-size=1",
+        "--optimize-for-size",
+        "--max-opt=0"
+      ],
+      "coldCreateMs": 323.9281000000001,
+      "warmCreateP95Ms": 308.28029999999944,
+      "moveP95Ms": 2.3815999999997075,
+      "childRssBytes": [67653632, 67342336, 67198976, 67805184, 67723264],
+      "childRssMeanBytes": 67544678.4,
+      "deterministicSteps": 100
+    },
+    {
+      "name": "baseline-wasm",
+      "flags": [
+        "--max-old-space-size=64",
+        "--max-semi-space-size=1",
+        "--optimize-for-size",
+        "--liftoff-only"
+      ],
+      "coldCreateMs": 292.21730000000025,
+      "warmCreateP95Ms": 297.5668999999998,
+      "moveP95Ms": 3.710399999999936,
+      "childRssBytes": [69136384, 68542464, 69263360, 69304320, 69263360],
+      "childRssMeanBytes": 69101977.6,
+      "deterministicSteps": 100
+    }
+  ]
+}

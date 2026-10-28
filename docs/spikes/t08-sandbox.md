@@ -1,7 +1,7 @@
 # T08 server sandbox comparison
 
 Status: fixture comparison and production host/IPC/recovery validation complete;
-Harbor Market benchmark, production memory acceptance and human confirmation
+Harbor Market benchmark, resource-accounting confirmation and human confirmation
 pending. D-008 remains **Default**. This is an intermediate spike report, not a
 claim that T08 or AC-09 is complete. The original prototype measurements below
 are retained; the production section records the implemented host separately.
@@ -85,7 +85,7 @@ restoration and rejection rollback, and sanitize validation failures. A normal C
 test compares Node/QuickJS hashes at each step across four seeds, including rejected
 moves. Production room/server containment is not covered by these prototypes.
 
-## Production host and recovery
+## Initial production host and recovery
 
 `RulesHostClient` now implements the full server-facing API over validated,
 versioned JSON IPC. It verifies version build hashes and entry digests, pins
@@ -115,7 +115,7 @@ Reproduce production measurements after building:
 pnpm exec tsx scripts/t08-host.ts
 ```
 
-Raw results: [t08-host-results.json](t08-host-results.json), measured on the same
+Initial results: [t08-host-original-results.json](t08-host-original-results.json), measured on the same
 Windows/CPU/Node configuration as above, using the hidden-counter fixture.
 Create includes child startup, lazy interpreter load, setup and initial snapshot
 export. Move latency includes IPC and boundary validation. There are 21 idle
@@ -142,9 +142,25 @@ Minifying the bundled host reduced warm-create p95 from an initial 323.27 ms to
 measurements, not guarantees. The interpreter heap is small, but whole-process
 RSS exceeds the D-008 idle-match budget. One process per match currently earns
 its overhead by containing native crashes and non-interruptible allocation.
-Q-011 requires an explicit decision on equivalent containment with shared hosts,
-or a human-approved change to the budget. Do not count interpreter heap alone
-as proof that the production memory gate passed.
+This initial implementation did not meet the idle budget. The lifecycle rework
+below addresses that cost while preserving the one-match process boundary.
+
+## Idle lifecycle rework
+
+After 10 seconds idle, a validated checkpoint retires the match's process. A
+bounded reserve contains only unused processes prewarmed with trusted interpreter
+code. A process that has run a game is never reused by another match. Every API
+resumes from the pinned game and checkpoint with unchanged game and payload limits.
+
+The [updated production run](t08-host-results.json) reproduces 500 Node hashes and
+all 21 idle-resume hashes. Move p95 is 2.72 ms, create p95 is 151.55 ms and resume
+p95 is 139.66 ms. All nine hostile cases remain contained by the public watchdog.
+
+Active RSS averages 63.01 MiB. After all 21 matches retire, the shared reserve
+uses 52.95 MiB total: 2.52 MiB per idle match. Including the entire measurement
+parent gives 6.66 MiB per match at that sample count. This meets the idle fixture
+target without claiming a single-match service or active process fits in 16 MB.
+See [t08-memory.md](t08-memory.md) for profiles, fixed overhead and full API tests.
 
 ## Recommendation and remaining gates
 
@@ -160,8 +176,8 @@ Before finishing T08:
 1. Run both implementations with Harbor Market and repeat the latency, load, memory
    and determinism measurements using real legal-move sequences.
 2. Obtain human confirmation of the sandbox choice, as required by AGENTS.md and T08.
-3. Resolve production memory acceptance (Q-011). Retain crash containment while
-   evaluating ways to meet the idle budget; do not silently relax the criterion.
+3. Confirm Harbor Market memory using the active/reserve/parent accounting in Q-011.
+   Keep the 16 MB idle target; do not substitute interpreter heap alone.
 4. The production implementation and fixture verification described above are now
    complete. T11 still owns real room-server persistence/resync integration; this
    report claims host/client recovery, not end-to-end AC-10 completion.

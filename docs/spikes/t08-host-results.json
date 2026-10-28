@@ -1,5 +1,5 @@
 {
-  "measuredAt": "2026-10-28T02:12:35.339Z",
+  "measuredAt": "2026-10-28T02:53:26.617Z",
   "node": "v24.12.0",
   "platform": "win32 x64",
   "cpu": "Intel(R) Core(TM) Ultra 7 258V",
@@ -10,100 +10,115 @@
       "warmLoads": 20,
       "moves": 500
     },
-    "coldCreateMs": 254.25639999999999,
-    "warmCreateP95Ms": 274.59630000000016,
-    "moveP95Ms": 2.649199999999837,
+    "firstCreateMs": 128.22699999999998,
+    "warmCreateP95Ms": 151.55449999999996,
+    "moveP95Ms": 2.7224999999998545,
     "childRssBytes": [
-      74289152, 74444800, 73920512, 73961472, 73027584, 74530816, 73068544, 73818112, 74215424,
-      74174464, 73695232, 74317824, 73801728, 73830400, 73326592, 73601024, 73822208, 74280960,
-      74088448, 73363456, 73687040
+      66142208, 66191360, 65982464, 66064384, 65896448, 65933312, 65978368, 66134016, 65855488,
+      66457600, 65806336, 65912832, 66142208, 66551808, 65859584, 66105344, 65941504, 66252800,
+      65720320, 66199552, 66392064
     ],
-    "childRssMeanBytes": 73869799.61904761,
+    "childRssMeanBytes": 66072380.952380955,
     "interpreterHeap": {
       "malloc_limit": 67108864,
-      "memory_used_size": 2298414,
-      "malloc_count": 63698,
-      "memory_used_count": 57383,
-      "atom_count": 3356,
-      "atom_size": 144569,
-      "str_count": 549,
-      "str_size": 35083,
-      "obj_count": 13627,
-      "obj_size": 654096,
-      "prop_count": 34847,
-      "prop_size": 330520,
-      "shape_count": 957,
-      "shape_size": 127824,
-      "js_func_count": 1803,
-      "js_func_size": 789642,
-      "js_func_code_size": 131605,
-      "js_func_pc2line_count": 1803,
-      "js_func_pc2line_size": 64679,
-      "c_func_count": 271,
-      "array_count": 500,
-      "fast_array_count": 500,
-      "fast_array_elements": 640,
+      "memory_used_size": 1635583,
+      "malloc_count": 43922,
+      "memory_used_count": 40740,
+      "atom_count": 3062,
+      "atom_size": 128834,
+      "str_count": 383,
+      "str_size": 29658,
+      "obj_count": 8875,
+      "obj_size": 426000,
+      "prop_count": 23340,
+      "prop_size": 217192,
+      "shape_count": 778,
+      "shape_size": 109848,
+      "js_func_count": 1790,
+      "js_func_size": 513682,
+      "js_func_code_size": 132132,
+      "js_func_pc2line_count": 1790,
+      "js_func_pc2line_size": 63929,
+      "c_func_count": 267,
+      "array_count": 246,
+      "fast_array_count": 246,
+      "fast_array_elements": 359,
       "binary_object_count": 0,
       "binary_object_size": 0
     },
     "deterministicSteps": 500,
-    "recoveryMs": 234.52399999999943,
-    "recoveryHashMatched": true
+    "recoveryMs": 121.58299999999963,
+    "recoveryHashMatched": true,
+    "idle": {
+      "idleMatches": 21,
+      "assignedProcesses": 0,
+      "warmSpareProcesses": 1,
+      "warmSpareRssBytes": [55525376],
+      "hostChildRssTotalBytes": 55525376,
+      "hostChildRssPerIdleMatchBytes": 2644065.523809524,
+      "parentRssBytes": 91209728,
+      "parentHeapUsedBytes": 16987056,
+      "totalObservedRssPerIdleMatchBytes": 6987385.904761905,
+      "resumeP95Ms": 139.65899999999965,
+      "resumeFirstMs": 131.92720000000008,
+      "restoredHashes": 21,
+      "note": "Per-idle-match value amortizes the one shared spare across 21 matches; parent absolute memory is separate and includes the measurement runner. Active process RSS is reported above."
+    }
   },
   "isolation": [
     {
       "name": "infinite loop",
       "code": "GAME_ERROR",
-      "elapsedMs": 1006.8364000000001,
-      "healthyMoveMs": 5.491700000000492
+      "elapsedMs": 1007.9631000000008,
+      "healthyMoveMs": 3.7616999999991094
     },
     {
       "name": "allocation",
       "code": "GAME_ERROR",
-      "elapsedMs": 1006.4861000000001,
-      "healthyMoveMs": 2.8628000000007887
+      "elapsedMs": 1005.2007999999987,
+      "healthyMoveMs": 1.9714999999996508
     },
     {
       "name": "fetch",
       "code": "GAME_ERROR",
-      "elapsedMs": 10.747300000000905,
-      "healthyMoveMs": 3.0291999999990367
+      "elapsedMs": 8.481800000001385,
+      "healthyMoveMs": 2.1379999999990105
     },
     {
       "name": "process",
       "code": "GAME_ERROR",
-      "elapsedMs": 8.251999999998588,
-      "healthyMoveMs": 2.602899999999863
+      "elapsedMs": 8.950300000000425,
+      "healthyMoveMs": 2.042199999999866
     },
     {
       "name": "require",
       "code": "GAME_ERROR",
-      "elapsedMs": 10.703400000000329,
-      "healthyMoveMs": 2.558499999999185
+      "elapsedMs": 8.343699999997625,
+      "healthyMoveMs": 2.6494999999995343
     },
     {
       "name": "global constructor",
       "code": "GAME_ERROR",
-      "elapsedMs": 15.991799999999785,
-      "healthyMoveMs": 2.665499999999156
+      "elapsedMs": 8.18239999999787,
+      "healthyMoveMs": 3.005199999999604
     },
     {
       "name": "dynamic import",
       "code": "GAME_ERROR",
-      "elapsedMs": 9.518799999999828,
-      "healthyMoveMs": 2.9988999999986845
+      "elapsedMs": 8.388200000001234,
+      "healthyMoveMs": 3.5362999999997555
     },
     {
       "name": "date",
       "code": "GAME_ERROR",
-      "elapsedMs": 8.218799999998737,
-      "healthyMoveMs": 2.5477999999984604
+      "elapsedMs": 10.349300000001676,
+      "healthyMoveMs": 2.592899999999645
     },
     {
       "name": "random",
       "code": "GAME_ERROR",
-      "elapsedMs": 8.335300000000643,
-      "healthyMoveMs": 2.6576999999997497
+      "elapsedMs": 7.738199999999779,
+      "healthyMoveMs": 3.20509999999922
     }
   ]
 }

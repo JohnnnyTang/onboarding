@@ -87,9 +87,10 @@ flowchart LR
 ### T08 `@bgp/rules-host`: isolation for game code
 
 **Status:** Production host, validated IPC and restart/recovery client implemented
-on `codex/t08-host-completion`; fixture isolation and deterministic crash recovery
-pass. Closure remains gated on the T06 Harbor Market benchmark, the production
-idle-memory budget and human confirmation of D-008. Validation and exact remaining
+on `codex/t08-host-completion`; fixture isolation, deterministic recovery and full
+API resumption after idle retirement pass. The 21-match fixture fits the idle-memory
+target with the shared reserve included. Closure remains gated on the T06 Harbor
+Market benchmark and human confirmation of D-008. Validation and exact remaining
 gates: [t08-validation.md](t08-validation.md),
 [spikes/t08-sandbox.md](spikes/t08-sandbox.md).
 
