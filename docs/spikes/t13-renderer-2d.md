@@ -1,7 +1,7 @@
 # T13: 2D renderer comparison
 
-Status: desktop comparison validated; human renderer confirmation pending. Phone
-qualification deferred to T20 by the project owner. D-009 remains Default. Date: 2026-10-27.
+Status: complete; PixiJS 8.6.6 confirmed by the project owner on 2026-10-27.
+D-009 for 2D is Accepted. Physical-phone qualification is deferred to T20.
 
 ## Method
 
@@ -71,16 +71,16 @@ snapshot, component declarations, layout and gesture logic through
 
 ## Recommendation and confirmation
 
-Keep PixiJS as the **provisional existing default**, behind `TableRenderer`.
-Its retained item nodes and narrow application boundary support the Phase 1
-implementation, and its measured submission overhead is small. Keep the Canvas
-comparison as a credible alternative, especially for the Chromium cadence issue.
-Do not promote D-009 to Accepted from this run.
+The initial headless comparison supported retaining PixiJS provisionally behind
+`TableRenderer`, with Canvas as a credible alternative. It did not establish
+a physical-phone performance pass. The accelerated follow-up below supplies
+additional desktop evidence for the final recommendation.
 
 The project owner explicitly deferred physical-phone testing from the T13 gates
 to T20 on 2026-10-27. This changes when the evidence is due; it does not establish
 a phone performance pass. The 300-item/60 fps target and AC-12 remain T20 gates.
-Human confirmation of the renderer choice is still required for T13.
+The project owner then confirmed PixiJS 8.6.6 for Phase 1 on 2026-10-27.
+D-009 for 2D is Accepted and T13 is complete; Q-008 is resolved.
 
 ## Chromium graphics-path investigation (2026-10-27)
 
@@ -108,7 +108,7 @@ SwiftShader cadence. This supports graphics-backend selection as the explanation
 for the earlier Chromium slowdown; it is not a controlled comparison of GPU and
 software rendering inside an otherwise identical browser mode.
 
-Recommendation: confirm PixiJS 8.6.6 behind `TableRenderer` for Phase 1. Retained
+Accepted recommendation: PixiJS 8.6.6 behind `TableRenderer` for Phase 1. Retained
 item nodes, the working interaction implementation, reviewed desktop baselines,
 and the accelerated comparison support it. Canvas remains a credible fallback.
 These are desktop results; physical-phone drag/zoom, text and performance checks

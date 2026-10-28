@@ -1,9 +1,8 @@
 # T13 table renderer validation
 
-Implementation and desktop validation are complete. The renderer recommendation
-is PixiJS 8.6.6 behind `TableRenderer`; human confirmation of D-009 is the only
-remaining T13 gate. The project owner deferred physical-phone qualification to
-T20 on 2026-10-27. This is a scheduling change, not a physical-device pass.
+T13 is complete. The project owner confirmed PixiJS 8.6.6 behind `TableRenderer`
+on 2026-10-27, and its D-009 status is Accepted. Physical-phone qualification was
+explicitly deferred to T20. This is a scheduling change, not a physical-device pass.
 
 ## Scope
 
@@ -69,7 +68,7 @@ headed Intel D3D11 from headless SwiftShader. Pixi frame p95 is 8.4 ms at both
 The backend comparison explains why the earlier software-rendered cadence
 should not be read as a measured phone or hardware-GPU regression.
 
-Confirm PixiJS 8.6.6 for Phase 1, retaining `TableRenderer` as the adapter boundary
+The owner accepted PixiJS 8.6.6 for Phase 1, retaining `TableRenderer` as the adapter boundary
 and Canvas as an alternative. Desktop screenshots cover text and zoomed detail;
 this evidence does not establish phone text readability or 60 fps on a phone.
 

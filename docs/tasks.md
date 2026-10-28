@@ -125,12 +125,11 @@ remain. Evidence and remaining gates: [spikes/t08-sandbox.md](spikes/t08-sandbox
 
 ### T13 `@bgp/table-2d`
 
-**Status:** Implementation and desktop validation complete; human confirmation of
-the PixiJS spike recommendation remains. Physical-phone qualification was deferred
-to T20 by the project owner on 2026-10-27. Scope and evidence:
+**Status:** Complete. The project owner confirmed PixiJS 8.6.6 on 2026-10-27.
+Physical-phone qualification is deferred to T20. Scope and evidence:
 [t13-validation.md](t13-validation.md).
 
-**Starts with a spike (2 days):** render the same fixture snapshot with PixiJS, a top-down orthographic Three.js view, and plain Canvas 2D; measure against the T13 criteria in [decisions.md](decisions.md#decision-points-by-stage); write `docs/spikes/t13-renderer-2d.md`; get the choice confirmed. The deliverables below assume PixiJS, the default.
+**Starts with a spike (2 days):** render the same fixture snapshot with PixiJS, a top-down orthographic Three.js view, and plain Canvas 2D; measure against the T13 criteria in [decisions.md](decisions.md#decision-points-by-stage); write `docs/spikes/t13-renderer-2d.md`; get the choice confirmed. The completed spike confirmed PixiJS for the deliverables below.
 
 **Deliverables:** a PixiJS v8 implementation of `TableRenderer`: all zone layouts, item drawing (images, card backs, labeled placeholders when art is missing, die faces, badges, highlights), drag and drop with drop-zone feedback, selection, animated transitions matched by item ID, view rotation for the viewing seat, pinch and pan on touch, a dev page `/dev/table` that renders fixture snapshots.
 
