@@ -1,0 +1,155 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "propertyNames": {
+    "$ref": "#/$defs/__schema0"
+  },
+  "additionalProperties": {
+    "type": "object",
+    "properties": {
+      "ctx": {
+        "type": "object",
+        "properties": {
+          "seats": {
+            "$ref": "#/$defs/__schema1"
+          },
+          "currentSeat": {
+            "$ref": "#/$defs/__schema0"
+          },
+          "activeSeats": {
+            "$ref": "#/$defs/__schema2"
+          },
+          "phase": {
+            "$ref": "#/$defs/__schema3"
+          },
+          "turn": {
+            "$ref": "#/$defs/__schema4"
+          },
+          "moveNumber": {
+            "$ref": "#/$defs/__schema6"
+          },
+          "options": {
+            "$ref": "#/$defs/IntegerJson"
+          }
+        },
+        "required": [
+          "seats",
+          "currentSeat",
+          "activeSeats",
+          "phase",
+          "turn",
+          "moveNumber",
+          "options"
+        ],
+        "additionalProperties": false
+      },
+      "game": {
+        "$ref": "#/$defs/IntegerJson"
+      },
+      "result": {
+        "anyOf": [
+          {
+            "type": "object",
+            "properties": {
+              "winners": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/$defs/__schema0"
+                }
+              },
+              "scores": {
+                "type": "object",
+                "propertyNames": {
+                  "$ref": "#/$defs/__schema0"
+                },
+                "additionalProperties": {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991
+                }
+              },
+              "reason": {
+                "type": "string"
+              }
+            },
+            "required": ["winners"],
+            "additionalProperties": false
+          },
+          {
+            "type": "null"
+          }
+        ]
+      }
+    },
+    "required": ["ctx", "game", "result"],
+    "additionalProperties": false
+  },
+  "$defs": {
+    "__schema0": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)$"
+    },
+    "__schema1": {
+      "minItems": 1,
+      "maxItems": 8,
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/__schema0"
+      }
+    },
+    "__schema2": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/__schema0"
+      }
+    },
+    "__schema3": {
+      "type": "string",
+      "minLength": 1
+    },
+    "__schema4": {
+      "exclusiveMinimum": 0,
+      "$ref": "#/$defs/__schema5"
+    },
+    "__schema5": {
+      "type": "integer",
+      "minimum": -9007199254740991,
+      "maximum": 9007199254740991
+    },
+    "__schema6": {
+      "minimum": 0,
+      "$ref": "#/$defs/__schema5"
+    },
+    "IntegerJson": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        },
+        {
+          "type": "string"
+        },
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/IntegerJson"
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/IntegerJson"
+          }
+        }
+      ]
+    }
+  },
+  "title": "HostViews"
+}

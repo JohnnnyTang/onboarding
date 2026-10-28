@@ -7,3 +7,8 @@ test("game errors expose a fixed safe code and message", () => {
     message: "Game execution failed",
   });
 });
+
+test("the public API exposes supervision instead of in-process game evaluation", () => {
+  expect(scaffold.RulesHostClient).toBeTypeOf("function");
+  expect(scaffold).not.toHaveProperty("QuickJsSandbox");
+});

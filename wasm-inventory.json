@@ -9,6 +9,7 @@
       "fallback": "Node vm in a restricted process for private or unlisted games; see D-008",
       "scope": "server",
       "files": [
+        "packages/rules-host/dist/quickjs.wasm",
         "node_modules/.pnpm/@jitl+quickjs-wasmfile-release-sync@0.32.0/node_modules/@jitl/quickjs-wasmfile-release-sync/dist/emscripten-module.wasm"
       ]
     }

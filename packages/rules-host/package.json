@@ -12,7 +12,7 @@
   "scripts": {
     "build": "tsc --project tsconfig.build.json && pnpm -w exec tsx scripts/build-rules-host.ts",
     "typecheck": "tsc --noEmit --project tsconfig.build.json && tsc --noEmit",
-    "test": "pnpm -w exec tsx scripts/build-rules-host.ts && vitest run --config ../../vitest.package.config.ts"
+    "test": "pnpm -w exec tsx scripts/build-rules-host.ts && vitest run --config ../../vitest.package.config.ts --no-file-parallelism"
   },
   "dependencies": {
     "@bgp/rules": "workspace:*",

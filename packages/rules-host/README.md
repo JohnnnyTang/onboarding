@@ -1,41 +1,59 @@
-# Rules sandbox spike
+# Rules host
 
-This package currently contains T08's sandbox prototypes. It is not yet the
-production process host: permission-restricted QuickJS hosting, the build-cache
-loader, validated IPC, restart/recovery client and Harbor Market measurements
-remain to be implemented after the sandbox choice is confirmed.
+`RulesHostClient` is the server-only production entry point for untrusted games.
+It verifies immutable build indexes and entry digests through `BuildStore`, pins
+source and starts one restricted Node process per active match. Each child owns one
+QuickJS runtime, the trusted rules bundle, game code and authoritative state.
+The public package exports the supervised client, not an in-process evaluator.
 
-`QuickJsSandbox.load(source)` lazily loads the self-hosted synchronous release
-QuickJS WASM. Each instance owns one interpreter runtime with a 64 MiB heap cap,
-a 512 KiB stack cap and a 1000 ms interrupt deadline. The trusted `@bgp/rules`
-bundle and import-free game module execute together inside that interpreter.
-No host callbacks or Node objects are injected into the game.
+The [privileged IPC contract](../../docs/contracts/rules-host.md) documents every
+method, validation boundary, size limit and recovery rule. Call `load(buildHash)`
+before `create(matchId, { buildHash, seats, seed, options })`; then use `apply`,
+`views`, `hash`, `exportState`, `restore` and `dispose`. `close()` releases every
+match. T10 supplies the finalized immutable version store.
 
-The `RulesSandbox` interface provides create, apply, per-seat views, hash, privileged
-snapshot export/restore and disposal. Inputs and returned state/events/views use
-the existing `@bgp/schema` validators. Successful moves return only the accepted
-event; views contain only `viewFor` output. Snapshot exports contain hidden state
-and RNG data and must stay on the server. Hashing uses Node SHA-256 over canonical
-JSON produced by the runtime without exposing a host crypto function to games.
+Successful moves return accepted events without authoritative state. Views come
+only from `viewFor`; forward only the authenticated seat's view to that player.
+Errors use fixed `GAME_ERROR` messages. Child output and interpreter exception
+text are discarded. Snapshots include hidden information and RNG: keep them on
+the server. `processId` is privileged supervision diagnostics for crash tests.
 
-Runtime errors are fixed `GAME_ERROR` messages; interpreter exceptions are never
-dumped. A failed or interrupted interpreter is discarded. Dynamic imports and
-queued asynchronous jobs are rejected. `Date`, random entropy, I/O globals and
-the global constructor escape path are removed before loading game code.
+Failed calls discard the host and return without retrying uncertain moves. The
+next call reloads the pinned build and restores the checkpoint plus acknowledged
+events. `exportState` advances the detached in-memory checkpoint and compacts its
+journal. After 10 seconds of inactivity a checkpoint retires the match's process.
+Every API operation resumes it from its pinned build and checkpoint. One unused
+process is prewarmed with trusted code only; an assigned process is never reused
+for another match. `RulesHostClientOptions` exposes `idleTimeoutMs` and
+`warmSpareCount`; zero disables retirement or the reserve respectively.
+T11 owns durable snapshots/logs, persistence before broadcast and browser
+resync. In-memory recovery survives child crashes, not a server restart.
 
-The `spike/` VM comparison uses a separate Node process per match, `--permission`
-with read access only to the built worker/runtime directory, no writes/children/
-workers/addons, a 64 MiB V8 old-space cap and a parent-enforced deadline. It is
-excluded from the public exports and must not be used for published games.
+Defaults: a 1000 ms complete-operation watchdog, 64 MiB interpreter heap, 512 KiB
+interpreter stack, 128 MiB Node old space and 8 MiB IPC envelopes. Limits may be
+lowered. Parent watchdogs contain allocator stalls and native crashes. Child
+permissions allow reads only in `dist/`, with no writes, child processes, workers
+or addons. No Node objects or host callbacks are exposed to game code. Time,
+entropy and I/O globals are removed before evaluating the game.
 
-Run from the repository root:
+The build bundles dependencies into `host-entry.js` and lazily loads the local
+pinned release WASM at `dist/quickjs.wasm`. Both installed and copied WASM paths
+are inventoried. Keep the built host directory read-only in deployment.
 
 ```sh
 pnpm --filter @bgp/rules-host... build
 pnpm --filter @bgp/rules-host test
-pnpm exec tsx scripts/t08-sandbox.ts
+pnpm exec tsx scripts/t08-sandbox.ts # initial QuickJS vs VM fixture comparison
+pnpm exec tsx scripts/t08-host.ts    # production IPC, memory, isolation and recovery
+pnpm exec tsx scripts/t08-memory.ts optimized # exploratory V8 profile comparison
 ```
 
-The last command records the comparison in `docs/spikes/t08-sandbox-results.json`.
-Harbor Market is still a scaffold at the starting revision; the fixture results
-must not be treated as the D-008 Harbor Market acceptance benchmark.
+The VM adapter in `spike/` is comparison-only and excluded from public exports.
+Current results use a hidden-counter fixture. Harbor Market is still a scaffold;
+its required benchmark and human confirmation remain T08 closure gates. Across
+21 suspended matches, child RSS averages 2.52 MiB per match including the shared
+reserve; active processes still average 63.01 MiB. Including the measurement parent
+gives 6.66 MiB per idle match at that scale. See the
+[memory accounting](../../docs/spikes/t08-memory.md),
+[validation](../../docs/t08-validation.md) and the
+[spike report](../../docs/spikes/t08-sandbox.md).

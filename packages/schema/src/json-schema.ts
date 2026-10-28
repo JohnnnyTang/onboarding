@@ -5,6 +5,7 @@ import * as http from "./http.js";
 import * as manifest from "./manifest.js";
 import * as protocol from "./protocol.js";
 import * as rules from "./rules.js";
+import * as rulesHost from "./rules-host.js";
 import * as table from "./table.js";
 
 // Callable contracts have no JSON representation; they are checked inside the sandbox.
@@ -44,6 +45,7 @@ export function contractJsonSchemas() {
     ...manifest,
     ...protocol,
     ...rules,
+    ...rulesHost,
     ...table,
   })) {
     if (

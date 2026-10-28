@@ -1,0 +1,345 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "oneOf": [
+    {
+      "type": "object",
+      "properties": {
+        "v": {
+          "type": "number",
+          "const": 1
+        },
+        "id": {
+          "$ref": "#/$defs/__schema0"
+        },
+        "ok": {
+          "type": "boolean",
+          "const": true
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean",
+                      "const": true
+                    },
+                    "event": {
+                      "type": "object",
+                      "properties": {
+                        "seq": {
+                          "$ref": "#/$defs/__schema0"
+                        },
+                        "seat": {
+                          "$ref": "#/$defs/__schema2"
+                        },
+                        "intent": {
+                          "type": "object",
+                          "properties": {
+                            "move": {
+                              "$ref": "#/$defs/__schema3"
+                            },
+                            "args": {
+                              "$ref": "#/$defs/IntegerJson"
+                            }
+                          },
+                          "required": ["move"],
+                          "additionalProperties": false
+                        }
+                      },
+                      "required": ["seq", "seat", "intent"],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": ["ok", "event"],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean",
+                      "const": false
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "MATCH_FINISHED",
+                        "NOT_YOUR_TURN",
+                        "MOVE_NOT_ALLOWED",
+                        "UNKNOWN_MOVE",
+                        "INVALID_ARGS",
+                        "INVALID_MOVE",
+                        "GAME_ERROR"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "gameCode": {
+                      "type": "string",
+                      "pattern": "^[A-Z][A-Z0-9]*(?:_[A-Z0-9]+)*$"
+                    }
+                  },
+                  "required": ["ok", "code", "message"],
+                  "additionalProperties": false
+                }
+              ]
+            },
+            {
+              "type": "object",
+              "propertyNames": {
+                "$ref": "#/$defs/__schema2"
+              },
+              "additionalProperties": {
+                "type": "object",
+                "properties": {
+                  "ctx": {
+                    "$ref": "#/$defs/__schema4"
+                  },
+                  "game": {
+                    "$ref": "#/$defs/IntegerJson"
+                  },
+                  "result": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/$defs/__schema8"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "required": ["ctx", "game", "result"],
+                "additionalProperties": false
+              }
+            },
+            {
+              "type": "object",
+              "properties": {
+                "v": {
+                  "$ref": "#/$defs/__schema9"
+                },
+                "game": {
+                  "$ref": "#/$defs/IntegerJson"
+                },
+                "ctx": {
+                  "$ref": "#/$defs/__schema4"
+                },
+                "rng": {
+                  "$ref": "#/$defs/__schema10"
+                },
+                "result": {
+                  "$ref": "#/$defs/__schema12"
+                }
+              },
+              "required": ["v", "game", "ctx", "rng", "result"],
+              "additionalProperties": false
+            }
+          ]
+        }
+      },
+      "required": ["v", "id", "ok", "value"],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "v": {
+          "type": "number",
+          "const": 1
+        },
+        "id": {
+          "$ref": "#/$defs/__schema0"
+        },
+        "ok": {
+          "type": "boolean",
+          "const": false
+        },
+        "code": {
+          "type": "string",
+          "const": "GAME_ERROR"
+        },
+        "message": {
+          "type": "string",
+          "const": "Game execution failed"
+        }
+      },
+      "required": ["v", "id", "ok", "code", "message"],
+      "additionalProperties": false
+    }
+  ],
+  "$defs": {
+    "__schema0": {
+      "exclusiveMinimum": 0,
+      "$ref": "#/$defs/__schema1"
+    },
+    "__schema1": {
+      "type": "integer",
+      "minimum": -9007199254740991,
+      "maximum": 9007199254740991
+    },
+    "__schema2": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)$"
+    },
+    "__schema3": {
+      "type": "string",
+      "minLength": 1
+    },
+    "__schema4": {
+      "type": "object",
+      "properties": {
+        "seats": {
+          "$ref": "#/$defs/__schema5"
+        },
+        "currentSeat": {
+          "$ref": "#/$defs/__schema2"
+        },
+        "activeSeats": {
+          "$ref": "#/$defs/__schema6"
+        },
+        "phase": {
+          "$ref": "#/$defs/__schema3"
+        },
+        "turn": {
+          "$ref": "#/$defs/__schema0"
+        },
+        "moveNumber": {
+          "$ref": "#/$defs/__schema7"
+        },
+        "options": {
+          "$ref": "#/$defs/IntegerJson"
+        }
+      },
+      "required": ["seats", "currentSeat", "activeSeats", "phase", "turn", "moveNumber", "options"],
+      "additionalProperties": false
+    },
+    "__schema5": {
+      "minItems": 1,
+      "maxItems": 8,
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/__schema2"
+      }
+    },
+    "__schema6": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/__schema2"
+      }
+    },
+    "__schema7": {
+      "minimum": 0,
+      "$ref": "#/$defs/__schema1"
+    },
+    "__schema8": {
+      "type": "object",
+      "properties": {
+        "winners": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/__schema2"
+          }
+        },
+        "scores": {
+          "type": "object",
+          "propertyNames": {
+            "$ref": "#/$defs/__schema2"
+          },
+          "additionalProperties": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          }
+        },
+        "reason": {
+          "type": "string"
+        }
+      },
+      "required": ["winners"],
+      "additionalProperties": false
+    },
+    "__schema9": {
+      "type": "number",
+      "const": 1
+    },
+    "__schema10": {
+      "type": "array",
+      "prefixItems": [
+        {
+          "$ref": "#/$defs/__schema11"
+        },
+        {
+          "$ref": "#/$defs/__schema11"
+        },
+        {
+          "$ref": "#/$defs/__schema11"
+        },
+        {
+          "$ref": "#/$defs/__schema11"
+        }
+      ],
+      "items": false,
+      "minItems": 4,
+      "maxItems": 4
+    },
+    "__schema11": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 4294967295,
+      "$ref": "#/$defs/__schema1"
+    },
+    "__schema12": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/__schema8"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "IntegerJson": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        },
+        {
+          "type": "string"
+        },
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/IntegerJson"
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/IntegerJson"
+          }
+        }
+      ]
+    }
+  },
+  "title": "HostResponse"
+}

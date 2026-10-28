@@ -33,7 +33,7 @@ export const BRIDGE_SOURCE = `
           for (const event of request.events) {
             if (event.seq !== restored.ctx.moveNumber + 1) throw Error();
             const result = R.applyIntent(def, restored, event.seat, event.intent);
-            if (!result.ok) throw Error();
+            if (!result.ok || R.canonicalJson(result.event) !== R.canonicalJson(event)) throw Error();
             restored = result.state;
           }
           state = restored;

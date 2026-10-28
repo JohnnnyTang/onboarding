@@ -1,0 +1,81 @@
+{
+  "measuredAt": "2026-10-28T02:53:25.331Z",
+  "node": "v24.12.0",
+  "platform": "win32 x64",
+  "cpu": "Intel(R) Core(TM) Ultra 7 258V",
+  "label": "optimized",
+  "samplesPerProfile": 5,
+  "bareNodeRssBytes": [50929664, 50884608, 50905088, 50999296, 51073024],
+  "profiles": [
+    {
+      "name": "original",
+      "flags": ["--max-old-space-size=128"],
+      "coldCreateMs": 196.8146,
+      "warmCreateP95Ms": 235.77019999999993,
+      "moveP95Ms": 2.2299000000000433,
+      "childRssBytes": [68415488, 69283840, 68419584, 68456448, 68304896],
+      "childRssMeanBytes": 68576051.2,
+      "deterministicSteps": 100
+    },
+    {
+      "name": "compact-128",
+      "flags": ["--max-old-space-size=128", "--max-semi-space-size=1", "--optimize-for-size"],
+      "coldCreateMs": 220.69669999999996,
+      "warmCreateP95Ms": 228.85770000000002,
+      "moveP95Ms": 2.2089999999998327,
+      "childRssBytes": [66056192, 66183168, 66215936, 65900544, 66080768],
+      "childRssMeanBytes": 66087321.6,
+      "deterministicSteps": 100
+    },
+    {
+      "name": "compact-64",
+      "flags": ["--max-old-space-size=64", "--max-semi-space-size=1", "--optimize-for-size"],
+      "coldCreateMs": 217.51109999999971,
+      "warmCreateP95Ms": 220.5689000000002,
+      "moveP95Ms": 2.442699999999604,
+      "childRssBytes": [65753088, 66203648, 64942080, 66367488, 64638976],
+      "childRssMeanBytes": 65581056,
+      "deterministicSteps": 100
+    },
+    {
+      "name": "compact-32",
+      "flags": ["--max-old-space-size=32", "--max-semi-space-size=1", "--optimize-for-size"],
+      "coldCreateMs": 217.4979000000003,
+      "warmCreateP95Ms": 217.3770000000004,
+      "moveP95Ms": 1.9466000000002168,
+      "childRssBytes": [65191936, 65658880, 65572864, 65417216, 66072576],
+      "childRssMeanBytes": 65582694.4,
+      "deterministicSteps": 100
+    },
+    {
+      "name": "baseline-js",
+      "flags": [
+        "--max-old-space-size=64",
+        "--max-semi-space-size=1",
+        "--optimize-for-size",
+        "--max-opt=0"
+      ],
+      "coldCreateMs": 239.59959999999955,
+      "warmCreateP95Ms": 255.5569999999998,
+      "moveP95Ms": 2.2070000000003347,
+      "childRssBytes": [66461696, 65953792, 67121152, 66830336, 66617344],
+      "childRssMeanBytes": 66596864,
+      "deterministicSteps": 100
+    },
+    {
+      "name": "baseline-wasm",
+      "flags": [
+        "--max-old-space-size=64",
+        "--max-semi-space-size=1",
+        "--optimize-for-size",
+        "--liftoff-only"
+      ],
+      "coldCreateMs": 238.72439999999915,
+      "warmCreateP95Ms": 238.39429999999993,
+      "moveP95Ms": 3.5424999999995634,
+      "childRssBytes": [63275008, 64606208, 64757760, 64360448, 64729088],
+      "childRssMeanBytes": 64345702.4,
+      "deterministicSteps": 100
+    }
+  ]
+}

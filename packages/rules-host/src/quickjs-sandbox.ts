@@ -34,12 +34,24 @@ function quickjs(): Promise<QuickJSWASMModule> {
     import("@jitl/quickjs-wasmfile-release-sync"),
   ]).then(([core, variant]) => {
     // Upstream's CJS-typed default differs from its Node ESM export condition.
-    const release = variant.default as unknown as Parameters<
-      typeof core.newQuickJSWASMModuleFromVariant
-    >[0];
-    return core.newQuickJSWASMModuleFromVariant(release);
+    const release = variant.default as unknown as Extract<
+      Parameters<typeof core.newVariant>[0],
+      { type: "sync" }
+    >;
+    return readFile(new URL("../dist/quickjs.wasm", import.meta.url)).then((bytes) =>
+      core.newQuickJSWASMModuleFromVariant(
+        core.newVariant(release, {
+          wasmBinary: bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength),
+        }),
+      ),
+    );
   });
   return modulePromise;
+}
+
+/** Load only the trusted interpreter module; no game or match exists yet. */
+export async function prepareQuickJs(): Promise<void> {
+  await quickjs();
 }
 
 export class QuickJsSandbox implements RulesSandbox {

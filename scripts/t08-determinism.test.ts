@@ -1,7 +1,7 @@
 import type { GameDefinition } from "@bgp/schema";
 import { expect, it } from "vitest";
 import { applyIntent, createMatch, hashState } from "../packages/rules/src/index.js";
-import { QuickJsSandbox } from "../packages/rules-host/src/index.js";
+import { QuickJsSandbox } from "../packages/rules-host/src/quickjs-sandbox.js";
 import { GAME_SOURCE, INIT } from "../packages/rules-host/test/fixtures.js";
 
 it("matches Node and QuickJS hashes after every seeded fixture move", async () => {

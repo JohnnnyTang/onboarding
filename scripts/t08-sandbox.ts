@@ -4,7 +4,7 @@ import type { GameDefinition } from "@bgp/schema";
 import { applyIntent, createMatch, hashState } from "../packages/rules/src/index.js";
 import { VmProcessSandbox } from "../packages/rules-host/spike/vm-process.js";
 import type { RulesSandbox } from "../packages/rules-host/src/index.js";
-import { QuickJsSandbox } from "../packages/rules-host/src/index.js";
+import { QuickJsSandbox } from "../packages/rules-host/src/quickjs-sandbox.js";
 import { GAME_SOURCE, HOSTILE_CASES, hostile, INIT } from "../packages/rules-host/test/fixtures.js";
 
 function p95(values: number[]): number {
