@@ -86,7 +86,8 @@
                       "type": "string"
                     },
                     "gameCode": {
-                      "type": "string"
+                      "type": "string",
+                      "pattern": "^[A-Z][A-Z0-9]*(?:_[A-Z0-9]+)*$"
                     }
                   },
                   "required": ["ok", "code", "message"],

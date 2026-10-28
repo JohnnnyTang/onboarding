@@ -1,5 +1,6 @@
 import { z } from "zod";
 import {
+  GameCodeSchema,
   IdSchema,
   PositiveIntegerSchema,
   RejectCodeSchema,
@@ -23,7 +24,7 @@ export const HostMoveOutcomeSchema = z.discriminatedUnion("ok", [
     ok: z.literal(false),
     code: RejectCodeSchema,
     message: z.string(),
-    gameCode: z.string().optional(),
+    gameCode: GameCodeSchema.optional(),
   }),
 ]);
 export const HostViewsSchema = z.record(SeatIdSchema, ClientViewSchema);

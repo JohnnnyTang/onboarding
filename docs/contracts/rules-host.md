@@ -15,16 +15,16 @@ The child receives source through IPC and cannot read the version store.
 
 The server client API is:
 
-| Method | Meaning |
-| ------ | ------- |
-| `load(buildHash)` | Verify and pin an immutable build; call before creating matches |
-| `create(matchId, init)` | Create a match; `init` is `MatchInit` plus `buildHash` |
-| `apply(matchId, seat, intent)` | Return an accepted event or runtime rejection; never return full state |
-| `views(matchId)` | Return a record of seat IDs to `viewFor` results |
-| `hash(matchId)` | SHA-256 of canonical authoritative state |
-| `exportState(matchId)` | Export privileged authoritative state, including RNG |
+| Method                               | Meaning                                                                   |
+| ------------------------------------ | ------------------------------------------------------------------------- |
+| `load(buildHash)`                    | Verify and pin an immutable build; call before creating matches           |
+| `create(matchId, init)`              | Create a match; `init` is `MatchInit` plus `buildHash`                    |
+| `apply(matchId, seat, intent)`       | Return an accepted event or runtime rejection; never return full state    |
+| `views(matchId)`                     | Return a record of seat IDs to `viewFor` results                          |
+| `hash(matchId)`                      | SHA-256 of canonical authoritative state                                  |
+| `exportState(matchId)`               | Export privileged authoritative state, including RNG                      |
 | `restore(matchId, snapshot, events)` | Replace recovery checkpoint with snapshot and consecutive accepted events |
-| `dispose(matchId)` | Forget the match and terminate its process |
+| `dispose(matchId)`                   | Forget the match and terminate its process                                |
 
 One match pins one build for its lifetime. Duplicate creates fail. Calls for a
 match are serialized; calls for different matches proceed independently.
@@ -65,7 +65,12 @@ reloads the pinned source, and restores that checkpoint plus events. A failed ca
 returns fixed `GAME_ERROR` immediately; an uncertain move is never retried. If a
 child applied a move but died before acknowledging it, recovery discards that move.
 The server can then explicitly submit it again. Successful restoration must
-reproduce every accepted event exactly, including any normalized intent.
+reproduce every accepted event exactly, including its original validated intent.
+Successful `exportState` calls advance the in-memory checkpoint and compact its
+journal. The returned snapshot is detached from that checkpoint. T11 should export
+at its required snapshot cadence, keeping recovery bounded as matches grow.
+Explicit restore can replace a dead host directly without replaying an older
+journal first; restored seats must match the match's original seats.
 
 This in-memory journal survives child crashes, not server restarts. T11 owns
 durable snapshots/logs, persistence before broadcast, and browser resync. After

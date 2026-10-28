@@ -60,7 +60,7 @@ export class HostProcess {
     }
   }
 
-  call(command: HostCommand): Promise<unknown> {
+  call(command: HostCommand, timeoutMs = this.options.timeoutMs): Promise<unknown> {
     if (this.dead || this.pending) return Promise.reject(new GameError());
     return new Promise((resolve, reject) => {
       try {
@@ -70,7 +70,8 @@ export class HostProcess {
           command,
         });
         if (Buffer.byteLength(JSON.stringify(request)) > MAX_IPC_BYTES) throw new GameError();
-        const timer = setTimeout(() => this.dispose(), this.options.timeoutMs);
+        if (timeoutMs < 1) throw new GameError();
+        const timer = setTimeout(() => this.dispose(), Math.min(timeoutMs, this.options.timeoutMs));
         this.pending = { resolve, reject, id: request.id, timer };
         this.child.send(request, (error) => {
           if (error) this.dispose();
