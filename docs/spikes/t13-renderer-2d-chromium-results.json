@@ -1,0 +1,242 @@
+[
+  {
+    "browser": "chromium",
+    "browserVersion": "156.0.8078.4",
+    "mode": "headed",
+    "recordedAt": "2026-10-28T02:01:05.031Z",
+    "measurement": {
+      "engine": "pixi",
+      "version": "8.6.6",
+      "backend": "ANGLE (Intel, Intel(R) Arc(TM) 140V GPU (16GB) (0x000064A0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "items": 300,
+      "width": 360,
+      "height": 800,
+      "dpr": 2,
+      "samples": 180,
+      "frameP50": 8.300000000000182,
+      "frameP95": 8.400000000000091,
+      "submitP95": 0.8999999761581421,
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36"
+    }
+  },
+  {
+    "browser": "chromium",
+    "browserVersion": "156.0.8078.4",
+    "mode": "headed",
+    "recordedAt": "2026-10-28T02:01:07.474Z",
+    "measurement": {
+      "engine": "three",
+      "version": "186",
+      "backend": "ANGLE (Intel, Intel(R) Arc(TM) 140V GPU (16GB) (0x000064A0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "items": 300,
+      "width": 360,
+      "height": 800,
+      "dpr": 2,
+      "samples": 180,
+      "frameP50": 8.300000000000068,
+      "frameP95": 8.400000000000091,
+      "submitP95": 1.100000023841858,
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36"
+    }
+  },
+  {
+    "browser": "chromium",
+    "browserVersion": "156.0.8078.4",
+    "mode": "headed",
+    "recordedAt": "2026-10-28T02:01:09.819Z",
+    "measurement": {
+      "engine": "canvas",
+      "version": "platform",
+      "backend": "Canvas 2D",
+      "items": 300,
+      "width": 360,
+      "height": 800,
+      "dpr": 2,
+      "samples": 180,
+      "frameP50": 8.299999999999955,
+      "frameP95": 8.400000000000091,
+      "submitP95": 0.8999999761581421,
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36"
+    }
+  },
+  {
+    "browser": "chromium",
+    "browserVersion": "156.0.8078.4",
+    "mode": "headed",
+    "recordedAt": "2026-10-28T02:01:12.754Z",
+    "measurement": {
+      "engine": "pixi",
+      "version": "8.6.6",
+      "backend": "ANGLE (Intel, Intel(R) Arc(TM) 140V GPU (16GB) (0x000064A0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "items": 300,
+      "width": 1440,
+      "height": 800,
+      "dpr": 2,
+      "samples": 180,
+      "frameP50": 8.300000000000182,
+      "frameP95": 8.400000000000091,
+      "submitP95": 0.6999999284744263,
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36"
+    }
+  },
+  {
+    "browser": "chromium",
+    "browserVersion": "156.0.8078.4",
+    "mode": "headed",
+    "recordedAt": "2026-10-28T02:01:15.548Z",
+    "measurement": {
+      "engine": "three",
+      "version": "186",
+      "backend": "ANGLE (Intel, Intel(R) Arc(TM) 140V GPU (16GB) (0x000064A0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "items": 300,
+      "width": 1440,
+      "height": 800,
+      "dpr": 2,
+      "samples": 180,
+      "frameP50": 8.300000000000182,
+      "frameP95": 16.59999999999991,
+      "submitP95": 1.5,
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36"
+    }
+  },
+  {
+    "browser": "chromium",
+    "browserVersion": "156.0.8078.4",
+    "mode": "headed",
+    "recordedAt": "2026-10-28T02:01:18.038Z",
+    "measurement": {
+      "engine": "canvas",
+      "version": "platform",
+      "backend": "Canvas 2D",
+      "items": 300,
+      "width": 1440,
+      "height": 800,
+      "dpr": 2,
+      "samples": 180,
+      "frameP50": 8.300000000000068,
+      "frameP95": 8.400000000000091,
+      "submitP95": 1.600000023841858,
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36"
+    }
+  },
+  {
+    "browser": "chromium",
+    "browserVersion": "156.0.8078.4",
+    "mode": "headless",
+    "recordedAt": "2026-10-28T02:01:56.495Z",
+    "measurement": {
+      "engine": "pixi",
+      "version": "8.6.6",
+      "backend": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+      "items": 300,
+      "width": 360,
+      "height": 800,
+      "dpr": 2,
+      "samples": 180,
+      "frameP50": 33.30000000000018,
+      "frameP95": 33.400000000000546,
+      "submitP95": 0.8999999761581421,
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.8078.4 Safari/537.36"
+    }
+  },
+  {
+    "browser": "chromium",
+    "browserVersion": "156.0.8078.4",
+    "mode": "headless",
+    "recordedAt": "2026-10-28T02:02:04.648Z",
+    "measurement": {
+      "engine": "three",
+      "version": "186",
+      "backend": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+      "items": 300,
+      "width": 360,
+      "height": 800,
+      "dpr": 2,
+      "samples": 180,
+      "frameP50": 33.30000000000018,
+      "frameP95": 33.400000000000546,
+      "submitP95": 2.100000023841858,
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.8078.4 Safari/537.36"
+    }
+  },
+  {
+    "browser": "chromium",
+    "browserVersion": "156.0.8078.4",
+    "mode": "headless",
+    "recordedAt": "2026-10-28T02:02:09.425Z",
+    "measurement": {
+      "engine": "canvas",
+      "version": "platform",
+      "backend": "Canvas 2D",
+      "items": 300,
+      "width": 360,
+      "height": 800,
+      "dpr": 2,
+      "samples": 180,
+      "frameP50": 16.699999999999818,
+      "frameP95": 16.799999999999272,
+      "submitP95": 1.399999976158142,
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.8078.4 Safari/537.36"
+    }
+  },
+  {
+    "browser": "chromium",
+    "browserVersion": "156.0.8078.4",
+    "mode": "headless",
+    "recordedAt": "2026-10-28T02:02:36.126Z",
+    "measurement": {
+      "engine": "pixi",
+      "version": "8.6.6",
+      "backend": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+      "items": 300,
+      "width": 1440,
+      "height": 800,
+      "dpr": 2,
+      "samples": 180,
+      "frameP50": 100,
+      "frameP95": 116.70000000000073,
+      "submitP95": 0.40000009536743164,
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.8078.4 Safari/537.36"
+    }
+  },
+  {
+    "browser": "chromium",
+    "browserVersion": "156.0.8078.4",
+    "mode": "headless",
+    "recordedAt": "2026-10-28T02:02:59.084Z",
+    "measurement": {
+      "engine": "three",
+      "version": "186",
+      "backend": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+      "items": 300,
+      "width": 1440,
+      "height": 800,
+      "dpr": 2,
+      "samples": 180,
+      "frameP50": 83.30000000000291,
+      "frameP95": 100,
+      "submitP95": 1.7000000476837158,
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.8078.4 Safari/537.36"
+    }
+  },
+  {
+    "browser": "chromium",
+    "browserVersion": "156.0.8078.4",
+    "mode": "headless",
+    "recordedAt": "2026-10-28T02:03:04.613Z",
+    "measurement": {
+      "engine": "canvas",
+      "version": "platform",
+      "backend": "Canvas 2D",
+      "items": 300,
+      "width": 1440,
+      "height": 800,
+      "dpr": 2,
+      "samples": 180,
+      "frameP50": 16.699999999999818,
+      "frameP95": 16.799999999999727,
+      "submitP95": 1.4000000953674316,
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.8078.4 Safari/537.36"
+    }
+  }
+]

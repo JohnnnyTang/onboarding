@@ -1,7 +1,7 @@
 # T13: 2D renderer comparison
 
-Status: measured desktop comparison; human confirmation and physical phone
-qualification pending. D-009 remains Default. Date: 2026-10-27.
+Status: desktop comparison validated; human renderer confirmation pending. Phone
+qualification deferred to T20 by the project owner. D-009 remains Default. Date: 2026-10-27.
 
 ## Method
 
@@ -17,7 +17,8 @@ text, selection and feedback.
 
 Run `pnpm dev:table`, then `pnpm exec tsx scripts/t13-renderer-spike.ts` in another
 terminal. The runner writes raw results and comparative screenshots to
-`.scratch/t13-spike/`. The committed raw run is
+`.scratch/t13-spike/headless/` (or `headed/` with `--headed`). Use
+`--browser=chromium` to restrict a run. The original committed raw run is
 `docs/spikes/t13-renderer-2d-results.json`. A manual comparison is available at
 `/dev/table/spike.html?engine=pixi` (also `three`, `canvas`), with `&fixture=all`
 for the smaller five-layout fixture. `&measure=1` enables the reproducible drag.
@@ -68,7 +69,7 @@ still needs new 3D geometry, interaction and text. Pixi and Canvas reuse the
 snapshot, component declarations, layout and gesture logic through
 `TableRenderer`; their drawing implementations will remain separate from 3D.
 
-## Recommendation and confirmation gate
+## Recommendation and confirmation
 
 Keep PixiJS as the **provisional existing default**, behind `TableRenderer`.
 Its retained item nodes and narrow application boundary support the Phase 1
@@ -76,12 +77,42 @@ implementation, and its measured submission overhead is small. Keep the Canvas
 comparison as a credible alternative, especially for the Chromium cadence issue.
 Do not promote D-009 to Accepted from this run.
 
-Before confirming: run this fixture and the production `/dev/table/?stress=1`
-page on an identified mid-range Android phone and iPhone; record device, browser,
-DPR, p95 frame interval and drag/zoom behavior. Investigate the Chromium desktop
-slowdown and compare actual hardware results. A human then confirms Pixi or
-authorizes a different adapter. The implementation uses the current default so
-it remains reviewable while that decision is pending.
+The project owner explicitly deferred physical-phone testing from the T13 gates
+to T20 on 2026-10-27. This changes when the evidence is due; it does not establish
+a phone performance pass. The 300-item/60 fps target and AC-12 remain T20 gates.
+Human confirmation of the renderer choice is still required for T13.
+
+## Chromium graphics-path investigation (2026-10-27)
+
+The updated runner supports `--headed` and `--browser=chromium`, records launch
+mode and browser version, fails on page errors, and saves results after every
+completed case. Run the headed and headless comparisons separately against the
+same fixture server, without overlapping tests or builds:
+
+```powershell
+pnpm exec tsx scripts/t13-renderer-spike.ts --browser=chromium --headed
+pnpm exec tsx scripts/t13-renderer-spike.ts --browser=chromium
+```
+
+The headed run reports the actual Intel Arc 140V D3D11 backend, while the
+headless run reports SwiftShader. Same Windows host, driver, Chromium 156.0.8078.4,
+DPR 2, fixture, 60 warmup frames and 180 measured intervals as above. Raw results:
+[t13-renderer-2d-chromium-results.json](t13-renderer-2d-chromium-results.json).
+The timestamps are UTC; these runs occurred on October 27 in America/New_York.
+
+With hardware rendering, Pixi frame p50/p95 is 8.3/8.4 ms at both 360 and 1440 px;
+submission p95 is 0.9/0.7 ms respectively. At 1440 px, Three frame p95 is 16.6 ms
+and Canvas is 8.4 ms. All three adapters remain inside the nominal 16.7 ms budget
+on this accelerated desktop. The matching headless run retains the slower
+SwiftShader cadence. This supports graphics-backend selection as the explanation
+for the earlier Chromium slowdown; it is not a controlled comparison of GPU and
+software rendering inside an otherwise identical browser mode.
+
+Recommendation: confirm PixiJS 8.6.6 behind `TableRenderer` for Phase 1. Retained
+item nodes, the working interaction implementation, reviewed desktop baselines,
+and the accelerated comparison support it. Canvas remains a credible fallback.
+These are desktop results; physical-phone drag/zoom, text and performance checks
+remain explicitly tracked under T20 and must not be inferred from this run.
 
 API references: [Pixi Application](https://pixijs.com/8.x/guides/components/application),
 [Pixi Assets](https://pixijs.com/8.x/guides/components/assets),
