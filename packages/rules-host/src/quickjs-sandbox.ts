@@ -49,6 +49,11 @@ function quickjs(): Promise<QuickJSWASMModule> {
   return modulePromise;
 }
 
+/** Load only the trusted interpreter module; no game or match exists yet. */
+export async function prepareQuickJs(): Promise<void> {
+  await quickjs();
+}
+
 export class QuickJsSandbox implements RulesSandbox {
   private deadline = 0;
   private disposed = false;

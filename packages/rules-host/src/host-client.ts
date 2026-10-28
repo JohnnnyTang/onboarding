@@ -18,7 +18,8 @@ import {
 } from "@bgp/schema";
 import { type BuildStore, loadBuild } from "./build-store.js";
 import { GameError } from "./errors.js";
-import { HostProcess } from "./host-process.js";
+import { HostPool } from "./host-pool.js";
+import type { HostProcess } from "./host-process.js";
 import type { MoveOutcome, SandboxOptions } from "./sandbox.js";
 
 interface HostedMatch {
@@ -28,6 +29,15 @@ interface HostedMatch {
   host?: HostProcess;
   queue: Promise<void>;
   disposed: boolean;
+  idleVersion: number;
+  idleTimer?: ReturnType<typeof setTimeout>;
+}
+
+export interface RulesHostClientOptions extends SandboxOptions {
+  /** Checkpoint and retire a process after this many idle milliseconds; 0 disables. */
+  idleTimeoutMs?: number;
+  /** Unassigned prewarmed processes only; never reuse a process that ran a game. */
+  warmSpareCount?: number;
 }
 
 /** Server-only client. Checkpoints and journals contain privileged match data. */
@@ -35,11 +45,13 @@ export class RulesHostClient {
   private readonly builds = new Map<string, string>();
   private readonly matches = new Map<string, HostedMatch>();
   private readonly options: Required<SandboxOptions>;
+  private readonly idleTimeoutMs: number;
+  private readonly pool: HostPool;
   private closed = false;
 
   constructor(
     private readonly store: BuildStore,
-    options: SandboxOptions = {},
+    options: RulesHostClientOptions = {},
   ) {
     const timeoutMs = options.timeoutMs ?? 1000;
     const memoryLimitBytes = options.memoryLimitBytes ?? 64 * 1024 * 1024;
@@ -53,6 +65,18 @@ export class RulesHostClient {
     )
       throw new GameError();
     this.options = { timeoutMs, memoryLimitBytes };
+    this.idleTimeoutMs = options.idleTimeoutMs ?? 10_000;
+    const warmSpareCount = options.warmSpareCount ?? 1;
+    if (
+      !Number.isInteger(this.idleTimeoutMs) ||
+      this.idleTimeoutMs < 0 ||
+      this.idleTimeoutMs > 3_600_000 ||
+      !Number.isInteger(warmSpareCount) ||
+      warmSpareCount < 0 ||
+      warmSpareCount > 2
+    )
+      throw new GameError();
+    this.pool = new HostPool(this.options, warmSpareCount);
   }
 
   async load(buildHash: string): Promise<void> {
@@ -74,17 +98,21 @@ export class RulesHostClient {
       const init = structuredClone(HostMatchInitSchema.parse(input));
       const source = this.builds.get(init.buildHash);
       if (this.closed || this.matches.has(matchId) || source === undefined) throw new GameError();
-      const record: HostedMatch = { source, events: [], queue: Promise.resolve(), disposed: false };
+      const record: HostedMatch = {
+        source,
+        events: [],
+        queue: Promise.resolve(),
+        disposed: false,
+        idleVersion: 0,
+      };
       this.matches.set(matchId, record);
       try {
         await this.enqueue(record, async (deadline) => {
-          const host = this.spawn(record);
+          const host = await this.spawn(record);
           await this.send(host, { op: "load", source, ...this.options }, deadline);
           const { buildHash: _buildHash, ...matchInit } = init;
           await this.send(host, { op: "create", init: matchInit }, deadline);
-          record.snapshot = MatchStateSchema.parse(
-            await this.send(host, { op: "exportState" }, deadline),
-          );
+          await this.checkpoint(record, host, deadline);
         });
       } catch {
         record.disposed = true;
@@ -159,16 +187,9 @@ export class RulesHostClient {
 
   async exportState(matchId: string): Promise<MatchState> {
     const record = this.record(matchId);
-    return this.enqueue(record, async (deadline) => {
-      const snapshot = MatchStateSchema.parse(
-        await this.send(await this.ready(record, deadline), { op: "exportState" }, deadline),
-      );
-      const seq = record.events.at(-1)?.seq ?? record.snapshot?.ctx.moveNumber;
-      if (snapshot.ctx.moveNumber !== seq) throw new GameError();
-      record.snapshot = structuredClone(snapshot);
-      record.events = [];
-      return snapshot;
-    });
+    return this.enqueue(record, async (deadline) =>
+      this.checkpoint(record, await this.ready(record, deadline), deadline),
+    );
   }
 
   async restore(matchId: string, snapshot: MatchState, events: AcceptedEvent[]): Promise<void> {
@@ -195,16 +216,23 @@ export class RulesHostClient {
     return host?.alive ? host.pid : undefined;
   }
 
+  /** Unassigned trusted processes only; privileged supervision, never player data. */
+  spareProcessIds(): number[] {
+    return this.pool.processIds();
+  }
+
   dispose(matchId: string): void {
     const record = this.matches.get(matchId);
     if (!record) return;
     record.disposed = true;
+    this.cancelIdle(record);
     record.host?.dispose();
     this.matches.delete(matchId);
   }
 
   close(): void {
     this.closed = true;
+    this.pool.close();
     for (const matchId of this.matches.keys()) this.dispose(matchId);
     this.builds.clear();
   }
@@ -215,9 +243,13 @@ export class RulesHostClient {
     return record;
   }
 
-  private spawn(record: HostedMatch): HostProcess {
+  private async spawn(record: HostedMatch): Promise<HostProcess> {
     if (record.disposed || this.closed) throw new GameError();
-    const host = new HostProcess(this.options);
+    const host = await this.pool.take();
+    if (record.disposed || this.closed) {
+      host.dispose();
+      throw new GameError();
+    }
     record.host = host;
     return host;
   }
@@ -236,7 +268,7 @@ export class RulesHostClient {
 
   private async loaded(record: HostedMatch, deadline: number): Promise<HostProcess> {
     if (record.host?.alive) return record.host;
-    const host = this.spawn(record);
+    const host = await this.spawn(record);
     await this.send(host, { op: "load", source: record.source, ...this.options }, deadline);
     return host;
   }
@@ -245,7 +277,48 @@ export class RulesHostClient {
     return host.call(command, Math.floor(deadline - performance.now()));
   }
 
+  private async checkpoint(
+    record: HostedMatch,
+    host: HostProcess,
+    deadline: number,
+  ): Promise<MatchState> {
+    const snapshot = MatchStateSchema.parse(await this.send(host, { op: "exportState" }, deadline));
+    const seq = record.events.at(-1)?.seq ?? record.snapshot?.ctx.moveNumber ?? 0;
+    if (snapshot.ctx.moveNumber !== seq) throw new GameError();
+    record.snapshot = structuredClone(snapshot);
+    record.events = [];
+    return snapshot;
+  }
+
+  private cancelIdle(record: HostedMatch): void {
+    record.idleVersion++;
+    clearTimeout(record.idleTimer);
+    delete record.idleTimer;
+  }
+
+  private armIdle(record: HostedMatch): void {
+    this.cancelIdle(record);
+    if (record.disposed || this.closed || this.idleTimeoutMs === 0 || !record.host?.alive) return;
+    const version = record.idleVersion;
+    record.idleTimer = setTimeout(() => {
+      delete record.idleTimer;
+      void this.queue(record, async (deadline) => {
+        if (record.idleVersion !== version || !record.host?.alive) return;
+        const host = record.host;
+        await this.checkpoint(record, host, deadline);
+        host.dispose();
+        delete record.host;
+      }).catch(() => {});
+    }, this.idleTimeoutMs);
+    record.idleTimer.unref();
+  }
+
   private enqueue<T>(record: HostedMatch, run: (deadline: number) => Promise<T>): Promise<T> {
+    this.cancelIdle(record);
+    return this.queue(record, run).finally(() => this.armIdle(record));
+  }
+
+  private queue<T>(record: HostedMatch, run: (deadline: number) => Promise<T>): Promise<T> {
     const result = record.queue.then(async () => {
       if (record.disposed || this.closed) throw new GameError();
       // Bound complete recovery/load/setup sequences as well as individual IPCs.

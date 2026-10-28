@@ -1,6 +1,6 @@
 import { HOST_PROTOCOL_VERSION, type HostCommand, HostRequestSchema } from "@bgp/schema";
 import { MAX_IPC_BYTES } from "./host-constants.js";
-import { QuickJsSandbox } from "./quickjs-sandbox.js";
+import { prepareQuickJs, QuickJsSandbox } from "./quickjs-sandbox.js";
 
 let sandbox: QuickJsSandbox | undefined;
 let busy = false;
@@ -20,7 +20,10 @@ process.on("message", async (raw: unknown) => {
   busy = true;
   try {
     let value: unknown = null;
-    if (command.op === "load") {
+    if (command.op === "prepare") {
+      if (sandbox) throw Error();
+      await prepareQuickJs();
+    } else if (command.op === "load") {
       if (sandbox) throw Error();
       sandbox = await QuickJsSandbox.load(command.source, command);
     } else {

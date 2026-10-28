@@ -35,6 +35,7 @@ Requests (`HostRequestSchema`) are `{ v: 1, id, command }`. `id` is a positive
 integer increasing per process. Commands are strict objects:
 
 - `{ op: "load", source, timeoutMs, memoryLimitBytes }`
+- `{ op: "prepare" }` (load the trusted interpreter module in an unassigned spare)
 - `{ op: "create", init }` (ordinary `MatchInit`, without build hash)
 - `{ op: "apply", seat, intent }`
 - `{ op: "views" }`, `{ op: "hash" }`, `{ op: "exportState" }`
@@ -42,7 +43,7 @@ integer increasing per process. Commands are strict objects:
 - `{ op: "dispose" }`
 
 Successful replies (`HostResponseSchema`) are `{ v: 1, id, ok: true, value }`.
-Create/load/restore/dispose return `null`; apply returns `HostMoveOutcomeSchema`;
+Prepare/create/load/restore/dispose return `null`; apply returns `HostMoveOutcomeSchema`;
 views returns `HostViewsSchema`; hash returns a lowercase SHA-256 string; export
 returns `MatchStateSchema`. Every call validates its operation-specific result.
 Failures are exactly `{ v: 1, id, ok: false, code: "GAME_ERROR", message:
@@ -56,6 +57,33 @@ interrupt uses the same limit. Default/maximum interpreter heap: 64 MiB; stack:
 not an OS limit on whole-process RSS. Each process gets Node permission flags
 allowing reads only in the built host directory, with no writes, subprocesses,
 workers or addons. No Node objects or callbacks are exposed to game code.
+
+The child also uses `--max-semi-space-size=1 --optimize-for-size`. The 128 MiB
+old-space cap and full 64 MiB interpreter limit remain available. This tunes
+collection without shrinking the permitted game heap or IPC/source size limits.
+
+## Idle lifecycle
+
+`RulesHostClientOptions` adds `idleTimeoutMs` (default 10000; integer 0..3600000,
+with 0 disabling retirement) and `warmSpareCount` (default 1; integer 0..2).
+After inactivity the client queues a checkpoint, compacts acknowledged events
+and destroys that match's process. A subsequent operation reloads the pinned
+source and restores the checkpoint before executing; all API methods remain
+available. Idle cleanup shares the match's serial queue and operation deadline.
+Failures retain the previous checkpoint and acknowledged journal for recovery.
+
+The small reserve contains only unassigned processes. `prepare` loads trusted
+interpreter code, with no game definition, context, state or RNG. Once assigned,
+a process belongs to that one match until destroyed. It is never returned to
+the reserve, so native crashes and retained game data cannot cross assignments.
+Unused crashed reserves are replaced on acquisition; `close` and `dispose` cancel
+idle timers and release their processes. Supervision may inspect assigned PIDs
+through `processId` and reserve PIDs through `spareProcessIds`; neither is player
+data. A retired match has no assigned PID until an operation resumes it.
+
+Report active per-process RSS, the fixed shared reserve, suspended-match data in
+the parent and cold/resume latency separately. Amortizing a reserve over many idle
+matches must state the sample count; it is not a per-process memory reduction.
 
 ## Recovery and delivery
 

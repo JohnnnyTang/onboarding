@@ -3,6 +3,13 @@ import { HostBuildSchema, HostRequestSchema, HostResponseSchema } from "./rules-
 
 describe("privileged rules-host contract", () => {
   it("validates the version and strict command shapes", () => {
+    expect(HostRequestSchema.safeParse({ v: 1, id: 1, command: { op: "prepare" } }).success).toBe(
+      true,
+    );
+    expect(
+      HostRequestSchema.safeParse({ v: 1, id: 1, command: { op: "prepare", source: "hidden" } })
+        .success,
+    ).toBe(false);
     const request = { v: 1, id: 1, command: { op: "apply", seat: "0", intent: { move: "tick" } } };
     expect(HostRequestSchema.safeParse(request).success).toBe(true);
     for (const value of [

@@ -9,6 +9,7 @@ await build({
   bundle: true,
   format: "iife",
   globalName: "BGP_RUNTIME",
+  minify: true,
   platform: "neutral",
   target: "es2022",
   define: { "process.env.NODE_ENV": '"production"' },

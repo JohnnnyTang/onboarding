@@ -40,6 +40,7 @@ export const HostRequestSchema = z.strictObject({
   v: z.literal(HOST_PROTOCOL_VERSION),
   id: PositiveIntegerSchema,
   command: z.discriminatedUnion("op", [
+    z.strictObject({ op: z.literal("prepare") }),
     z.strictObject({
       op: z.literal("load"),
       source: z.string().max(2 * 1024 * 1024),

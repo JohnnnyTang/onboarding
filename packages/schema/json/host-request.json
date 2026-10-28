@@ -16,6 +16,17 @@
           "properties": {
             "op": {
               "type": "string",
+              "const": "prepare"
+            }
+          },
+          "required": ["op"],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "type": "string",
               "const": "load"
             },
             "source": {

@@ -30,6 +30,159 @@ async function add(client: RulesHostClient, id: string, hash: string | undefined
 }
 
 describe("production rules host client", () => {
+  it("resumes every API after an idle checkpoint without losing state or reusing assigned processes", async () => {
+    const { client, hashes } = fixture([GAME_SOURCE], { idleTimeoutMs: 40 });
+    const direct = await QuickJsSandbox.load(GAME_SOURCE);
+    const pids = new Set<number>();
+    const retire = async () => {
+      const pid = client.processId("idle");
+      if (!pid) throw Error("Expected active host");
+      expect(pids.has(pid)).toBe(false);
+      pids.add(pid);
+      await vi.waitFor(() => expect(client.processId("idle")).toBeUndefined(), {
+        timeout: 1500,
+        interval: 10,
+      });
+      expect(() => process.kill(pid, 0)).toThrow();
+    };
+    try {
+      await add(client, "idle", hashes[0]);
+      await direct.create(INIT);
+      await client.apply("idle", "0", { move: "tick" });
+      await direct.apply("0", { move: "tick" });
+      await retire();
+      expect(await client.hash("idle")).toBe(await direct.hash());
+      await retire();
+      expect(await client.views("idle")).toEqual(await direct.views());
+      await retire();
+      const snapshot = await client.exportState("idle");
+      expect(snapshot).toEqual(await direct.exportState());
+      await retire();
+      expect(await client.apply("idle", "1", { move: "tick" })).toEqual(
+        await direct.apply("1", { move: "tick" }),
+      );
+      await retire();
+      await client.restore("idle", snapshot, []);
+      await direct.restore(snapshot, []);
+      await retire();
+      expect(await client.hash("idle")).toBe(await direct.hash());
+      expect(await client.apply("idle", "0", { move: "reject" })).toMatchObject({
+        code: "INVALID_MOVE",
+      });
+      await retire();
+      client.dispose("idle");
+      await expect(client.hash("idle")).rejects.toBeInstanceOf(GameError);
+    } finally {
+      client.close();
+      direct.dispose();
+    }
+  }, 15_000);
+
+  it("keeps multiple matches independent across idle retirement and native process termination", async () => {
+    const { client, hashes } = fixture([GAME_SOURCE], { idleTimeoutMs: 50 });
+    try {
+      await add(client, "a", hashes[0]);
+      await add(client, "b", hashes[0]);
+      await client.apply("a", "0", { move: "tick" });
+      const hashA = await client.hash("a");
+      const hashB = await client.hash("b");
+      await vi.waitFor(
+        () => {
+          expect(client.processId("a")).toBeUndefined();
+          expect(client.processId("b")).toBeUndefined();
+        },
+        { timeout: 1500 },
+      );
+      expect(await client.hash("a")).toBe(hashA);
+      const pidA = client.processId("a");
+      if (!pidA) throw Error("Missing process");
+      process.kill(pidA, "SIGKILL");
+      await vi.waitFor(() => expect(client.processId("a")).toBeUndefined());
+      expect(await client.hash("b")).toBe(hashB);
+      expect(await client.hash("a")).toBe(hashA);
+    } finally {
+      client.close();
+    }
+  });
+
+  it("replaces an unused crashed spare and closes every resource", async () => {
+    const { client, hashes } = fixture([GAME_SOURCE], { idleTimeoutMs: 0 });
+    try {
+      const spare = client.spareProcessIds()[0];
+      if (!spare) throw Error("Missing spare");
+      process.kill(spare, "SIGKILL");
+      await vi.waitFor(() => expect(client.spareProcessIds()).not.toContain(spare));
+      await add(client, "new", hashes[0]);
+      expect(await client.apply("new", "0", { move: "tick" })).toMatchObject({ ok: true });
+      const pids = [...client.spareProcessIds(), client.processId("new")].filter(
+        (pid): pid is number => pid !== undefined,
+      );
+      client.close();
+      expect(client.spareProcessIds()).toEqual([]);
+      await vi.waitFor(() => {
+        for (const pid of pids) expect(() => process.kill(pid, 0)).toThrow();
+      });
+    } finally {
+      client.close();
+    }
+  });
+
+  it("cancels a creation while its trusted reserve is still preparing", async () => {
+    const { client, hashes } = fixture([GAME_SOURCE]);
+    const preparing = client.spareProcessIds()[0];
+    try {
+      const hash = hashes[0];
+      if (!hash || !preparing) throw Error("Missing fixture");
+      await client.load(hash);
+      const creating = client.create("cancelled", { ...INIT, buildHash: hash });
+      await Promise.resolve();
+      await Promise.resolve();
+      client.close();
+      await expect(creating).rejects.toBeInstanceOf(GameError);
+      await vi.waitFor(() => expect(() => process.kill(preparing, 0)).toThrow());
+    } finally {
+      client.close();
+    }
+  });
+
+  it("preserves large snapshots and source bundles with the full memory limits", async () => {
+    const source = `${GAME_SOURCE}\n/*${"x".repeat(1900 * 1024)}*/`;
+    const { client, hashes } = fixture([source], { idleTimeoutMs: 40, warmSpareCount: 0 });
+    try {
+      await add(client, "large", hashes[0]);
+      const snapshot = await client.exportState("large");
+      snapshot.game = { count: 0, secret: "x".repeat(6 * 1024 * 1024) };
+      await client.restore("large", snapshot, []);
+      await vi.waitFor(() => expect(client.processId("large")).toBeUndefined(), { timeout: 2000 });
+      expect(await client.exportState("large")).toEqual(snapshot);
+      expect(await client.apply("large", "0", { move: "tick" })).toMatchObject({ ok: true });
+      expect(JSON.stringify(await client.views("large"))).not.toContain("secret");
+    } finally {
+      client.close();
+    }
+  }, 15_000);
+
+  it("orders moves queued around idle cleanup without dropping acknowledged events", async () => {
+    const { client, hashes } = fixture([GAME_SOURCE], { idleTimeoutMs: 1 });
+    const direct = await QuickJsSandbox.load(GAME_SOURCE);
+    try {
+      await add(client, "race", hashes[0]);
+      await direct.create(INIT);
+      for (let step = 0; step < 10; step++) {
+        const moves = Array.from({ length: 5 }, () => client.apply("race", "0", { move: "tick" }));
+        expect((await Promise.all(moves)).every((result) => result.ok)).toBe(true);
+        for (let move = 0; move < 5; move++) await direct.apply("0", { move: "tick" });
+        await vi.waitFor(() => expect(client.processId("race")).toBeUndefined(), {
+          timeout: 1500,
+          interval: 5,
+        });
+      }
+      expect(await client.hash("race")).toBe(await direct.hash());
+    } finally {
+      client.close();
+      direct.dispose();
+    }
+  }, 15_000);
   it("pins immutable builds, serializes moves, and returns only per-seat views", async () => {
     const { client, hashes, store } = fixture([GAME_SOURCE]);
     const direct = await QuickJsSandbox.load(GAME_SOURCE);
