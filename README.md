@@ -1,68 +1,97 @@
-# Board Game Platform — Handoff
+# Board Game Platform
 
-A web platform where indie designers build, playtest and later publish board games. Games are registered dynamically as SDK packages; the platform provides rendering, networking, accounts, storage and replays.
+**From a sketch on a table to a game people can playtest together.**
 
-**Status:** T01 workspace scaffold; application features begin in T02. The package scope `@bgp/*` and the CLI name `bgp` are placeholders until the platform is named.
+Board Game Platform is an in-progress, browser-based toolkit for indie board game designers. The idea is to let a designer start with components and manual play, add enforceable rules when ready, and invite remote playtesters without asking them to install an app. The platform supplies the table, networking, accounts, storage, and replay machinery; game packages supply the game.
 
-## Working with the scaffold
+> **Development status:** This repository is a Phase 1 work in progress, not a ready-to-use playtest service. The deterministic headless core, schema contracts, local database and auth groundwork, isolated rules host, and PixiJS table renderer have substantial implementations. The end-to-end designer and guest flows are still being built. See [the task tracker](docs/tasks.md) for the exact status and validation notes.
 
-Use Node from `.nvmrc` and pnpm from `package.json#packageManager`, then run:
+## The story
+
+Designers often have to choose between a free-form tabletop that leaves all rules to the players and a coded implementation that demands a finished rulebook up front. This project aims to make that a path rather than a choice:
+
+1. **Sketch:** declare cards, dice, pieces, and zones; move them manually in sandbox mode.
+2. **Script:** write a game package against a small rules SDK so the platform can enforce moves and turns.
+3. **Playtest:** invite guests by link, preserve each seat's hidden information, and replay what happened.
+4. **Learn and present:** later phases add balance analysis and a richer 3D table.
+
+The first audience is indie designers and their invited playtesters. A public game center comes later. The product direction and tradeoffs live in [intent.md](intent.md).
+
+## How it is designed
+
+A game is a deterministic state machine. The same seeded rules and move sequence must produce the same result, whether used for a local test, a remote match, or a replay. Rendering is separate: a game describes components and a table snapshot, while the table renderer decides how to draw them.
+
+Remote matches are server authoritative. Game code runs in an isolated rules host; each client receives only its own permitted view. Sandbox play also hides private zones and rekeys hidden items after shuffles. Those boundaries are part of the product, not optional polish.
+
+```text
+Browser: web UI + 2D table + isolated game worker
+                    │ HTTP / WebSocket
+Server: API + room server ── rules host ── game bundle
+                    │
+              PostgreSQL + asset storage
+```
+
+The intended full system is described in [architecture.md](docs/architecture.md). Implemented pieces and planned connections are distinguished in [tasks.md](docs/tasks.md).
+
+## What is in this repository
+
+| Area                                      | Role                                                              | Current state                                                         |
+| ----------------------------------------- | ----------------------------------------------------------------- | --------------------------------------------------------------------- |
+| `packages/schema`                         | Zod contracts and generated JSON Schemas                          | Implemented                                                           |
+| `packages/rules`                          | Seeded RNG, rules runtime, sandbox operations, replay and hashing | Implemented                                                           |
+| `packages/testing`                        | Headless runner, random bot, leak and determinism checks          | Implemented                                                           |
+| `packages/rules-host`                     | Isolated server-side game execution and recovery client           | Implemented; T08 closure has remaining gates                          |
+| `packages/table-2d`                       | PixiJS table renderer and gesture handling                        | Implemented; physical-phone qualification remains                     |
+| `apps/server`                             | Database schema, migrations, and auth foundation                  | HTTP game and match API / room server are pending                     |
+| `apps/web`                                | Browser application                                               | App shell and product flows are pending; table fixture harness exists |
+| `games/harbor-market`                     | Enforced reference game                                           | Planned; currently a scaffold                                         |
+| `packages/card-generator`, `packages/cli` | Card-face generation and developer commands                       | Planned; currently scaffolds                                          |
+
+The [Phase 1 specification](docs/phase-1-spec.md) defines the complete designer sandbox, remote match, replay, and SDK acceptance criteria. Later 3D and balance-analysis phases are direction, not current features.
+
+## Try the current code
+
+Use Node **24.22.1** (see `.nvmrc`), pnpm **11.9.0**, and Docker with Compose for database-backed tests and local services.
 
 ```sh
 pnpm install --frozen-lockfile
-pnpm lint
+# Copy .env.example to .env and set GUEST_TOKEN_SECRET for local use.
+docker compose -f infra/docker-compose.yml up -d --wait
+pnpm db:migrate
 pnpm typecheck
+pnpm lint
 pnpm test
-pnpm build
-pnpm check:wasm
-pnpm exec playwright install chromium
-pnpm test:e2e --project=chromium
 ```
 
-All ten workspace packages currently export empty modules and have a placeholder test.
-The browser test verifies the Playwright harness only; it does not claim a Phase 1 acceptance criterion.
-`pnpm dev` runs scaffold watchers until API and web entry points arrive in T10/T12, and starts
-Docker services automatically once T07 adds Compose. Database commands fail with an explicit T07
-message until then. See [dev-environment.md](docs/dev-environment.md) for service configuration.
+`pnpm dev` starts the local services and workspace watchers. At this stage the API and web entries are scaffold watchers, so this command does **not** yet open the finished product. To explore the implemented table renderer independently of Docker:
 
-`pnpm lint` combines Biome with an AST-based package-boundary check. The guard also rejects
-Node imports and known nondeterministic globals in pure source files. It supplements the
-runtime isolation and determinism checks that later tasks must implement.
+```sh
+pnpm dev:table
+# Open http://127.0.0.1:4313/dev/table/
+```
 
-## Reading order
+For browser tests, install Playwright browsers first with `pnpm exec playwright install --with-deps`, then run `pnpm test:e2e`. PostgreSQL-backed tests require the Compose services. See [development environment](docs/dev-environment.md) for configuration, test users, ports, and database notes; see [table-2d](packages/table-2d/README.md) for the renderer harness.
 
-| #   | Document                                           | What it answers                                                                                     |
-| --- | -------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
-| 1   | [intent.md](intent.md)                             | Why this exists, who it is for, how to make judgment calls                                          |
-| 2   | [AGENTS.md](AGENTS.md)                             | Rules for coding agents: commands, hard constraints, definition of done                             |
-| 3   | [docs/phase-1-spec.md](docs/phase-1-spec.md)       | What Phase 1 delivers, acceptance criteria, what is out of scope                                    |
-| 4   | [docs/architecture.md](docs/architecture.md)       | System shape, repo layout, package boundaries, how a move flows                                     |
-| 5   | [docs/decisions.md](docs/decisions.md)             | Settled decisions (ADR log) and open questions                                                      |
-| 6   | [docs/contracts/](docs/contracts/)                 | Source-of-truth interfaces: rules API, components and table, manifest, WebSocket protocol, HTTP API |
-| 7   | [docs/data-model.md](docs/data-model.md)           | Database tables and storage keys                                                                    |
-| 8   | [docs/reference-game.md](docs/reference-game.md)   | _Harbor Market_, the fully specified test game                                                      |
-| 9   | [docs/tasks.md](docs/tasks.md)                     | Phase 1 broken into ordered tasks with done checks                                                  |
-| 10  | [docs/testing.md](docs/testing.md)                 | Test strategy and quality gates                                                                     |
-| 11  | [docs/dev-environment.md](docs/dev-environment.md) | Local setup, services, environment variables                                                        |
-| 12  | [docs/tech-stack.md](docs/tech-stack.md)           | Libraries and tools by area and phase, version policy                                               |
-| 13  | [docs/glossary.md](docs/glossary.md)               | Shared vocabulary                                                                                   |
-| 14  | [docs/spikes/](docs/spikes/README.md)              | How open choices get settled with measurements; template and planned spikes                         |
+## Build a game (planned workflow)
 
-## Relation to the earlier tech stack plan
+The target developer path is `bgp init → bgp dev → bgp validate → bgp build → bgp publish`. A game bundle will contain a deterministic rules definition, component declarations, and assets. Published versions will be immutable and addressed by their content hash, so matches and replays remain tied to the exact rules they used. The CLI and publishing flow are tracked in [T19](docs/tasks.md#t19-cli) and [T17](docs/tasks.md#t17-publish-create-match-invite); these commands are not available yet.
 
-The "Board Game Platform — Tech Stack Plan" document is the long-range picture. Where it differs from these files, **these files win**. These files add two things the plan lacks: a WebAssembly policy that explains each use (D-002), and a status for every library choice — accepted, default with alternatives, or open — with the stage at which open choices get decided ([decisions.md](docs/decisions.md#decision-points-by-stage), [tech-stack.md](docs/tech-stack.md)).
+For the rules surface and data format, start with [rules API](docs/contracts/rules-api.md), [components and table](docs/contracts/components-and-table.md), and [manifest](docs/contracts/manifest.md).
 
-## Phases at a glance
+## Project map
 
-| Phase | Name             | Delivers                                                                                                   | Gate to the next phase                            |
-| ----- | ---------------- | ---------------------------------------------------------------------------------------------------------- | ------------------------------------------------- |
-| 1     | Designer sandbox | Rules runtime, 2D table, sandbox and enforced play, card generator, local-first projects, remote playtests | Designers keep coming back to playtest            |
-| 2     | 3D table         | Three.js WebGPU renderer, quality tiers, material library, physics dice, asset pipeline                    | Standard tier runs smoothly on mid-range phones   |
-| 3     | Balance evidence | Partial rules, AI-assisted rule drafting, bots, simulation, balance reports, board heatmaps                | Designers change their games based on the reports |
-| 4     | Play center      | Public listing, matchmaking, async play, spectators                                                        | —                                                 |
+- [Intent](intent.md) — users, product journey, principles, and tie-breakers.
+- [Phase 1 spec](docs/phase-1-spec.md) — scope and acceptance criteria.
+- [Architecture](docs/architecture.md) — processes, package boundaries, and move flow.
+- [Contracts](docs/contracts/) — source-of-truth interfaces for games, table, HTTP, and wire protocol.
+- [Tasks and status](docs/tasks.md) — ordered implementation plan and validation links.
+- [Decisions](docs/decisions.md) and [tech stack](docs/tech-stack.md) — accepted choices, defaults, and open questions.
+- [Agent guide](AGENTS.md) — repository rules and contribution checks.
 
-Only Phase 1 is specified for implementation. Later phases appear where Phase 1 must leave room for them.
+## Contributing
+
+Follow [AGENTS.md](AGENTS.md) and pick up work from [docs/tasks.md](docs/tasks.md). Contract changes need matching schemas and tests. Keep game rules deterministic and pure, and preserve per-seat hidden information. Run `pnpm typecheck`, `pnpm lint`, and `pnpm test` for implementation changes; the relevant task's done checks may require more.
 
 ## License
 
-This project is licensed under the [MIT License](LICENSE).
+[MIT](LICENSE).
