@@ -74,6 +74,8 @@ flowchart LR
 
 ### T06 Reference game: Harbor Market
 
+**Status:** Complete. Local validation and scope: [t06-validation.md](t06-validation.md).
+
 **Deliverables:** `games/harbor-market` implementing [reference-game.md](reference-game.md) fully: rules, `playerView`, `legalMoves`, `present`, `interpret`, `actions`; `bgp.json`; `components.json` (art paths may point to files produced in T16; the renderer shows placeholders until then).
 
 **Done when:** every test in the reference game's "Required tests" table passes, including 1,000 random games for determinism and 200 for hidden information.

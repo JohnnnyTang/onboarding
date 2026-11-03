@@ -39,6 +39,16 @@ component identity. Spectator filtering and enabled action validity are checked
 at every step too. Local defaults are 20 games per property; the full workload
 uses 1,000 deterministic games and 200 hidden-information games.
 
+## Acceptance run
+
+The full workload ran on `209bdd4` (2026-10-29, Windows, Node 24.12.0) with
+`BGP_PROPERTY_RUNS=1000`: 3 files and 28 tests passed. PROP-DET verified 1,000
+deterministic games (895 s) and UNIT-LEAK verified 200 hidden-information games
+(184 s). Later commits on the branch and the merges into main change no game or
+rules runtime code. After the merges, typecheck, lint, workspace tests with
+PostgreSQL, build, WASM inventory and generated schemas pass, and the table-2d
+and Harbor Market e2e specs pass in Chromium, Firefox and WebKit.
+
 ## Reproduction
 
 ```sh
@@ -66,3 +76,9 @@ separate gates; the QuickJS parity test is functional evidence, not a benchmark.
 Remote room-server play and the browser game-worker replay matrix belong to their
 later tasks. Numbered HUD/waiting labels are the reversible SDK 1 fallback recorded
 in Q-012 until presentation receives a display-name mapping.
+
+Follow-up: the four harbor zones overlap at the table corners. Since the renderer
+keeps zone labels upright in the viewer's top-left corner, two harbor labels share
+a corner (for example seat 2 and seat 3 from seat 1's view). Shrinking or offsetting
+the side harbors in `presentation.ts` would fix it; table polish can pick this up
+in T15/T20.
