@@ -69,15 +69,15 @@ The build hash is not unique: versions with identical files share it (AC-02), so
 
 ### `match_seats`
 
-| Column              | Type                    | Notes                            |
-| ------------------- | ----------------------- | -------------------------------- |
-| `match_id`          | uuid → `matches.id`     | PK with `seat`                   |
-| `seat`              | text                    | `"0"`, `"1"`, …                  |
+| Column              | Type                    | Notes                                                    |
+| ------------------- | ----------------------- | -------------------------------------------------------- |
+| `match_id`          | uuid → `matches.id`     | PK with `seat`                                           |
+| `seat`              | text                    | `"0"`, `"1"`, …                                          |
 | `user_id`           | uuid → `users.id`, null | Set when a signed-in user claims; unique with `match_id` |
-| `display_name`      | text, null              | Set on claim                     |
-| `is_guest`          | boolean                 |                                  |
-| `invite_token_hash` | text, unique            | SHA-256 of the invite token      |
-| `claimed_at`        | timestamptz, null       |                                  |
+| `display_name`      | text, null              | Set on claim                                             |
+| `is_guest`          | boolean                 |                                                          |
+| `invite_token_hash` | text, unique            | SHA-256 of the invite token                              |
+| `claimed_at`        | timestamptz, null       |                                                          |
 
 ### `match_events` (append-only)
 

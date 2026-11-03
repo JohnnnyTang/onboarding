@@ -143,16 +143,16 @@ These rules complete the endpoint table; `apps/server/test/http-*.test.ts` and
 **Statuses.** Creating a game, draft version, match or feedback returns 201; a file
 upload returns 204 with no body; everything else succeeds with 200. Failures use:
 
-| Status | Code                | When                                                                                                                  |
-| ------ | ------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| 400    | `BAD_MESSAGE`       | Malformed JSON, or a body or query that fails its `HTTP_CONTRACTS` schema; `errors` lists each issue                 |
+| Status | Code                | When                                                                                                                     |
+| ------ | ------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| 400    | `BAD_MESSAGE`       | Malformed JSON, or a body or query that fails its `HTTP_CONTRACTS` schema; `errors` lists each issue                     |
 | 400    | `VALIDATION_FAILED` | The manifest at draft creation, upload checks, finalize, match seat count or options, feedback `seq`; `errors` lists all |
-| 413    | `VALIDATION_FAILED` | JSON body over 1 MiB, or an uploaded file over 5 MB                                                                   |
-| 401    | `UNAUTHORIZED`      | Missing or invalid credentials (T09)                                                                                  |
-| 403    | `FORBIDDEN`         | Authenticated but not the owner or a seat holder, or a guest at a user-only route                                    |
-| 404    | `NOT_FOUND`         | Unknown resource or route; IDs that are not UUIDs and malformed invite tokens are simply unknown                     |
-| 409    | `CONFLICT`          | Duplicate slug or version, changing a ready version, or an action the match's current state does not allow           |
-| 500    | `INTERNAL`          | Anything else; details only in server logs                                                                            |
+| 413    | `VALIDATION_FAILED` | JSON body over 1 MiB, or an uploaded file over 5 MB                                                                      |
+| 401    | `UNAUTHORIZED`      | Missing or invalid credentials (T09)                                                                                     |
+| 403    | `FORBIDDEN`         | Authenticated but not the owner or a seat holder, or a guest at a user-only route                                        |
+| 404    | `NOT_FOUND`         | Unknown resource or route; IDs that are not UUIDs and malformed invite tokens are simply unknown                         |
+| 409    | `CONFLICT`          | Duplicate slug or version, changing a ready version, or an action the match's current state does not allow               |
+| 500    | `INTERNAL`          | Anything else; details only in server logs                                                                               |
 
 **Lists** are newest first. `cursor` is the last ID of the previous page and is `null`
 on the last page.
