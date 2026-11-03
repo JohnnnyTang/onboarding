@@ -124,6 +124,8 @@ from the Harbor Market measurements. Validation and evidence: [t08-validation.md
 
 ### T12 Web app shell
 
+**Status:** Complete. Local validation and scope: [t12-validation.md](t12-validation.md).
+
 **Deliverables:** React + Vite app; routes for home, projects, games, matches, invite claim (`/join/:token`), lobby, match, replay; OIDC sign-in with oidc-client-ts, tokens kept in memory; typed API client using `@bgp/schema`; TanStack Query; basic layout and empty states.
 
 **Done when:** a Playwright test signs in as `designer1`, sees an empty games list, and a guest claims an invite and reaches the lobby.
