@@ -130,6 +130,41 @@ describe("production rules host client", () => {
     }
   });
 
+  it("reports only unexpected exits of assigned processes to the supervisor", async () => {
+    const exits: string[] = [];
+    const source = GAME_SOURCE.replace(
+      "moves: {",
+      "moves: { hang: { anySeat: true, apply() { while (true) {} } },",
+    );
+    const { client, hashes } = fixture([source], {
+      idleTimeoutMs: 50,
+      onProcessExit: (id: string) => exits.push(id),
+    });
+    try {
+      await add(client, "watched", hashes[0]);
+      await add(client, "other", hashes[0]);
+      // Idle retirement, the watchdog and dispose are the client's own decisions.
+      await vi.waitFor(() => expect(client.processId("watched")).toBeUndefined(), {
+        timeout: 1500,
+      });
+      // The interpreter interrupt or the parent watchdog stops the loop, whichever is first.
+      const hung = await client.apply("watched", "0", { move: "hang" }).catch(() => null);
+      expect(hung?.ok ?? false).toBe(false);
+      await client.hash("other");
+      client.dispose("other");
+      expect(exits).toEqual([]);
+
+      const before = await client.hash("watched");
+      const pid = client.processId("watched");
+      if (!pid) throw Error("Missing process");
+      process.kill(pid, "SIGKILL");
+      await vi.waitFor(() => expect(exits).toEqual(["watched"]));
+      expect(await client.hash("watched")).toBe(before);
+    } finally {
+      client.close();
+    }
+  });
+
   it("replaces an unused crashed spare and closes every resource", async () => {
     const { client, hashes } = fixture([GAME_SOURCE], { idleTimeoutMs: 0 });
     try {

@@ -9,6 +9,8 @@ import type { AuthService } from "./auth/service.js";
 import type { BlobStore } from "./blob/blob-store.js";
 import type { Database } from "./db/connection.js";
 import { ApiError, sendError } from "./http/errors.js";
+import type { RoomManager } from "./room/manager.js";
+import { roomRoutes } from "./room/routes.js";
 import { gameRoutes } from "./routes/games.js";
 import { matchRoutes } from "./routes/matches.js";
 import { versionRoutes } from "./routes/versions.js";
@@ -22,6 +24,10 @@ export interface AppDependencies {
   /** Allowed CORS origin and base of invite links. */
   publicWebOrigin: string;
   logger?: FastifyServerOptions["logger"];
+  /** The WebSocket room server (`/ws`); without it only the HTTP API is served. */
+  rooms?: RoomManager;
+  /** Room `hello` deadline; defaults to the protocol's 10 seconds. */
+  helloTimeoutMs?: number;
 }
 
 const CORS_HEADERS = {
@@ -75,5 +81,13 @@ export async function buildApp(deps: AppDependencies): Promise<FastifyInstance> 
   await app.register(gameRoutes, deps);
   await app.register(versionRoutes, deps);
   await app.register(matchRoutes, deps);
+  if (deps.rooms) {
+    await app.register(roomRoutes, {
+      db: deps.db,
+      auth: deps.auth,
+      rooms: deps.rooms,
+      ...(deps.helloTimeoutMs === undefined ? {} : { helloTimeoutMs: deps.helloTimeoutMs }),
+    });
+  }
   return app;
 }

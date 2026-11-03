@@ -23,6 +23,7 @@ import type { HostProcess } from "./host-process.js";
 import type { MoveOutcome, SandboxOptions } from "./sandbox.js";
 
 interface HostedMatch {
+  id: string;
   source: string;
   snapshot?: MatchState;
   events: AcceptedEvent[];
@@ -38,6 +39,12 @@ export interface RulesHostClientOptions extends SandboxOptions {
   idleTimeoutMs?: number;
   /** Unassigned prewarmed processes only; never reuse a process that ran a game. */
   warmSpareCount?: number;
+  /**
+   * Called with the match ID when the process assigned to a match dies on its own
+   * (crash, kill, native fault). Not called for watchdog kills, idle retirement or
+   * `dispose`. Supervision only: the next call recovers from the checkpoint either way.
+   */
+  onProcessExit?: (matchId: string) => void;
 }
 
 /** Server-only client. Checkpoints and journals contain privileged match data. */
@@ -47,6 +54,7 @@ export class RulesHostClient {
   private readonly options: Required<SandboxOptions>;
   private readonly idleTimeoutMs: number;
   private readonly pool: HostPool;
+  private readonly onProcessExit: ((matchId: string) => void) | undefined;
   private closed = false;
 
   constructor(
@@ -77,6 +85,7 @@ export class RulesHostClient {
     )
       throw new GameError();
     this.pool = new HostPool(this.options, warmSpareCount);
+    this.onProcessExit = options.onProcessExit;
   }
 
   async load(buildHash: string): Promise<void> {
@@ -99,6 +108,7 @@ export class RulesHostClient {
       const source = this.builds.get(init.buildHash);
       if (this.closed || this.matches.has(matchId) || source === undefined) throw new GameError();
       const record: HostedMatch = {
+        id: matchId,
         source,
         events: [],
         queue: Promise.resolve(),
@@ -254,6 +264,9 @@ export class RulesHostClient {
       throw new GameError();
     }
     record.host = host;
+    host.onExit = () => {
+      if (record.host === host && !record.disposed && !this.closed) this.onProcessExit?.(record.id);
+    };
     return host;
   }
 

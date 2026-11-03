@@ -26,6 +26,7 @@ Every API operation resumes it from its pinned build and checkpoint. One unused
 process is prewarmed with trusted code only; an assigned process is never reused
 for another match. `RulesHostClientOptions` exposes `idleTimeoutMs` and
 `warmSpareCount`; zero disables retirement or the reserve respectively.
+`onProcessExit(matchId)` reports an assigned process that died on its own.
 T11 owns durable snapshots/logs, persistence before broadcast and browser
 resync. In-memory recovery survives child crashes, not a server restart.
 

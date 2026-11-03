@@ -25,6 +25,8 @@ export class HostProcess {
       }
     | undefined;
   private readonly child: ChildProcess;
+  /** Called once if the child dies on its own (not through `dispose`). Supervision only. */
+  onExit: (() => void) | undefined;
 
   constructor(private readonly options: Required<SandboxOptions>) {
     const dist = fileURLToPath(new URL("../dist/", import.meta.url));
@@ -41,9 +43,9 @@ export class HostProcess {
       stdio: ["ignore", "ignore", "ignore", "ipc"],
       serialization: "json",
     });
-    this.child.on("error", () => this.dispose());
-    this.child.on("exit", () => this.dispose());
-    this.child.on("disconnect", () => this.dispose());
+    this.child.on("error", () => this.lost());
+    this.child.on("exit", () => this.lost());
+    this.child.on("disconnect", () => this.lost());
     this.child.on("message", (raw: unknown) => this.receive(raw));
   }
 
@@ -95,6 +97,18 @@ export class HostProcess {
         reject(new GameError());
       }
     });
+  }
+
+  private lost(): void {
+    if (this.dead) return;
+    this.dispose();
+    const onExit = this.onExit;
+    this.onExit = undefined;
+    try {
+      onExit?.();
+    } catch {
+      // A supervisor's failure must not escape into the child process event handlers.
+    }
   }
 
   dispose(): void {

@@ -49,13 +49,28 @@ type SeatRow = typeof matchSeats.$inferSelect;
 const INVITE_TOKEN = /^[A-Za-z0-9_-]{22}$/;
 const bySeat = (a: { seat: string }, b: { seat: string }) => Number(a.seat) - Number(b.seat);
 
-function seatInfo(seat: SeatRow): SeatInfo {
-  // Presence belongs to the room server (T11); an unclaimed seat has an empty name.
-  return { seat: seat.seat, name: seat.displayName ?? "", connected: false, guest: seat.isGuest };
+/** Live presence from the room server; without one every seat is disconnected. */
+export interface Presence {
+  isConnected(matchId: string, seat: string): boolean;
+}
+const NO_PRESENCE: Presence = { isConnected: () => false };
+
+function seatInfo(seat: SeatRow, presence: Presence): SeatInfo {
+  // An unclaimed seat has an empty name.
+  return {
+    seat: seat.seat,
+    name: seat.displayName ?? "",
+    connected: presence.isConnected(seat.matchId, seat.seat),
+    guest: seat.isGuest,
+  };
 }
 
 /** Summaries never include the seed, options, RNG or state. */
-async function summaries(db: Database, rows: MatchRow[]): Promise<MatchSummary[]> {
+async function summaries(
+  db: Database,
+  rows: MatchRow[],
+  presence: Presence,
+): Promise<MatchSummary[]> {
   if (rows.length === 0) return [];
   const versions = await db
     .select({ id: gameVersions.id, buildHash: gameVersions.buildHash })
@@ -79,13 +94,13 @@ async function summaries(db: Database, rows: MatchRow[]): Promise<MatchSummary[]
       seats: seats
         .filter((seat) => seat.matchId === match.id)
         .sort(bySeat)
-        .map(seatInfo),
+        .map((seat) => seatInfo(seat, presence)),
     }),
   );
 }
 
-async function summary(db: Database, match: MatchRow): Promise<MatchSummary> {
-  const [result] = await summaries(db, [match]);
+async function summary(db: Database, match: MatchRow, presence: Presence): Promise<MatchSummary> {
+  const [result] = await summaries(db, [match], presence);
   if (!result) throw new Error("Missing match summary");
   return result;
 }
@@ -134,6 +149,7 @@ function isObject(value: Json): value is { [key: string]: Json } {
 
 export const matchRoutes: FastifyPluginAsync<AppDependencies> = async (app, deps) => {
   const { db, auth } = deps;
+  const presence = deps.rooms ?? NO_PRESENCE;
 
   app.post("/api/matches", async (request, reply) => {
     const user = currentUser(request);
@@ -193,7 +209,7 @@ export const matchRoutes: FastifyPluginAsync<AppDependencies> = async (app, deps
     });
     return reply.code(201).send(
       CreateMatchResponseSchema.parse({
-        match: await summary(db, match),
+        match: await summary(db, match, presence),
         invites: invites.map((invite) => ({
           seat: invite.seat,
           url: new URL(`/join/${invite.token}`, deps.publicWebOrigin).href,
@@ -222,14 +238,14 @@ export const matchRoutes: FastifyPluginAsync<AppDependencies> = async (app, deps
       .limit(limit + 1);
     const result = page(rows, limit);
     return MatchListResponseSchema.parse({
-      items: await summaries(db, result.items),
+      items: await summaries(db, result.items, presence),
       cursor: result.cursor,
     });
   });
 
   app.get("/api/matches/:matchId", { config: { auth: "match" } }, async (request) => {
     const { match } = await matchAccess(db, request);
-    return summary(db, match);
+    return summary(db, match, presence);
   });
 
   app.post("/api/matches/:matchId/start", async (request) => {
@@ -261,7 +277,7 @@ export const matchRoutes: FastifyPluginAsync<AppDependencies> = async (app, deps
       if (!started) throw new Error("Update returned no match");
       return started;
     });
-    return summary(db, match);
+    return summary(db, match, presence);
   });
 
   app.post("/api/matches/:matchId/abandon", async (request) => {
@@ -279,7 +295,9 @@ export const matchRoutes: FastifyPluginAsync<AppDependencies> = async (app, deps
       if (!abandoned) throw new Error("Update returned no match");
       return abandoned;
     });
-    return summary(db, match);
+    // Live connections get MATCH_NOT_ACTIVE and close.
+    deps.rooms?.abandoned(match.id);
+    return summary(db, match, presence);
   });
 
   app.post("/api/invites/:token/claim", { config: { auth: "optional" } }, async (request) => {

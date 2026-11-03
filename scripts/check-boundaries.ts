@@ -33,6 +33,8 @@ const POLICIES: Record<string, Policy> = {
       "postgres",
       "fastify",
       "fastify-plugin",
+      "@fastify/websocket",
+      "fast-json-patch",
       "jose",
       "@aws-sdk/client-s3",
     ],

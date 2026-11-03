@@ -131,11 +131,18 @@ describe("PostgreSQL migrations and constraints", () => {
       await tx
         .insert(schema.matchFeedback)
         .values({ id: id(5), matchId: id(4), seq: 0, seat: "0", body: "Playtest feedback" });
-      const [storedVersion] = await tx.select().from(schema.gameVersions);
+      // Room tests commit fixtures, so every read names this fixture's rows.
+      const [storedVersion] = await tx
+        .select()
+        .from(schema.gameVersions)
+        .where(eq(schema.gameVersions.id, id(3)));
       expect(storedVersion?.manifest).toEqual(manifest);
       expect(storedVersion?.buildHash).toBeNull();
       expect(storedVersion?.finalizedAt).toBeNull();
-      const [storedMatch] = await tx.select().from(schema.matches);
+      const [storedMatch] = await tx
+        .select()
+        .from(schema.matches)
+        .where(eq(schema.matches.id, id(4)));
       expect(storedMatch).toMatchObject({
         seed: 0xffffffff,
         lastSeq: 0,
@@ -144,9 +151,15 @@ describe("PostgreSQL migrations and constraints", () => {
         finishedAt: null,
       });
       expect(storedMatch?.createdAt).toBeInstanceOf(Date);
-      const [storedSeat] = await tx.select().from(schema.matchSeats);
+      const [storedSeat] = await tx
+        .select()
+        .from(schema.matchSeats)
+        .where(eq(schema.matchSeats.matchId, id(4)));
       expect(storedSeat).toMatchObject({ userId: null, displayName: null, claimedAt: null });
-      const [snapshot] = await tx.select().from(schema.matchSnapshots);
+      const [snapshot] = await tx
+        .select()
+        .from(schema.matchSnapshots)
+        .where(eq(schema.matchSnapshots.matchId, id(4)));
       expect(MatchStateSchema.parse(snapshot?.state)).toEqual(initialState);
     });
   });
@@ -251,9 +264,15 @@ describe("PostgreSQL migrations and constraints", () => {
         .update(schema.matches)
         .set({ lastSeq: sql`${schema.matches.lastSeq} + 1` })
         .where(eq(schema.matches.id, id(4)));
-      const [stored] = await tx.select().from(schema.matches);
+      const [stored] = await tx
+        .select()
+        .from(schema.matches)
+        .where(eq(schema.matches.id, id(4)));
       expect(stored?.lastSeq).toBe(1);
-      const [storedEvent] = await tx.select().from(schema.matchEvents);
+      const [storedEvent] = await tx
+        .select()
+        .from(schema.matchEvents)
+        .where(eq(schema.matchEvents.matchId, id(4)));
       expect(storedEvent?.intent).toEqual(event.intent);
       await expect(tx.insert(schema.matchEvents).values(event)).rejects.toMatchObject({
         cause: { code: "23505" },
