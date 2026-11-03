@@ -2,6 +2,7 @@ import { randomBytes } from "node:crypto";
 import { existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { defineConfig, devices } from "@playwright/test";
+import { e2eDatabaseUrl } from "./scripts/e2e-database.js";
 
 // Same precedence as the dev launcher: existing environment values win over the root .env.
 const envFile = fileURLToPath(new URL(".env", import.meta.url));
@@ -23,12 +24,9 @@ function appServers() {
   // Playwright reads these settings directly; it never runs as a cached Turborepo task.
   // biome-ignore lint/suspicious/noUndeclaredEnvVars: not a turbo task input
   if (process.env.BGP_E2E_APP === "0") return [];
-  // A test database, not the development one: the T12 check needs designer1 to own no games.
-  const databaseUrl =
-    // biome-ignore lint/suspicious/noUndeclaredEnvVars: not a turbo task input
-    process.env.E2E_DATABASE_URL ??
-    process.env.TEST_DATABASE_URL ??
-    "postgres://bgp:bgp@localhost:5432/bgp_test";
+  // Its own database (bgp_e2e by default): the T12 check needs designer1 to own no games, and
+  // integration tests expect their database to hold no committed rows.
+  const databaseUrl = e2eDatabaseUrl(process.env);
   // biome-ignore lint/suspicious/noUndeclaredEnvVars: not a turbo task input
   const secret = process.env.GUEST_TOKEN_SECRET ?? "";
   // The API and the browser must agree on the issuer the tokens come from.
@@ -36,10 +34,11 @@ function appServers() {
   return [
     {
       command:
-        "node --import tsx scripts/db-migrate.ts && node --import tsx apps/server/src/main.ts",
+        "node --import tsx scripts/e2e-database.ts && node --import tsx apps/server/src/main.ts",
       url: "http://127.0.0.1:3000/api/healthz",
       reuseExistingServer,
       env: {
+        E2E_DATABASE_URL: databaseUrl,
         DATABASE_URL: databaseUrl,
         HOST: "127.0.0.1",
         PORT: "3000",
