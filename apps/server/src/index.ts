@@ -10,5 +10,7 @@ export {
   createS3BlobStore,
 } from "./blob/blob-store.js";
 export { loadConfig, type ServerConfig } from "./config.js";
+export { RoomManager, type RoomManagerOptions } from "./room/manager.js";
+export type { RoomEngine } from "./room/room.js";
 export type { SetupChecker } from "./versions/finalize.js";
 export { createRulesSetupChecker, createVersionBuildStore } from "./versions/rules-builds.js";

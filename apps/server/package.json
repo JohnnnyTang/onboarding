@@ -21,13 +21,16 @@
     "@aws-sdk/client-s3": "3.1154.0",
     "@bgp/rules-host": "workspace:*",
     "@bgp/schema": "workspace:*",
+    "@fastify/websocket": "11.3.4",
     "drizzle-orm": "0.45.4",
+    "fast-json-patch": "3.1.1",
     "fastify": "5.12.7",
     "fastify-plugin": "6.0.1",
     "jose": "6.2.13",
     "postgres": "3.4.9"
   },
   "devDependencies": {
+    "@types/ws": "8.18.2",
     "drizzle-kit": "0.31.11",
     "harbor-market": "workspace:*"
   }

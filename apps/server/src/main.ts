@@ -8,6 +8,7 @@ import { createUserStore } from "./auth/user-store.js";
 import { type BlobStore, createFsBlobStore, createS3BlobStore } from "./blob/blob-store.js";
 import { type BlobConfig, loadConfig } from "./config.js";
 import { connectDatabase } from "./db/connection.js";
+import { RoomManager } from "./room/manager.js";
 import { createRulesSetupChecker, createVersionBuildStore } from "./versions/rules-builds.js";
 
 function blobStore(config: BlobConfig): BlobStore {
@@ -29,7 +30,13 @@ const config = loadConfig(process.env);
 const connection = connectDatabase(config.databaseUrl, { max: 10 });
 const blobs = blobStore(config.blob);
 const builds = createVersionBuildStore(connection.db, blobs);
-const rulesHost = new RulesHostClient(builds, config.rules);
+// Created before the rooms so a crashed match process can be reported to its room.
+let rooms: RoomManager | undefined;
+const rulesHost = new RulesHostClient(builds, {
+  ...config.rules,
+  onProcessExit: (matchId) => rooms?.hostExited(matchId),
+});
+rooms = new RoomManager({ db: connection.db, engine: rulesHost });
 const app = await buildApp({
   db: connection.db,
   auth: createAuthService({
@@ -41,6 +48,7 @@ const app = await buildApp({
   setup: createRulesSetupChecker(rulesHost, builds),
   publicWebOrigin: config.publicWebOrigin,
   logger: { level: config.logLevel },
+  rooms,
 });
 
 async function shutdown(): Promise<void> {
