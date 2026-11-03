@@ -1,10 +1,11 @@
 # T08 server sandbox comparison
 
-Status: fixture comparison and production host/IPC/recovery validation complete;
-Harbor Market benchmark, resource-accounting confirmation and human confirmation
-pending. D-008 remains **Default**. This is an intermediate spike report, not a
-claim that T08 or AC-09 is complete. The original prototype measurements below
-are retained; the production section records the implemented host separately.
+Status: fixture comparison, production host/IPC/recovery validation and the
+Harbor Market benchmark with Q-011 resource accounting are complete; QuickJS meets
+every D-008 criterion on Harbor Market. Human confirmation is pending, so D-008
+remains **Default** and T08 stays open until then. The original prototype
+measurements below are retained; the production and Harbor Market sections record
+the implemented host separately.
 
 ## Scope and reproduction
 
@@ -162,27 +163,66 @@ parent gives 6.66 MiB per match at that sample count. This meets the idle fixtur
 target without claiming a single-match service or active process fits in 16 MB.
 See [t08-memory.md](t08-memory.md) for profiles, fixed overhead and full API tests.
 
+## Harbor Market workload
+
+`pnpm exec tsx scripts/t08-harbor-market.ts` (after `pnpm build`, with no other
+tests running) records results in
+[t08-harbor-market-results.json](t08-harbor-market-results.json). It bundles the
+game exactly as the package build does (790,792 bytes, import-free) and records 21
+complete legal games with the seeded `runMatch` bot: 2, 3 and 4 seats, short and
+full length, 2,436 accepted moves (20 to 215 per game). Each game is replayed move
+by move through the production `RulesHostClient`, the QuickJS sandbox and the VM
+process prototype. Every state hash (2,457 per path) matches direct Node
+execution, and seat views match at setup and at the end of every game.
+
+Two runs on 2026-11-03 (Windows x64, Node v24.12.0, ranges across both runs):
+
+| Measurement                      | Criterion | Production (QuickJS + IPC)        | QuickJS sandbox           | VM process prototype      |
+| -------------------------------- | --------- | --------------------------------- | ------------------------- | ------------------------- |
+| Move p95                         | < 20 ms   | 12.8–14.2 ms (max 19.7–24.1)      | 11.5–11.6 ms              | 6.2–6.7 ms                |
+| New match load (create) p95      | < 300 ms  | 220–255 ms; first 190–202 ms      | warm 113 ms; cold 206–218 | warm 123–125 ms; cold 119 |
+| Cold client start to first match | —         | 296–354 ms (waits for reserve)    | —                         | —                         |
+| Active memory per match          | —         | RSS 66.6–68.6 MiB (max 71.8)      | heap 4.58 MiB (max 5.15)  | child RSS 70.5–72.2 MiB   |
+| Idle memory per match (21)       | < 16 MB   | 2.46–2.52 MiB children only       | —                         | —                         |
+| Idle incl. whole parent          | —         | 6.52–7.35 MiB (parent 84–103 MiB) | —                         | —                         |
+| Resume p95 (idle → hash)         | —         | 213–215 ms, 21/21 hashes restored | —                         | —                         |
+
+Production creates are measured 2 s after the client starts, as on a running
+server whose reserve process has booted. The cold row is measured separately with
+a fresh client: its first create waits for Node and QuickJS start-up and lands
+around the 300 ms line. That is a server-start cost, paid once, not per-match
+load. Create and resume times are dominated by evaluating the 790 KB bundle in the
+interpreter; a smaller game bundle is the main lever if this margin shrinks.
+
+Idle accounting follows Q-011: all 21 matches retired to checkpoints, leaving one
+shared unused reserve process (51.6–53.0 MiB), amortized across 21 matches. The
+parent includes the measurement runner and recorded games; it runs production
+before the spike phases so their sandboxes do not inflate it. The 64 MiB
+interpreter cap, 128 MiB Node old space and IPC limits are unchanged.
+
+The INT-ISOLATION hostile corpus does not depend on the game; it passes in the
+rules-host integration suite against the same production host.
+
 ## Recommendation and remaining gates
 
-Keep QuickJS as D-008's default. On this fixture it meets the latency and heap
-targets, provides a separate interpreter heap, and avoids one roughly 66 MiB Node
-process per idle match. The VM prototype is faster per move but its isolation and
-memory tradeoffs do not justify changing the default on the available evidence.
+Keep QuickJS as D-008's default and confirm it. On Harbor Market it meets every
+spike criterion with margin on moves (p95 about 12–14 ms including IPC against
+20 ms) and memory (about 2.5 MiB per idle match against 16 MB), and meets the
+load criterion at p95 220–255 ms. The VM prototype is about twice as fast per move,
+but each match costs a ~71 MiB Node process and `vm` is not a security boundary;
+neither speed nor load justifies switching.
 
-This recommendation is provisional until the required Harbor Market workload runs.
-Do not change D-008 to Accepted or mark T08 complete from these fixture measurements.
-Before finishing T08:
+Gates:
 
-1. Run both implementations with Harbor Market and repeat the latency, load, memory
-   and determinism measurements using real legal-move sequences.
-2. Obtain human confirmation of the sandbox choice, as required by AGENTS.md and T08.
-3. Confirm Harbor Market memory using the active/reserve/parent accounting in Q-011.
-   Keep the 16 MB idle target; do not substitute interpreter heap alone.
-4. The production implementation and fixture verification described above are now
-   complete. T11 still owns real room-server persistence/resync integration; this
-   report claims host/client recovery, not end-to-end AC-10 completion.
-5. Merge the updated spike write-up after the remaining decisions and complete the
-   full task's checks. The original prototype write-up is already on main.
+1. Done: both implementations ran Harbor Market legal-move sequences with
+   identical hashes, and the latency, load, memory and determinism measurements
+   above replace the fixture-only evidence.
+2. Done: Harbor Market idle memory measured with the active/reserve/parent
+   accounting in Q-011, against the retained 16 MB target.
+3. Pending: human confirmation of the sandbox choice, as required by AGENTS.md
+   and T08. On confirmation, change D-008 to Accepted and mark T08 complete.
+4. T11 still owns real room-server persistence/resync integration; this report
+   claims host/client recovery, not end-to-end AC-10 completion.
 
 Reference: the installed upstream QuickJS
 [API and minimal-distribution documentation](https://github.com/justjake/quickjs-emscripten)

@@ -1,0 +1,85 @@
+{
+  "measuredAt": "2026-11-03T09:24:12.540Z",
+  "node": "v24.12.0",
+  "platform": "win32 x64",
+  "cpu": "Intel(R) Core(TM) Ultra 7 258V",
+  "workload": {
+    "description": "Harbor Market bundle (esbuild, as dist/game.js); seeded-bot legal games replayed move by move",
+    "bundleBytes": 790792,
+    "games": 21,
+    "seatCounts": [2, 3, 4],
+    "events": 2436,
+    "eventsPerGame": {
+      "min": 20,
+      "max": 215
+    }
+  },
+  "criteria": {
+    "moveP95Ms": 20,
+    "newMatchLoadMs": 300,
+    "idleMemoryPerMatchBytes": 16777216
+  },
+  "production": {
+    "settleMs": 2000,
+    "firstCreateMs": 190.063900000001,
+    "createP95Ms": 254.96099999999933,
+    "createMaxMs": 265.83460000000014,
+    "moveP95Ms": 14.161299999999756,
+    "moveMaxMs": 24.101699999999255,
+    "activeRssMeanBytes": 69804812.1904762,
+    "activeRssMaxBytes": 73338880,
+    "samples": {
+      "matches": 21,
+      "creates": 21,
+      "moves": 2436
+    },
+    "idle": {
+      "idleMatches": 21,
+      "assignedProcesses": 0,
+      "warmSpareProcesses": 1,
+      "warmSpareRssBytes": [54079488],
+      "hostChildRssTotalBytes": 54079488,
+      "hostChildRssPerIdleMatchBytes": 2575213.714285714,
+      "parentRssBytes": 107753472,
+      "parentHeapUsedBytes": 45647312,
+      "totalObservedRssPerIdleMatchBytes": 7706331.428571428,
+      "resumeP95Ms": 214.94319999999425,
+      "resumeFirstMs": 192.51110000000335,
+      "restoredHashes": 21,
+      "note": "Per-idle-match value amortizes the one shared spare across the idle matches; parent absolute memory is separate and includes the measurement runner. Active process RSS is reported separately."
+    },
+    "coldStart": {
+      "clientStartToCreatedMs": 366.70730000000003,
+      "createIncludingReserveBootMs": 353.8778000000002
+    }
+  },
+  "quickjs": {
+    "coldLoadAndCreateMs": 218.21510000000126,
+    "warmLoadAndCreateP95Ms": 112.47339999998803,
+    "moveP95Ms": 11.572999999989406,
+    "moveMaxMs": 21.707399999999325,
+    "parentRssDeltaPerMatchBytes": 6469339.428571428,
+    "quickjsHeapUsedMeanBytes": 4805254.095238095,
+    "quickjsHeapUsedMaxBytes": 5402199,
+    "samples": {
+      "matches": 21,
+      "warmLoads": 20,
+      "moves": 2436
+    },
+    "hashesCompared": 2457
+  },
+  "vmProcess": {
+    "coldLoadAndCreateMs": 119.69789999999921,
+    "warmLoadAndCreateP95Ms": 123.22389999999723,
+    "moveP95Ms": 6.2273000000132015,
+    "moveMaxMs": 12.005700000008801,
+    "parentRssDeltaPerMatchBytes": 2166588.9523809524,
+    "vmChildRssMeanBytes": 73960496.76190476,
+    "samples": {
+      "matches": 21,
+      "warmLoads": 20,
+      "moves": 2436
+    },
+    "hashesCompared": 2457
+  }
+}
