@@ -162,3 +162,26 @@ describe("components, snapshots and gestures", () => {
     );
   });
 });
+
+test("zone rotation is optional and uses whole clockwise degrees", () => {
+  const base = {
+    table: { size_mm: [900, 900] },
+    zones: [{ id: "hand:1", layout: "fan", rect_mm: { x: -380, y: 0, w: 500, h: 110 } }],
+    items: [],
+  };
+  expect(TableSnapshotSchema.safeParse(base).success).toBe(true);
+  for (const rotation_deg of [0, 90, 180, 270, 359])
+    expect(
+      TableSnapshotSchema.safeParse({
+        ...base,
+        zones: base.zones.map((zone) => ({ ...zone, rotation_deg })),
+      }).success,
+    ).toBe(true);
+  for (const rotation_deg of [-1, 360, 1.5])
+    expect(
+      TableSnapshotSchema.safeParse({
+        ...base,
+        zones: base.zones.map((zone) => ({ ...zone, rotation_deg })),
+      }).success,
+    ).toBe(false);
+});

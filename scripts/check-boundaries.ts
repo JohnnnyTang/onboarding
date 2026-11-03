@@ -113,6 +113,13 @@ export function checkSource(root: string, file: string, source: string): string[
     }
     const name = packageName(specifier);
     if (testFile && (name === "vitest" || name === "fast-check")) return;
+    // Game tests exercise the public test harness and validate their artifacts.
+    if (
+      testFile &&
+      path.startsWith("games/") &&
+      (name === "@bgp/testing" || name === "@bgp/schema")
+    )
+      return;
     if (path === "apps/server/drizzle.config.ts" && name === "drizzle-kit") return;
     if (path === "apps/server/vitest.config.ts" && name === "vitest") return;
     if (specifier.startsWith("node:") || NODE_MODULES.has(specifier)) {

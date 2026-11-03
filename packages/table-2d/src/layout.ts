@@ -75,6 +75,14 @@ export function layoutZone(
         placement.y = y - Math.abs(offset) * Math.min(5, h / Math.max(1, ordered.length));
       }
     }
+    if (zone.layout !== "free" && zone.rotation_deg) {
+      const angle = (zone.rotation_deg * Math.PI) / 180;
+      const dx = placement.x - x,
+        dy = placement.y - y;
+      placement.x = x + dx * Math.cos(angle) + dy * Math.sin(angle);
+      placement.y = y - dx * Math.sin(angle) + dy * Math.cos(angle);
+      placement.rotation += zone.rotation_deg;
+    }
     return placement;
   });
 }
@@ -138,10 +146,18 @@ export function screenToTable(x: number, y: number, view: Viewport): [number, nu
     dx * Math.sin(view.angle) - dy * Math.cos(view.angle),
   ];
 }
+function zoneLocal(zone: ZonePlacement, x: number, y: number): [number, number] {
+  const angle = ((zone.rotation_deg ?? 0) * Math.PI) / 180;
+  const dx = x - zone.rect_mm.x,
+    dy = y - zone.rect_mm.y;
+  return [dx * Math.cos(angle) - dy * Math.sin(angle), dx * Math.sin(angle) + dy * Math.cos(angle)];
+}
+
 export function hitZone(snapshot: TableSnapshot, x: number, y: number): ZonePlacement | undefined {
-  return [...snapshot.zones]
-    .reverse()
-    .find(({ rect_mm: r }) => Math.abs(x - r.x) <= r.w / 2 && Math.abs(y - r.y) <= r.h / 2);
+  return [...snapshot.zones].reverse().find((zone) => {
+    const [localX, localY] = zoneLocal(zone, x, y);
+    return Math.abs(localX) <= zone.rect_mm.w / 2 && Math.abs(localY) <= zone.rect_mm.h / 2;
+  });
 }
 export function hitItem(
   items: readonly PlacedItem[],
@@ -168,6 +184,7 @@ export function dropGesture(
 ): Gesture | undefined {
   const zone = hitZone(snapshot, x, y);
   if (!zone?.droppable) return undefined;
+  const [localX, localY] = zoneLocal(zone, x, y);
   const gesture: Extract<Gesture, { kind: "drop" }> = {
     kind: "drop",
     item: item.id,
@@ -187,14 +204,15 @@ export function dropGesture(
       snapshot.items.filter((p) => p.zone === zone.id),
     );
     const r = zone.rect_mm;
-    const col = Math.max(0, Math.min(cols - 1, Math.floor((x - r.x + r.w / 2) / (r.w / cols))));
-    const row = Math.max(0, Math.min(rows - 1, Math.floor((r.y + r.h / 2 - y) / (r.h / rows))));
+    const col = Math.max(0, Math.min(cols - 1, Math.floor((localX + r.w / 2) / (r.w / cols))));
+    const row = Math.max(0, Math.min(rows - 1, Math.floor((r.h / 2 - localY) / (r.h / rows))));
     gesture.index = row * cols + col;
   } else if (zone.layout === "stack") {
     gesture.index = snapshot.items.filter((p) => p.zone === zone.id && p.id !== item.id).length;
   } else {
     gesture.index = placements.filter(
-      (p) => p.item.zone === zone.id && p.item.id !== item.id && p.x < x,
+      (p) =>
+        p.item.zone === zone.id && p.item.id !== item.id && zoneLocal(zone, p.x, p.y)[0] < localX,
     ).length;
   }
   return gesture;

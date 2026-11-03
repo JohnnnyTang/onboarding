@@ -142,3 +142,19 @@ Presentation rules:
 | Illegal moves      | Each `gameCode` in the move table is produced by a crafted intent                                                               |
 | Hidden information | For every seat and every step of 200 random games, the seat's view contains none of the IDs in other hands, the deck or the box |
 | Determinism        | 1,000 random games via `legalMoves`: replaying each from seed and events gives the same state hash                              |
+
+## Implementation details
+
+- Setup deals round-robin in seat order. The initial shuffle happens before any
+  view is published; its opaque IDs have never been observable before shuffling.
+- Move arguments are strict objects. Repeating an ID in a shipment or discard is
+  rejected with `NOT_IN_HAND`; cards must be distinct. Malformed argument shapes
+  use the runtime's `INVALID_ARGS` response and do not echo submitted values.
+- A final-seat hand-limit discard completes before `endGame` is emitted. Finishing
+  the match does not start another turn or consume another tide roll.
+- Side-seat rows/fans use `ZonePlacement.rotation_deg`; top-seat zones rotate 180°.
+  Names are displayed as `Seat 1`, `Seat 2`, etc. because SDK 1 `PresentInfo` has no
+  display-name field (Q-012). Spectators and finished games have no move controls.
+- `BGP_PROPERTY_RUNS=1000 pnpm --filter harbor-market test` runs the full T06
+  acceptance workload; normal local runs use 20 games per property. The leak
+  property caps at 200 complete games and includes spectator views and snapshots.

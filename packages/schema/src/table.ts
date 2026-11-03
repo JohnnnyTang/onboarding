@@ -145,6 +145,7 @@ export const ZonePlacementSchema = z
     rect_mm: RectSchema,
     owner: SeatIdSchema.optional(),
     droppable: z.boolean().optional(),
+    rotation_deg: RotationSchema.optional(),
   })
   .refine(
     (zone) => zone.layout === "grid" || zone.grid === undefined,
