@@ -2,8 +2,8 @@
 
 Production implementation branch: `codex/t08-host-completion`, based on `b40f329`.
 The isolated worktree continues the prototypes already integrated into main.
-T08 is **not complete**: Harbor Market is still a scaffold and the required game
-benchmark and human confirmation remain. The idle-memory rework now fits the
+T08 is **not complete**: Harbor Market is implemented in [T06](t06-validation.md),
+but the required game benchmark and human confirmation remain. The idle-memory rework now fits the
 16 MB fixture target at the explicitly measured 21-match scale.
 
 ## Implemented and checked
