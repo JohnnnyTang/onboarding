@@ -99,6 +99,8 @@ jobs:
     env:
       CI: "true"
       TURBO_TELEMETRY_DISABLED: "1"
+      # Renderer baselines only: no Docker services or build here for the web app and API.
+      BGP_E2E_APP: "0"
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
