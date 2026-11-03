@@ -56,6 +56,39 @@ export interface SeatInfo {
 
 Per connection: `move` ≤ 10 per second, `ephemeral` ≤ 20 per second, `chat` ≤ 1 per second. Excess messages get `error` `RATE_LIMITED` (not fatal) and are dropped.
 
+## Server behavior (T11)
+
+How the room server in `apps/server` applies the rules above. Message shapes are unchanged.
+
+- **Frames.** Text frames up to 64 KiB; larger frames close the socket (1009). Fatal errors close with
+  1008, or 1011 for `INTERNAL`. A server shutdown closes with 1001 and no `error`; clients reconnect.
+- **`hello` checks, in order:** protocol (`PROTOCOL_VERSION`), schema (`BAD_MESSAGE`), token
+  (`UNAUTHORIZED`; `auth.kind` must match the token type), a guest token's match (`FORBIDDEN`), the
+  match (`MATCH_NOT_FOUND`), a claimed seat held by the caller (`FORBIDDEN`), then status `active`
+  (`MATCH_NOT_ACTIVE`, also for finished matches, whose replay is served over HTTP). Every error before
+  `welcome` is fatal, as is a missing `hello` after 10 seconds (`BAD_MESSAGE`). Tokens are checked at
+  `hello` only. Owners without a seat are not admitted yet (Q-016); sandbox matches are not hosted yet
+  (Q-017).
+- **`welcome`** always carries the full current view, so no `snapshot` follows it; `lastSeq` is
+  accepted but not needed.
+- **After `welcome`:** an invalid message or a second `hello` gets a non-fatal `BAD_MESSAGE` and is
+  dropped. A `move` whose `clientSeq` does not increase gets `rejected` `BAD_MESSAGE`.
+- **Moves.** `patch.cause.clientSeq` is sent only to the mover's own connection. A change whose patch
+  exceeds 8 KiB and is longer than the view is sent as a `snapshot` (no `cause`; it still acknowledges the
+  move). `GAME_ERROR` always has the message `Game execution failed`; the move is discarded, never
+  retried. After `ended`, moves get `rejected` `MATCH_FINISHED`. Abandoning an active match sends every
+  connection a fatal `MATCH_NOT_ACTIVE`.
+- **Recovery.** When a match's rules host process dies, or the server restarts, the room rebuilds the
+  match from its latest stored snapshot plus later events, checks the stored hash where one exists for
+  the current `seq`, and sends each connection a `snapshot` at the unchanged `seq`. A failed rebuild
+  closes every connection with `INTERNAL`.
+- **Presence** goes to every connection when a seat connects, disconnects or is taken over. HTTP match
+  summaries report the same `connected` flags.
+- **Chat** goes to every connection, the sender included, and is not stored.
+- **Ephemeral** messages go to the other connections only. A `drag` keeps its `item` only for seats whose
+  current view already contains that ID; other seats receive it as a `pointer` at the same position, so
+  dragging a hidden card never reveals which card it is.
+
 ## Error codes
 
 Shared by `rejected`, `error` and HTTP error bodies.

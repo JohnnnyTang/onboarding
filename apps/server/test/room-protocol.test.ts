@@ -2,6 +2,7 @@ import { ErrorCodeSchema, HttpErrorSchema, type MatchState } from "@bgp/schema";
 import { asc, eq } from "drizzle-orm";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { matches, matchSnapshots } from "../src/db/schema.js";
+import { sandboxPackage } from "./api-fixture.js";
 import {
   type ActiveMatch,
   join,
@@ -124,6 +125,21 @@ describe("hello handshake errors", () => {
       .where(eq(matchSnapshots.matchId, match.matchId));
     const error = await refusedHello(hello(match.matchId, owner));
     expect(error).toEqual({
+      t: "error",
+      code: "INTERNAL",
+      message: "Internal server error",
+      fatal: true,
+    });
+  });
+});
+
+describe("sandbox matches (Q-017)", () => {
+  it("cannot be hosted yet: hello fails with INTERNAL and no state", async () => {
+    const pkg = sandboxPackage(uniqueSlug("sandbox"));
+    const match = await startMatch(env, server, pkg, 2);
+    const [owner] = match.seats;
+    if (!owner) throw new Error("Expected a seat");
+    expect(await refusedHello(hello(match.matchId, owner))).toEqual({
       t: "error",
       code: "INTERNAL",
       message: "Internal server error",
