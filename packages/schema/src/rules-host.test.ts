@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { HostBuildSchema, HostRequestSchema, HostResponseSchema } from "./rules-host.js";
+import {
+  HostBuildSchema,
+  HostMoveOutcomeSchema,
+  HostRequestSchema,
+  HostResponseSchema,
+} from "./rules-host.js";
 
 describe("privileged rules-host contract", () => {
   it("validates the version and strict command shapes", () => {
@@ -24,6 +29,17 @@ describe("privileged rules-host contract", () => {
   });
 
   it("accepts only sanitized errors and state-free move successes", () => {
+    expect(
+      HostMoveOutcomeSchema.safeParse({ ok: false, code: "GAME_ERROR", message: "hidden" }).success,
+    ).toBe(false);
+    expect(
+      HostMoveOutcomeSchema.safeParse({
+        ok: false,
+        code: "GAME_ERROR",
+        message: "Game execution failed",
+        gameCode: "HIDDEN",
+      }).success,
+    ).toBe(false);
     const response = {
       v: 1,
       id: 1,

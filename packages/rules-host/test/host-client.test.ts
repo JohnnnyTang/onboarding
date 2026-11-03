@@ -30,6 +30,26 @@ async function add(client: RulesHostClient, id: string, hash: string | undefined
 }
 
 describe("production rules host client", () => {
+  it("sanitizes game errors even when game code tampers with serialization", async () => {
+    const source = hostile(`
+      Object.prototype.toJSON = function() {
+        return { ok: false, code: "GAME_ERROR", message: "hidden-secret", gameCode: "HIDDEN" };
+      };
+      throw Error(state.secret);
+    `);
+    const { client, hashes } = fixture([source]);
+    try {
+      await add(client, "safe-error", hashes[0]);
+      expect(await client.apply("safe-error", "0", { move: "tick" })).toEqual({
+        ok: false,
+        code: "GAME_ERROR",
+        message: "Game execution failed",
+      });
+      expect(client.processId("safe-error")).toBeUndefined();
+    } finally {
+      client.close();
+    }
+  });
   it("resumes every API after an idle checkpoint without losing state or reusing assigned processes", async () => {
     const { client, hashes } = fixture([GAME_SOURCE], { idleTimeoutMs: 40 });
     const direct = await QuickJsSandbox.load(GAME_SOURCE);

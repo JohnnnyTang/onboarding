@@ -20,12 +20,19 @@ import {
 export const HOST_PROTOCOL_VERSION = 1;
 export const HostMoveOutcomeSchema = z.discriminatedUnion("ok", [
   z.strictObject({ ok: z.literal(true), event: AcceptedEventSchema }),
-  z.strictObject({
-    ok: z.literal(false),
-    code: RejectCodeSchema,
-    message: z.string(),
-    gameCode: GameCodeSchema.optional(),
-  }),
+  z
+    .strictObject({
+      ok: z.literal(false),
+      code: RejectCodeSchema,
+      message: z.string(),
+      gameCode: GameCodeSchema.optional(),
+    })
+    .refine(
+      (value) =>
+        value.code !== "GAME_ERROR" ||
+        (value.message === "Game execution failed" && value.gameCode === undefined),
+      "Game errors must use the fixed safe payload",
+    ),
 ]);
 export const HostViewsSchema = z.record(SeatIdSchema, ClientViewSchema);
 export const HostBuildSchema = z.strictObject({

@@ -46,27 +46,16 @@
       "type": "object",
       "properties": {
         "ok": {
-          "type": "boolean",
-          "const": false
+          "$ref": "#/$defs/__schema0"
         },
         "code": {
-          "type": "string",
-          "enum": [
-            "MATCH_FINISHED",
-            "NOT_YOUR_TURN",
-            "MOVE_NOT_ALLOWED",
-            "UNKNOWN_MOVE",
-            "INVALID_ARGS",
-            "INVALID_MOVE",
-            "GAME_ERROR"
-          ]
+          "$ref": "#/$defs/__schema1"
         },
         "message": {
-          "type": "string"
+          "$ref": "#/$defs/__schema2"
         },
         "gameCode": {
-          "type": "string",
-          "pattern": "^[A-Z][A-Z0-9]*(?:_[A-Z0-9]+)*$"
+          "$ref": "#/$defs/__schema3"
         }
       },
       "required": ["ok", "code", "message"],
@@ -74,6 +63,29 @@
     }
   ],
   "$defs": {
+    "__schema0": {
+      "type": "boolean",
+      "const": false
+    },
+    "__schema1": {
+      "type": "string",
+      "enum": [
+        "MATCH_FINISHED",
+        "NOT_YOUR_TURN",
+        "MOVE_NOT_ALLOWED",
+        "UNKNOWN_MOVE",
+        "INVALID_ARGS",
+        "INVALID_MOVE",
+        "GAME_ERROR"
+      ]
+    },
+    "__schema2": {
+      "type": "string"
+    },
+    "__schema3": {
+      "type": "string",
+      "pattern": "^[A-Z][A-Z0-9]*(?:_[A-Z0-9]+)*$"
+    },
     "IntegerJson": {
       "anyOf": [
         {

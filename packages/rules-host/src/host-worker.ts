@@ -4,6 +4,7 @@ import { prepareQuickJs, QuickJsSandbox } from "./quickjs-sandbox.js";
 
 let sandbox: QuickJsSandbox | undefined;
 let busy = false;
+let lastRequestId = 0;
 process.on("disconnect", () => process.exit(0));
 process.on("message", async (raw: unknown) => {
   // Malformed envelopes cannot be correlated safely. Never echo input or exceptions.
@@ -12,6 +13,8 @@ process.on("message", async (raw: unknown) => {
   try {
     if (busy || Buffer.byteLength(JSON.stringify(raw)) > MAX_IPC_BYTES) throw Error();
     const request = HostRequestSchema.parse(raw);
+    if (request.id <= lastRequestId) throw Error();
+    lastRequestId = request.id;
     id = request.id;
     command = request.command;
   } catch {

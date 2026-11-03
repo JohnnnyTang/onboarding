@@ -145,7 +145,10 @@ export class RulesHostClient {
           )
             throw new GameError();
           record.events.push(structuredClone(outcome.event));
-        } else if (outcome.code === "GAME_ERROR") host.dispose();
+        } else if (outcome.code === "GAME_ERROR") {
+          host.dispose();
+          return { ok: false, code: "GAME_ERROR", message: "Game execution failed" };
+        }
         return outcome.ok
           ? outcome
           : {
