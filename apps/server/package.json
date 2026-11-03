@@ -13,10 +13,12 @@
     "build": "tsc --project tsconfig.build.json",
     "typecheck": "tsc --noEmit --project tsconfig.build.json && tsc --noEmit",
     "test": "vitest run --config vitest.config.ts",
-    "dev": "tsx watch ../../scripts/scaffold-dev.ts @bgp/server",
-    "db:generate": "drizzle-kit generate"
+    "dev": "tsx watch src/main.ts",
+    "db:generate": "drizzle-kit generate",
+    "start": "node dist/main.js"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "3.1154.0",
     "@bgp/rules-host": "workspace:*",
     "@bgp/schema": "workspace:*",
     "drizzle-orm": "0.45.4",
@@ -26,6 +28,7 @@
     "postgres": "3.4.9"
   },
   "devDependencies": {
-    "drizzle-kit": "0.31.11"
+    "drizzle-kit": "0.31.11",
+    "harbor-market": "workspace:*"
   }
 }

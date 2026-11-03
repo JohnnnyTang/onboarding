@@ -3,7 +3,8 @@ import type { FastifyPluginAsync, FastifyRequest } from "fastify";
 import fp from "fastify-plugin";
 import { AuthError, type AuthService, type CallerIdentity, requireMatchScope } from "./service.js";
 
-export type AuthPolicy = "none" | "optional" | "user" | "match";
+/** `any` admits users and guests; the route checks what a guest's match lets it reach. */
+export type AuthPolicy = "none" | "optional" | "user" | "match" | "any";
 declare module "fastify" {
   interface FastifyRequest {
     identity: CallerIdentity | null;

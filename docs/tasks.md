@@ -110,6 +110,8 @@ from the Harbor Market measurements. Validation and evidence: [t08-validation.md
 
 ### T10 HTTP API
 
+**Status:** Complete. Local validation and scope: [t10-validation.md](t10-validation.md).
+
 **Deliverables:** every endpoint in [http-api.md](contracts/http-api.md); `BlobStore` with `fs` and `s3` drivers; the upload flow and finalize validation in [manifest.md](contracts/manifest.md#upload-flow), including the rules-host `setup` check; match creation with seeds and invite tokens; replay endpoint.
 
 **Done when:** INT-UPLOAD passes; each endpoint has success and permission tests; invite tokens are stored hashed; the seed is absent from every response before a match finishes.

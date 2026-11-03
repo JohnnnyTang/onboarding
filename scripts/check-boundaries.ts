@@ -34,6 +34,7 @@ const POLICIES: Record<string, Policy> = {
       "fastify",
       "fastify-plugin",
       "jose",
+      "@aws-sdk/client-s3",
     ],
     node: true,
   },
