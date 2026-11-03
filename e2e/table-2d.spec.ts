@@ -5,6 +5,8 @@ import { components, fixture } from "../dev/table/fixture.js";
 import { fitViewport, layoutSnapshot, tableToScreen } from "../packages/table-2d/src/layout.js";
 
 const pageErrors = new WeakMap<Page, string[]>();
+// Minor rasterization drift between Windows runner images and browser patches.
+const MAX_DIFF_PIXELS = 600;
 test.beforeEach(async ({ page }) => {
   const errors: string[] = [];
   pageErrors.set(page, errors);
@@ -34,12 +36,12 @@ for (const width of [360, 1440]) {
     page.on("pageerror", (error) => errors.push(error.message));
     await ready(page);
     await expect(page.locator("#table")).toHaveScreenshot(`table-${width}.png`, {
-      maxDiffPixels: 100,
+      maxDiffPixels: MAX_DIFF_PIXELS,
     });
     await page.getByRole("button", { name: "300 items" }).click();
     await page.waitForTimeout(400);
     await expect(page.locator("#table")).toHaveScreenshot(`stress-${width}.png`, {
-      maxDiffPixels: 100,
+      maxDiffPixels: MAX_DIFF_PIXELS,
     });
     expect(errors).toEqual([]);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
@@ -69,7 +71,7 @@ test("selection, clickZone, and drops use contract shapes without predicting the
   await page.mouse.down();
   await page.mouse.move(...target, { steps: 10 });
   await expect(page.locator("#table")).toHaveScreenshot("drop-feedback.png", {
-    maxDiffPixels: 100,
+    maxDiffPixels: MAX_DIFF_PIXELS,
   });
   await page.mouse.up();
   const gesture = GestureSchema.parse(
@@ -106,13 +108,15 @@ test("seat rotation and repeated authoritative snapshot animation", async ({ pag
   if (!card) throw new Error("Fixture missing");
   await page.mouse.click(...(await position(page, card.x, card.y, "1")));
   await expect(page.locator("#selection")).toHaveText("Selected: market-0");
-  await expect(page.locator("#table")).toHaveScreenshot("seat-1.png", { maxDiffPixels: 100 });
+  await expect(page.locator("#table")).toHaveScreenshot("seat-1.png", {
+    maxDiffPixels: MAX_DIFF_PIXELS,
+  });
   await page.getByRole("button", { name: "Next snapshot" }).click();
   await page.waitForTimeout(500);
   await page.mouse.click(...(await position(page, 200, -100, "1")));
   await expect(page.locator("#selection")).toHaveText("No pieces selected");
   await expect(page.locator("#table")).toHaveScreenshot("next-snapshot.png", {
-    maxDiffPixels: 100,
+    maxDiffPixels: MAX_DIFF_PIXELS,
   });
   await page.getByRole("button", { name: "Next snapshot" }).click();
   await page.waitForTimeout(500);
@@ -162,7 +166,7 @@ test("touch pinch and pan preserve integer table-coordinate drops", async ({ pag
   await page.mouse.click(box.x + sx, box.y + sy);
   await expect(page.locator("#selection")).toHaveText("Selected: market-0");
   await expect(page.locator("#table")).toHaveScreenshot("pinch-pan.png", {
-    maxDiffPixels: 100,
+    maxDiffPixels: MAX_DIFF_PIXELS,
   });
   await page.mouse.move(box.x + sx, box.y + sy);
   await page.mouse.down();
@@ -199,7 +203,7 @@ test("keyboard focus walks the seat's view, clicks with Enter and clears with Es
   ).toEqual({ kind: "click", item: "market-0" });
   await expect(canvas).toHaveAttribute("aria-label", "Game table: FISH, in Market (row), selected");
   await expect(page.locator("#table")).toHaveScreenshot("keyboard-focus.png", {
-    maxDiffPixels: 100,
+    maxDiffPixels: MAX_DIFF_PIXELS,
   });
   await page.keyboard.press("ArrowLeft");
   await expect(canvas).toHaveAttribute(

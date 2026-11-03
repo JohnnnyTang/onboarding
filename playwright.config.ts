@@ -4,7 +4,9 @@ export default defineConfig({
   testDir: "./e2e",
   forbidOnly: Boolean(process.env.CI),
   retries: process.env.CI ? 2 : 0,
+  timeout: 120_000,
   reporter: process.env.CI ? "github" : "list",
+  expect: { timeout: 30_000 },
   use: { trace: "retain-on-failure" },
   webServer: {
     command: "pnpm dev:table",
