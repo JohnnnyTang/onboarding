@@ -107,6 +107,14 @@ at its required snapshot cadence, keeping recovery bounded as matches grow.
 Explicit restore can replace a dead host directly without replaying an older
 journal first; restored seats must match the match's original seats.
 
+`RulesHostClientOptions.onProcessExit(matchId)` (added in T11) is called once when
+the process assigned to a live match exits on its own: a crash, an external kill or
+a native fault. It is not called for the client's own decisions (watchdog kills,
+idle retirement, `dispose`, `close`) or for unassigned spares. It carries only the
+match ID, never process output. Recovery does not depend on it; the room server
+uses it to rebuild the match from durable storage right away and send each
+connection a fresh `snapshot`.
+
 This in-memory journal survives child crashes, not server restarts. T11 owns
 durable snapshots/logs, persistence before broadcast, and browser resync. After
 a server restart, create the match with its pinned build, then restore the stored
