@@ -118,6 +118,8 @@ from the Harbor Market measurements. Validation and evidence: [t08-validation.md
 
 ### T11 Room server
 
+**Status:** Complete. Local validation and scope: [t11-validation.md](t11-validation.md).
+
 **Deliverables:** WebSocket endpoint and every message in [protocol.md](contracts/protocol.md); one serial queue per match; persistence before broadcast; per-connection view tracking and JSON Patch diffs; snapshots at seq 0, every 50 events and at the end; presence, chat, ephemeral relay; rate limits; recovery after rules-host restarts.
 
 **Done when:** INT-LEAK, INT-REPLAY and INT-RECOVERY pass; every protocol error code is produced by a test; a client that drops a patch gets a snapshot after `resync`.
