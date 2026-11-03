@@ -10,6 +10,7 @@ import type { BlobStore } from "./blob/blob-store.js";
 import type { Database } from "./db/connection.js";
 import { ApiError, sendError } from "./http/errors.js";
 import { gameRoutes } from "./routes/games.js";
+import { matchRoutes } from "./routes/matches.js";
 import { versionRoutes } from "./routes/versions.js";
 import type { SetupChecker } from "./versions/finalize.js";
 
@@ -73,5 +74,6 @@ export async function buildApp(deps: AppDependencies): Promise<FastifyInstance> 
   });
   await app.register(gameRoutes, deps);
   await app.register(versionRoutes, deps);
+  await app.register(matchRoutes, deps);
   return app;
 }
