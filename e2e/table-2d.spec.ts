@@ -100,7 +100,7 @@ test("selection, clickZone, and drops use contract shapes without predicting the
 test("seat rotation and repeated authoritative snapshot animation", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 1000 });
   await ready(page);
-  await page.getByRole("button", { name: "View seat 1" }).click();
+  await page.getByRole("button", { name: "Seat 1" }).click();
   await page.waitForTimeout(400);
   const card = layoutSnapshot(fixture, components).find((p) => p.item.id === "market-0");
   if (!card) throw new Error("Fixture missing");
@@ -176,9 +176,37 @@ test("touch pinch and pan preserve integer table-coordinate drops", async ({ pag
     throw new Error("Missing touch-transformed coordinates");
   expect(Math.abs(drop.pos_mm[0] - 150)).toBeLessThanOrEqual(2);
   expect(Math.abs(drop.pos_mm[1] + 110)).toBeLessThanOrEqual(2);
-  await page.getByRole("button", { name: "Reset view" }).click();
+  await page.getByRole("button", { name: "Fit table" }).click();
   await page.waitForTimeout(500);
   await page.mouse.click(...(await position(page, card.x, card.y)));
+  await expect(page.locator("#selection")).toHaveText("No pieces selected");
+});
+
+test("keyboard focus walks the seat's view, clicks with Enter and clears with Escape", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await ready(page);
+  const canvas = page.locator("canvas");
+  await canvas.focus();
+  // Seat 0 reads the guest's four cards first, then the deck top, then the market row.
+  for (let step = 0; step < 6; step++) await page.keyboard.press("ArrowRight");
+  await expect(canvas).toHaveAttribute("aria-label", "Game table: FISH, in Market (row)");
+  await page.keyboard.press("Enter");
+  await expect(page.locator("#selection")).toHaveText("Selected: market-0");
+  expect(
+    GestureSchema.parse(JSON.parse((await page.locator("#gesture").textContent()) ?? "")),
+  ).toEqual({ kind: "click", item: "market-0" });
+  await expect(canvas).toHaveAttribute("aria-label", "Game table: FISH, in Market (row), selected");
+  await expect(page.locator("#table")).toHaveScreenshot("keyboard-focus.png", {
+    maxDiffPixels: 100,
+  });
+  await page.keyboard.press("ArrowLeft");
+  await expect(canvas).toHaveAttribute(
+    "aria-label",
+    "Game table: Card back, in Draw deck (stack), 12 in stack",
+  );
+  await page.keyboard.press("Escape");
   await expect(page.locator("#selection")).toHaveText("No pieces selected");
 });
 

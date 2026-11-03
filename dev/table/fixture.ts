@@ -81,21 +81,21 @@ export const fixture = TableSnapshotSchema.parse({
   zones: [
     {
       id: "deck",
-      label: "STACK / 12",
+      label: "Draw deck (stack)",
       layout: "stack",
       rect_mm: { x: -280, y: 100, w: 130, h: 140 },
       droppable: true,
     },
     {
       id: "market",
-      label: "ROW / MARKET",
+      label: "Market (row)",
       layout: "row",
       rect_mm: { x: 80, y: 100, w: 540, h: 140 },
       droppable: true,
     },
     {
       id: "grid",
-      label: "GRID / SUPPLY",
+      label: "Supply (grid)",
       layout: "grid",
       rect_mm: { x: -230, y: -60, w: 220, h: 180 },
       grid: { cols: 3, rows: 2 },
@@ -103,14 +103,14 @@ export const fixture = TableSnapshotSchema.parse({
     },
     {
       id: "free",
-      label: "FREE / DROP HERE",
+      label: "Open table (free placement)",
       layout: "free",
       rect_mm: { x: 150, y: -60, w: 380, h: 180 },
       droppable: true,
     },
     {
       id: "hand",
-      label: "FAN / YOUR HAND",
+      label: "Your hand (fan)",
       owner: "0",
       layout: "fan",
       rect_mm: { x: 0, y: -220, w: 440, h: 140 },
@@ -118,7 +118,7 @@ export const fixture = TableSnapshotSchema.parse({
     },
     {
       id: "opponent",
-      label: "SEAT 1",
+      label: "Guest hand (fan)",
       owner: "1",
       layout: "fan",
       rect_mm: { x: 0, y: 235, w: 400, h: 130 },
@@ -197,7 +197,7 @@ export const stressFixture: TableSnapshot = TableSnapshotSchema.parse({
   zones: [
     {
       id: "cargo",
-      label: "300 draggable items",
+      label: "Cargo (300 draggable cards)",
       layout: "grid",
       rect_mm: { x: 0, y: 0, w: 960, h: 700 },
       grid: { cols: 20, rows: 15 },
@@ -217,27 +217,39 @@ export const stressFixture: TableSnapshot = TableSnapshotSchema.parse({
 
 export function fixtureAssets(): (ref: string) => string {
   const assets = new Map<string, string>();
-  for (const [ref, title, color] of [
-    ["fish", "FISH", "#d49a64"],
-    ["back", "BGP", "#35576b"],
-    ["coin", "1", "#e0b556"],
-    ["board", "HARBOR", "#639f9e"],
-    ["piece", "BOAT", "#bd7154"],
-  ]) {
+  // Placeholder art at each definition's proportions (2 px per mm), so sprites fill their pieces.
+  const art: [ref: string, title: string, color: string, size: [number, number], round?: true][] = [
+    ["fish", "FISH", "#d49a64", [63, 88]],
+    ["back", "BGP", "#35576b", [63, 88]],
+    ["coin", "1", "#e0b556", [30, 30], true],
+    ["board", "HARBOR", "#639f9e", [120, 65]],
+    ["piece", "BOAT", "#bd7154", [42, 35]],
+  ];
+  for (const [ref, title, color, [w, h], round] of art) {
     const canvas = document.createElement("canvas");
-    canvas.width = 126;
-    canvas.height = 176;
+    canvas.width = w * 2;
+    canvas.height = h * 2;
     const ctx = canvas.getContext("2d");
     if (!ctx) throw new Error("Canvas unavailable");
-    ctx.fillStyle = color ?? "#333";
-    ctx.fillRect(0, 0, 126, 176);
+    ctx.fillStyle = color;
     ctx.strokeStyle = "#f4e9cf";
     ctx.lineWidth = 2;
-    ctx.strokeRect(8, 8, 110, 160);
+    if (round) {
+      ctx.beginPath();
+      ctx.arc(w, h, w - 1, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(w, h, w - 7, 0, Math.PI * 2);
+      ctx.stroke();
+    } else {
+      ctx.fillRect(0, 0, w * 2, h * 2);
+      ctx.strokeRect(8, 8, w * 2 - 16, h * 2 - 16);
+    }
     ctx.fillStyle = "#f4e9cf";
-    ctx.font = "bold 20px Arial";
+    ctx.font = `bold ${Math.min(20, Math.round(h * 0.6))}px Arial`;
     ctx.textAlign = "center";
-    ctx.fillText(title ?? "", 63, 96);
+    ctx.textBaseline = "middle";
+    ctx.fillText(title, w, h);
     assets.set(`assets/${ref}.png`, canvas.toDataURL("image/png"));
   }
   return (ref) => assets.get(ref) ?? "/dev/table/missing.png";

@@ -159,6 +159,27 @@ export function hitItem(
   });
 }
 
+/** Keyboard order as the seat sees it: zones top to bottom, then left to right; items left to right. */
+export function focusOrder(
+  snapshot: TableSnapshot,
+  placements: readonly PlacedItem[],
+  view: Viewport,
+): string[] {
+  const zones = snapshot.zones
+    .map((zone) => ({ zone, at: tableToScreen(zone.rect_mm.x, zone.rect_mm.y, view) }))
+    .sort((a, b) => Math.round(a.at[1]) - Math.round(b.at[1]) || a.at[0] - b.at[0]);
+  return zones.flatMap(({ zone }) =>
+    placements
+      .filter((placement) => placement.item.zone === zone.id)
+      .map((placement) => ({
+        id: placement.item.id,
+        at: tableToScreen(placement.x, placement.y, view),
+      }))
+      .sort((a, b) => a.at[0] - b.at[0] || a.at[1] - b.at[1])
+      .map(({ id }) => id),
+  );
+}
+
 export function dropGesture(
   snapshot: TableSnapshot,
   placements: readonly PlacedItem[],
