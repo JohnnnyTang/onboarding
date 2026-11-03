@@ -3,22 +3,28 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "exports": {
-    ".": {
-      "import": "./dist/index.js",
-      "types": "./dist/index.d.ts"
-    }
-  },
   "scripts": {
-    "build": "tsc --project tsconfig.build.json",
+    "build": "tsc --noEmit --project tsconfig.build.json && vite build",
     "typecheck": "tsc --noEmit --project tsconfig.build.json && tsc --noEmit",
-    "test": "vitest run --config ../../vitest.package.config.ts",
-    "dev": "tsx watch ../../scripts/scaffold-dev.ts @bgp/web"
+    "test": "vitest run --config vitest.config.ts",
+    "dev": "vite",
+    "preview": "vite preview"
   },
   "dependencies": {
-    "@bgp/schema": "workspace:*",
+    "@bgp/card-generator": "workspace:*",
     "@bgp/rules": "workspace:*",
+    "@bgp/schema": "workspace:*",
     "@bgp/table-2d": "workspace:*",
-    "@bgp/card-generator": "workspace:*"
+    "@tanstack/react-query": "5.104.5",
+    "oidc-client-ts": "3.5.0",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "react-router": "8.5.0"
+  },
+  "devDependencies": {
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@vitejs/plugin-react": "6.1.2",
+    "vite": "8.1.0"
   }
 }

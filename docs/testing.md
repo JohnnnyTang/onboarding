@@ -141,7 +141,13 @@ baselines are enforced in the `table-visuals` job across Chromium, Firefox and
 WebKit. Linux jobs keep the interaction matrix and pass `--ignore-snapshots` to
 avoid comparing Windows font/GPU rasterization on Linux. Review every changed
 PNG before accepting `--update-snapshots`. The fixture server starts automatically
-through Playwright and needs neither Docker nor the T12 app shell.
+through Playwright; with `BGP_E2E_APP=0` (set in the `table-visuals` job) the renderer
+tests need neither Docker nor the T12 app servers.
+
+T12 adds `e2e/web-app.spec.ts`: designer1 signs in through Keycloak and sees empty games and
+matches lists, and a guest claims an invite created by a designer2 fixture (a sandbox version
+published over the HTTP API) and reaches the lobby. Playwright starts the API, against its own
+`bgp_e2e` database, and the Vite web app after the table fixture server.
 
 Physical Android/iPhone renderer profiling is a T20 gate, deferred from T13 by
 the project owner on 2026-10-27. Run both the three-engine spike and production

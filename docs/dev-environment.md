@@ -15,7 +15,8 @@ Use Node `24.22.1` (`.nvmrc`) and pnpm `11.9.0` (`packageManager`). Install depe
 with `pnpm install --frozen-lockfile`. PostgreSQL and Keycloak run through Docker Compose;
 `pnpm dev` waits for healthy services, applies development database migrations, then starts
 the app watchers. The API server (`apps/server`, `tsx watch src/main.ts`) reads the root
-`.env` if present; the web UI remains a scaffold watcher until T12.
+`.env` if present. The web app (`apps/web`, `vite`) serves http://localhost:5173 and reads
+`VITE_*` settings from the environment (the root `.env` through the launcher) or `apps/web/.env`.
 
 The root `.env.example` includes server and web settings. The launcher and migration
 command read root `.env`; server integration tests also read it. Existing process environment
@@ -75,8 +76,16 @@ The server's Vitest global setup automatically migrates `TEST_DATABASE_URL` befo
 no manual test-database migration is needed. It defaults to `bgp_test`, refuses development
 database URLs, and fails clearly if PostgreSQL is unavailable. Tests roll back their data
 instead of clearing shared tables. The Keycloak browser tests verify both account-page
-sign-ins, the web client's PKCE requirement and its `bgp-api` audience. Browser tests need
-healthy Keycloak and the Playwright browser installation, but do not yet need the app server.
+sign-ins, the web client's PKCE requirement, its `bgp-api` audience and the `sub` claim.
+Browser tests need healthy Keycloak and the Playwright browser installation.
+
+From T12, `pnpm test:e2e` also starts the API on port 3000 and the web app on 5173 (after
+`pnpm build`). The API uses its own database, `bgp_e2e` on the `DATABASE_URL` server, which
+`scripts/e2e-database.ts` creates and migrates; set `E2E_DATABASE_URL` (ending in `_e2e`) to
+choose another. Outside CI, Playwright reuses servers already listening on 3000 and 5173, such
+as `pnpm dev`, which then serve the development database instead. `OIDC_ISSUER` selects the
+Keycloak realm for the API and the web app. `BGP_E2E_APP=0` skips both servers for
+renderer-only runs.
 
 UUID v7 IDs are supplied by application code; the database does not substitute UUID v4.
 JSONB TypeScript types come from `@bgp/schema`; API/runtime/storage boundaries must still
@@ -89,6 +98,10 @@ T10/T11 transactions. PostgreSQL already enforces keys, numeric bounds and immut
 - Realm `bgp`.
 - Public client `bgp-web`: standard flow with PKCE (S256), redirect URI `http://localhost:5173/*`, web origin `http://localhost:5173`.
 - An audience mapper so access tokens for `bgp-web` include `bgp-api` in `aud`.
+- The `basic` default client scope, which puts `sub` in access tokens (Keycloak 26); the API
+  requires it. Realm imports only create missing realms, so a Keycloak started before T12
+  keeps the old client: add `basic` as a Default client scope of `bgp-web` in the admin
+  console, or reset the services (`docker compose ... down -v`).
 - Test users: `designer1` / `designer1`, `designer2` / `designer2` (used by E2E tests).
 
 ## Environment variables

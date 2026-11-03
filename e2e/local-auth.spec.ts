@@ -72,10 +72,13 @@ test("web client requires PKCE and issues access tokens for bgp-api", async ({ p
   if (typeof tokenBody.access_token !== "string") throw new Error("Missing access token");
   const payload = tokenBody.access_token.split(".")[1];
   if (!payload) throw new Error("Malformed access token");
-  const claims: { aud?: unknown; iss?: unknown } = JSON.parse(
+  const claims: { aud?: unknown; iss?: unknown; sub?: unknown } = JSON.parse(
     Buffer.from(payload, "base64url").toString(),
   );
   expect(claims.iss).toBe(issuer);
+  // Keycloak 26 adds `sub` to access tokens only through the `basic` client scope; the API
+  // requires it (contracts/http-api.md, T09).
+  expect(typeof claims.sub).toBe("string");
   expect(Array.isArray(claims.aud) ? claims.aud : [claims.aud]).toContain("bgp-api");
 
   authorize.searchParams.delete("code_challenge");
