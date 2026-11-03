@@ -181,16 +181,40 @@ describe("PostgreSQL migrations and constraints", () => {
     });
   });
 
-  it("deduplicates non-null build hashes", async () => {
+  it("lets versions with identical files share a build hash, only when ready", async () => {
     await fixture(async (tx) => {
       await tx
         .update(schema.gameVersions)
         .set({ status: "ready", buildHash: "a".repeat(64), finalizedAt: new Date() })
         .where(eq(schema.gameVersions.id, id(3)));
+      const ready = { ...version, status: "ready" as const, buildHash: "a".repeat(64) };
+      await tx.insert(schema.gameVersions).values({ ...ready, id: id(5), version: "1.0.1" });
+      // Savepoints keep the fixture usable after each expected failure.
+      for (const invalid of [
+        { ...version, id: id(6), version: "1.0.2", buildHash: "b".repeat(64) },
+        { ...version, id: id(7), version: "1.0.3", status: "ready" as const },
+      ]) {
+        await expect(
+          tx.transaction((savepoint) => savepoint.insert(schema.gameVersions).values(invalid)),
+        ).rejects.toMatchObject({ cause: { code: "23514" } });
+      }
+    });
+  });
+
+  it("lets an account hold at most one seat per match", async () => {
+    await fixture(async (tx) => {
+      await tx.insert(schema.matchSeats).values({ ...seat, userId: id(1), isGuest: false });
+      await tx
+        .insert(schema.matchSeats)
+        .values({ ...seat, seat: "2", inviteTokenHash: "c".repeat(64) });
       await expect(
-        tx
-          .insert(schema.gameVersions)
-          .values({ ...version, id: id(5), version: "1.0.1", buildHash: "a".repeat(64) }),
+        tx.insert(schema.matchSeats).values({
+          ...seat,
+          seat: "1",
+          userId: id(1),
+          isGuest: false,
+          inviteTokenHash: "b".repeat(64),
+        }),
       ).rejects.toMatchObject({ cause: { code: "23505" } });
     });
   });

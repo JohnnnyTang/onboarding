@@ -36,9 +36,11 @@ PostgreSQL tables (Drizzle schema in `apps/server/src/db/schema.ts`), object sto
 | `mode`                       | enum `enforced`, `sandbox`      |                                                  |
 | `status`                     | enum `draft`, `ready`, `failed` |                                                  |
 | `manifest`                   | jsonb                           | Validated `bgp.json`                             |
-| `build_hash`                 | text, unique, null until ready  | [manifest.md](contracts/manifest.md#upload-flow) |
+| `build_hash`                 | text, indexed; set iff `ready`  | [manifest.md](contracts/manifest.md#upload-flow) |
 | `validation_errors`          | jsonb, null                     | Set when `failed`                                |
 | `created_at`, `finalized_at` | timestamptz                     |                                                  |
+
+The build hash is not unique: versions with identical files share it (AC-02), so versions sharing a hash must also agree on `mode` and `entry` (checked on finalize).
 
 ### `version_files`
 
@@ -71,7 +73,7 @@ PostgreSQL tables (Drizzle schema in `apps/server/src/db/schema.ts`), object sto
 | ------------------- | ----------------------- | -------------------------------- |
 | `match_id`          | uuid → `matches.id`     | PK with `seat`                   |
 | `seat`              | text                    | `"0"`, `"1"`, …                  |
-| `user_id`           | uuid → `users.id`, null | Set when a signed-in user claims |
+| `user_id`           | uuid → `users.id`, null | Set when a signed-in user claims; unique with `match_id` |
 | `display_name`      | text, null              | Set on claim                     |
 | `is_guest`          | boolean                 |                                  |
 | `invite_token_hash` | text, unique            | SHA-256 of the invite token      |

@@ -15,6 +15,13 @@
       "when": 1793093863507,
       "tag": "0001_append-only-match-events",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1793706467178,
+      "tag": "0002_version-hash-and-seat-owner",
+      "breakpoints": true
     }
   ]
 }

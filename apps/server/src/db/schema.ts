@@ -70,12 +70,20 @@ export const gameVersions = pgTable(
     mode: gameMode("mode").notNull(),
     status: versionStatus("status").notNull(),
     manifest: jsonb("manifest").$type<Manifest>().notNull(),
-    buildHash: text("build_hash").unique(),
+    // Not unique: re-publishing identical files as a new version yields the same hash (AC-02).
+    buildHash: text("build_hash"),
     validationErrors: jsonb("validation_errors").$type<ValidationError[]>(),
     createdAt: createdAt(),
     finalizedAt: timestamp("finalized_at", { withTimezone: true }),
   },
-  (table) => [unique("game_versions_game_version_unique").on(table.gameId, table.version)],
+  (table) => [
+    unique("game_versions_game_version_unique").on(table.gameId, table.version),
+    index("game_versions_build_hash_idx").on(table.buildHash),
+    check(
+      "game_versions_ready_hash",
+      sql`(${table.status} = 'ready') = (${table.buildHash} IS NOT NULL)`,
+    ),
+  ],
 );
 
 export const versionFiles = pgTable(
@@ -140,6 +148,8 @@ export const matchSeats = pgTable(
   (table) => [
     primaryKey({ columns: [table.matchId, table.seat] }),
     index("match_seats_user_id_idx").on(table.userId),
+    // One account holds at most one seat per match; unclaimed and guest seats have null.
+    unique("match_seats_match_user_unique").on(table.matchId, table.userId),
     check("match_seats_seat_format", sql`${table.seat} ~ '^(0|[1-9][0-9]*)$'`),
   ],
 );
