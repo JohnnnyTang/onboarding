@@ -16,6 +16,24 @@ describe("package boundaries", () => {
     expect(check("apps/server/vitest.config.ts", 'import "vitest/config";')).toEqual([]);
     expect(check("apps/server/src/index.ts", 'import "drizzle-kit";')).not.toEqual([]);
     expect(check("apps/server/src/index.ts", 'import "vitest/config";')).not.toEqual([]);
+    for (const config of ["apps/web/vite.config.ts", "apps/web/vitest.config.ts"]) {
+      expect(check(config, 'import react from "@vitejs/plugin-react";')).toEqual([]);
+    }
+    expect(check("apps/web/vite.config.ts", 'import "vite";')).toEqual([]);
+    expect(check("apps/web/src/main.tsx", 'import "vite";')).not.toEqual([]);
+    expect(check("apps/web/src/main.tsx", 'import "@vitejs/plugin-react";')).not.toEqual([]);
+  });
+
+  test("the web app admits its UI libraries but no game package", () => {
+    const source = [
+      'import { createRoot } from "react-dom/client";',
+      'import { Link } from "react-router";',
+      'import { useQuery } from "@tanstack/react-query";',
+      'import { UserManager } from "oidc-client-ts";',
+    ].join("\n");
+    expect(check("apps/web/src/main.tsx", source)).toEqual([]);
+    expect(check("apps/web/src/main.tsx", 'import game from "harbor-market";')).not.toEqual([]);
+    expect(check("packages/table-2d/src/index.ts", 'import "react";')).not.toEqual([]);
   });
   test("admits public imports and same-package relative imports", () => {
     expect(

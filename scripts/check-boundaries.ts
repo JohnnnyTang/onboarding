@@ -24,7 +24,18 @@ const POLICIES: Record<string, Policy> = {
   "packages/table-2d": { imports: ["@bgp/schema", "pixi.js"] },
   "packages/card-generator": { imports: ["@bgp/schema"] },
   "packages/cli": { imports: ["@bgp/rules", "@bgp/schema", "@bgp/testing", "esbuild"], node: true },
-  "apps/web": { imports: ["@bgp/schema", "@bgp/table-2d", "@bgp/card-generator"] },
+  "apps/web": {
+    imports: [
+      "@bgp/schema",
+      "@bgp/table-2d",
+      "@bgp/card-generator",
+      "react",
+      "react-dom",
+      "react-router",
+      "@tanstack/react-query",
+      "oidc-client-ts",
+    ],
+  },
   "apps/server": {
     imports: [
       "@bgp/schema",
@@ -39,6 +50,9 @@ const POLICIES: Record<string, Policy> = {
     node: true,
   },
 };
+// Vite, Vitest and the React plugin are build tooling, admitted only in the web app's configs.
+const WEB_TOOL_CONFIGS = new Set(["apps/web/vite.config.ts", "apps/web/vitest.config.ts"]);
+const WEB_BUILD_TOOLS = new Set(["vite", "vitest", "@vitejs/plugin-react"]);
 const GAME_POLICY: Policy = { imports: ["@bgp/rules", "@bgp/schema"], pure: true };
 const NODE_MODULES = new Set(builtinModules.map((name) => name.replace(/^node:/, "")));
 const FORBIDDEN_GLOBALS = new Set([
@@ -123,6 +137,7 @@ export function checkSource(root: string, file: string, source: string): string[
       return;
     if (path === "apps/server/drizzle.config.ts" && name === "drizzle-kit") return;
     if (path === "apps/server/vitest.config.ts" && name === "vitest") return;
+    if (WEB_TOOL_CONFIGS.has(path) && WEB_BUILD_TOOLS.has(name)) return;
     if (specifier.startsWith("node:") || NODE_MODULES.has(specifier)) {
       if (!policy.node) report(node, `Node import ${specifier} is forbidden in ${owner}.`);
       return;
