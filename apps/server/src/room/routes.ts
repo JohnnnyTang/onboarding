@@ -20,8 +20,15 @@ export const MAX_CLIENT_FRAME_BYTES = 64 * 1024;
 export const roomRoutes: FastifyPluginAsync<RoomRouteOptions> = async (app, options) => {
   const { rooms } = options;
   rooms.log = app.log;
-  await app.register(websocket, { options: { maxPayload: MAX_CLIENT_FRAME_BYTES } });
-  app.addHook("onClose", async () => rooms.close());
+  await app.register(websocket, {
+    options: { maxPayload: MAX_CLIENT_FRAME_BYTES },
+    // Rooms close their connections with 1001 (going away), so clients reconnect.
+    preClose(done) {
+      rooms.close();
+      for (const client of this.websocketServer.clients) client.close(1001, "Server stopping");
+      this.websocketServer.close(() => done());
+    },
+  });
   app.get("/ws", { websocket: true, config: { auth: "none" } }, (socket) => {
     const connection = new ClientConnection(
       {

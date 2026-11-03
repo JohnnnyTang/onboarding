@@ -100,6 +100,8 @@ export async function startRoomEnv(): Promise<RoomEnv> {
         blobs,
         setup: createRulesSetupChecker(engine, builds),
         publicWebOrigin: WEB_ORIGIN,
+        // ROOM_TEST_LOG=1 prints server-side room errors while debugging a test.
+        logger: process.env.ROOM_TEST_LOG ? { level: "error" } : false,
         rooms,
         ...(options.helloTimeoutMs === undefined ? {} : { helloTimeoutMs: options.helloTimeoutMs }),
       });
