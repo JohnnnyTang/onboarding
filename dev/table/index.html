@@ -1,13 +1,68 @@
 <!doctype html>
 <html lang="en">
-  <head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><title>BGP — Table workshop</title></head>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Table workshop</title>
+  </head>
   <body>
-    <header><span class="brand">BGP <span>/ TABLE WORKSHOP</span></span><span class="tag">T13 · 2D RENDERER</span></header>
-    <main>
-      <div class="heading"><div><p class="eyebrow">A PLACE TO PLAYTEST</p><h1>Around the table.</h1></div><p class="hint">Select a piece. Drag it into a zone.<br/>Pinch to zoom. Pan the empty felt.</p></div>
-      <nav aria-label="Fixture controls"><button type="button" id="fixture">All layouts</button><button type="button" id="stress">300 items</button><button type="button" id="next">Next snapshot</button><button type="button" id="seat">View seat 1</button><button type="button" id="reset">Reset view</button></nav>
+    <header class="bar">
+      <div class="title">
+        <h1>Table workshop</h1>
+        <p>Fixture snapshots for the 2D table. Nothing on this page talks to a server.</p>
+      </div>
+      <nav class="controls" aria-label="Fixture controls">
+        <fieldset class="segmented"><legend>Snapshot</legend>
+          <button type="button" id="fixture" aria-pressed="true">All layouts</button>
+          <button type="button" id="stress" aria-pressed="false">300 items</button>
+        </fieldset>
+        <fieldset class="segmented"><legend>Viewing seat</legend>
+          <button type="button" id="seat-0" aria-pressed="true">Seat 0</button>
+          <button type="button" id="seat-1" aria-pressed="false">Seat 1</button>
+        </fieldset>
+        <button type="button" id="next">Next snapshot</button>
+        <button type="button" id="reset">Fit table</button>
+      </nav>
+    </header>
+    <main class="workspace">
       <div id="table"></div>
-      <footer><span id="selection">No pieces selected</span><output id="gesture" aria-live="polite">Ready to play.</output></footer>
+      <aside class="panel" aria-label="Table readouts">
+        <section class="turn" aria-labelledby="turn-heading">
+          <h2 id="turn-heading">Turn</h2>
+          <p id="prompt" class="prompt"></p>
+          <table id="players" class="players">
+            <thead>
+              <tr><th scope="col">Player</th><th scope="col">Score</th><th scope="col">Hand</th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </section>
+        <section aria-labelledby="selection-heading">
+          <div class="section-head">
+            <h2 id="selection-heading">Selected</h2>
+            <button type="button" id="clear" class="quiet" disabled>Clear</button>
+          </div>
+          <p id="selection" aria-live="polite">No pieces selected</p>
+        </section>
+        <section class="gestures" aria-labelledby="gesture-heading">
+          <h2 id="gesture-heading">Gestures</h2>
+          <ol id="log" class="log" reversed></ol>
+          <p class="payload-label">Last payload</p>
+          <output id="gesture" class="payload" aria-live="polite">Ready to play.</output>
+        </section>
+        <section aria-labelledby="keys-heading">
+          <h2 id="keys-heading">Controls</h2>
+          <p class="how">Drag a piece onto a zone. Drag empty felt to pan; pinch or scroll to zoom.</p>
+          <dl class="keys">
+            <dt><kbd>Tab</kbd></dt><dd>Focus the table</dd>
+            <dt><kbd>←</kbd> <kbd>→</kbd></dt><dd>Move between pieces</dd>
+            <dt><kbd>Enter</kbd></dt><dd>Click the piece</dd>
+            <dt><kbd>Esc</kbd></dt><dd>Clear selection</dd>
+            <dt><kbd>+</kbd> <kbd>−</kbd></dt><dd>Zoom</dd>
+            <dt><kbd>0</kbd></dt><dd>Fit the table</dd>
+          </dl>
+        </section>
+      </aside>
     </main>
     <script type="module" src="./main.ts"></script>
   </body>

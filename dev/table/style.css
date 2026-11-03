@@ -1,121 +1,355 @@
+/* Table workshop: a drafting bench around a cutting-mat table. DIN lettering, as on rulers and mats. */
+:root {
+  --bench: #dde3db;
+  --sheet: #f7f8f4;
+  --ink: #1b2a24;
+  --muted: #55665e;
+  --rule: #c3ccc2;
+  --mat: #15392f;
+  --mark: #f1c75b;
+  --legal: #237a50;
+  --font:
+    Bahnschrift, "DIN Alternate", "DIN 2014", "Barlow", "Roboto Condensed", system-ui, sans-serif;
+  --code: ui-monospace, "Cascadia Mono", Consolas, monospace;
+  color-scheme: light;
+}
 * {
   box-sizing: border-box;
 }
 body {
   margin: 0;
-  background: #eeebdf;
-  color: #233e32;
-  font-family: Arial, sans-serif;
-}
-header {
-  padding: 22px 3vw;
-  border-bottom: 1px solid #b8c1ad;
+  min-height: 100dvh;
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
+  flex-direction: column;
+  background: var(--bench);
+  color: var(--ink);
+  font-family: var(--font);
+  font-size: 15px;
+  line-height: 1.45;
+  font-variant-numeric: tabular-nums;
 }
-.brand {
-  font-size: 24px;
-  font-weight: 800;
-  letter-spacing: -1px;
-}
-.brand span {
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 1px;
-}
-.tag,
-.eyebrow {
-  font-size: 10px;
-  letter-spacing: 1.5px;
-}
-main {
-  max-width: 1500px;
-  margin: auto;
-  padding: 26px 3vw 18px;
-}
-.heading {
-  display: flex;
-  justify-content: space-between;
-  align-items: end;
-  gap: 12px;
-  margin-bottom: 22px;
-}
-h1 {
-  font-family: Georgia, serif;
-  font-size: clamp(30px, 4vw, 52px);
-  font-weight: 400;
-  letter-spacing: -1.5px;
-  margin: 8px 0 0;
-}
-.hint {
-  font-size: 12px;
-  line-height: 1.6;
+h1,
+h2,
+p {
   margin: 0;
-  color: #56675b;
-}
-nav {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 7px;
-  margin-bottom: 12px;
 }
 button {
-  border: 1px solid #9ba996;
-  border-radius: 3px;
-  background: transparent;
-  color: #233e32;
-  padding: 9px 13px;
   font: inherit;
-  font-size: 12px;
+  font-size: 14px;
+  color: var(--ink);
+  background: var(--sheet);
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  padding: 7px 12px;
   cursor: pointer;
 }
-button:hover,
-button:focus-visible {
-  background: #d7ddca;
+button:hover {
+  border-color: var(--muted);
+}
+button:disabled {
+  cursor: default;
+  opacity: 0.45;
+  border-color: var(--rule);
+}
+:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
+/* Header bar */
+.bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 24px;
+  padding: 14px 20px;
+}
+.title {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+}
+h1 {
+  font-size: 22px;
+  font-weight: 600;
+  font-stretch: 87.5%;
+  letter-spacing: -0.01em;
+}
+.title p {
+  color: var(--muted);
+  font-size: 14px;
+}
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.segmented {
+  display: inline-flex;
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  background: var(--sheet);
+  padding: 2px;
+}
+.segmented button {
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  padding: 5px 11px;
+}
+.segmented button[aria-pressed="true"] {
+  background: var(--ink);
+  color: var(--sheet);
+}
+
+/* Table and panel */
+.workspace {
+  flex: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 16px;
+  padding: 0 20px 20px;
+  min-height: 0;
 }
 #table {
-  width: 100%;
-  height: min(68vh, 780px);
-  min-height: 380px;
-  border-radius: 8px;
+  min-height: 420px;
+  height: calc(100dvh - 86px);
+  border-radius: 10px;
   overflow: hidden;
+  background: var(--mat);
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.25);
 }
-footer {
+#table canvas:focus-visible {
+  outline: 3px solid var(--mark);
+  outline-offset: -3px;
+}
+.panel {
   display: flex;
+  flex-direction: column;
+  background: var(--sheet);
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  max-height: calc(100dvh - 86px);
+  overflow: auto;
+}
+.panel section {
+  padding: 14px 16px;
+  border-top: 1px solid var(--rule);
+}
+.panel section:first-child {
+  border-top: 0;
+}
+h2 {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+.section-head {
+  display: flex;
+  align-items: baseline;
   justify-content: space-between;
-  gap: 12px;
-  padding: 13px 0;
-  font-size: 11px;
-  line-height: 1.5;
+}
+button.quiet {
+  border: 0;
+  background: none;
+  padding: 0 2px;
+  font-size: 13px;
+  color: var(--legal);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* Turn: the snapshot's prompt and HUD */
+.prompt {
+  font-size: 18px;
+  line-height: 1.3;
+  margin-bottom: 10px;
+}
+.prompt:empty {
+  display: none;
+}
+.players {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+.players th {
+  font-weight: 400;
+  font-size: 12px;
+  color: var(--muted);
+  text-align: right;
+  padding: 0 0 4px;
+}
+.players th:first-child,
+.players td:first-child {
+  text-align: left;
+}
+.players td {
+  text-align: right;
+  padding: 5px 0;
+  border-top: 1px solid var(--rule);
+}
+.players tr.active td:first-child {
+  box-shadow: inset 4px 0 0 var(--mark);
+  padding-left: 10px;
+  font-weight: 600;
+}
+.players .seat {
+  color: var(--muted);
+  font-weight: 400;
+  font-size: 12px;
+  margin-left: 6px;
+}
+.players .empty td {
+  color: var(--muted);
+  text-align: left;
+}
+
+/* Selection and gestures */
+#selection {
+  font-size: 14px;
   overflow-wrap: anywhere;
 }
-output {
-  color: #526556;
-  text-align: right;
+.log {
+  list-style: none;
+  margin: 0 0 10px;
+  padding: 0;
+  font-size: 14px;
 }
-@media (max-width: 500px) {
-  .tag {
-    display: none;
+.log li {
+  display: grid;
+  grid-template-columns: 2.2em 3.6em 1fr;
+  gap: 6px;
+  padding: 5px 0;
+  border-top: 1px solid var(--rule);
+  overflow-wrap: anywhere;
+}
+.log li:first-child {
+  animation: arrive 600ms ease-out;
+}
+.log .n {
+  color: var(--muted);
+  font-size: 12px;
+  padding-top: 2px;
+}
+.log .kind {
+  font-weight: 600;
+}
+.log .kind.drop {
+  color: var(--legal);
+}
+.log:empty::before {
+  content: "Click, drag or use the keyboard on the table. Each gesture the table emits is listed here.";
+  display: block;
+  color: var(--muted);
+  font-size: 14px;
+}
+.payload-label {
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+.payload {
+  display: block;
+  font-family: var(--code);
+  font-size: 12px;
+  line-height: 1.5;
+  padding: 8px 10px;
+  border-radius: 6px;
+  background: #eaeee8;
+  overflow-wrap: anywhere;
+}
+@keyframes arrive {
+  from {
+    background: rgb(241 199 91 / 0.45);
   }
-  .heading {
-    display: block;
+  to {
+    background: transparent;
   }
-  .hint {
-    margin-top: 12px;
+}
+
+/* Keys */
+.keys {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 6px 12px;
+  margin: 0;
+  font-size: 14px;
+}
+.keys dt {
+  white-space: nowrap;
+}
+.keys dd {
+  margin: 0;
+  color: var(--muted);
+}
+kbd {
+  font-family: var(--font);
+  font-size: 12px;
+  display: inline-block;
+  min-width: 1.8em;
+  text-align: center;
+  padding: 1px 5px;
+  border: 1px solid var(--rule);
+  border-bottom-width: 2px;
+  border-radius: 4px;
+  background: var(--bench);
+}
+
+@media (max-width: 900px) {
+  .workspace {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 0 12px 16px;
+    gap: 12px;
   }
-  main {
-    padding-top: 18px;
+  .bar {
+    padding: 12px;
   }
   #table {
+    height: 62dvh;
     min-height: 400px;
-    height: 56vh;
   }
-  footer {
-    flex-direction: column;
+  .panel {
+    max-height: none;
   }
-  output {
-    text-align: left;
+}
+@media (prefers-reduced-motion: reduce) {
+  .log li:first-child {
+    animation: none;
+  }
+}
+
+/* Fieldset reset for the segmented controls; legends stay available to assistive technology. */
+fieldset.segmented {
+  margin: 0;
+  min-width: 0;
+}
+.segmented legend {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.how {
+  font-size: 14px;
+  margin-bottom: 10px;
+}
+@media (max-width: 900px) {
+  /* Tables are landscape; a square frame leaves room to pan without a wall of empty felt. */
+  #table {
+    height: auto;
+    min-height: 0;
+    aspect-ratio: 1;
+    max-height: 70dvh;
+  }
+}
+@media (hover: none) and (pointer: coarse) {
+  .keys {
+    display: none;
   }
 }

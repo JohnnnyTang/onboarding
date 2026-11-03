@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   dropGesture,
   fitViewport,
+  focusOrder,
   hitItem,
   hitZone,
   layoutZone,
@@ -210,5 +211,35 @@ describe("rotated seat zones", () => {
       y: 23,
       rotation: 12,
     });
+  });
+});
+
+describe("keyboard focus order", () => {
+  const table: TableSnapshot = {
+    table: { size_mm: [800, 600] },
+    zones: [
+      { id: "hand", layout: "row", owner: "0", rect_mm: { x: 0, y: -220, w: 400, h: 120 } },
+      { id: "deck", layout: "stack", rect_mm: { x: -200, y: 100, w: 120, h: 120 } },
+      { id: "market", layout: "row", rect_mm: { x: 100, y: 100, w: 300, h: 120 } },
+      { id: "far", layout: "row", owner: "1", rect_mm: { x: 0, y: 230, w: 400, h: 120 } },
+    ],
+    items: [
+      { id: "h0", zone: "hand", index: 0, face: "down" },
+      { id: "h1", zone: "hand", index: 1, face: "down" },
+      { id: "d0", zone: "deck", index: 0, face: "down" },
+      { id: "d1", zone: "deck", index: 1, face: "down" },
+      { id: "m0", zone: "market", index: 0, face: "down" },
+      { id: "m1", zone: "market", index: 1, face: "down" },
+      { id: "f0", zone: "far", index: 0, face: "down" },
+    ],
+  };
+  const placements = table.zones.flatMap((z) => layoutZone(z, table.items, components));
+  it("reads the table top to bottom, then left to right, for the viewing seat", () => {
+    const view = fitViewport(table, 1000, 800, "0");
+    expect(focusOrder(table, placements, view)).toEqual(["f0", "d1", "m0", "m1", "h0", "h1"]);
+  });
+  it("follows the rotated view of the seat across the table", () => {
+    const view = fitViewport(table, 1000, 800, "1");
+    expect(focusOrder(table, placements, view)).toEqual(["h1", "h0", "m1", "m0", "d1", "f0"]);
   });
 });

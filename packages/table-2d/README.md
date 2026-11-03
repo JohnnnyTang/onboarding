@@ -38,6 +38,22 @@ carry an insertion index. A drop emits a gesture and returns the item to the
 snapshot position until the next authoritative snapshot arrives. Pinch zooms
 around the touch midpoint; dragging empty felt pans; the wheel zooms on desktop.
 
+Feedback is local and never predicts a move. With a mouse, interactive pieces
+show a hover outline and a `grab` or `pointer` cursor. A dragged piece lifts above
+its neighbours with a longer shadow; every droppable zone gets a soft outline and
+the zone under the pointer a strong one, while zones that refuse drops dim.
+Stacks show up to three card edges under the top card. Numeric d6 faces draw as
+pips, and round or hex tokens clip their art to the outline. A faint 50 mm grid
+marks table coordinates. Zone labels and count badges stay upright for the
+viewing seat; card art turns with the table, as it would on a real one.
+
+The canvas is focusable. Arrow keys move a focus ring through pieces in the
+order the seat sees them (`focusOrder`: zones top to bottom, then left to right).
+Enter or Space does exactly what a click does, including the `click` gesture.
+Escape clears the selection, `+` and `-` zoom, and `0` fits the table. The
+canvas `aria-label` names the focused piece using only what the snapshot shows;
+face-down cards are read as "Card back". Keyboard drag and drop is left to T20.
+
 Item IDs retain display nodes across snapshots. Position and rotation animate;
 appearance changes replace the node's children. Missing or failed images keep
 labeled placeholders. Only visible fronts or explicit backs are requested.
