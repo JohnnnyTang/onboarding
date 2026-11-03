@@ -8,7 +8,7 @@ match until destroyed. Native crashes and allocator stalls remain contained.
 
 The measured 21-match fixture fits the original 16 MB idle goal. The 64 MiB game
 heap, 128 MiB Node old space, 2 MiB source limit and 8 MiB IPC limit are unchanged.
-D-008 stays Default until Harbor Market and human confirmation.
+Harbor Market later confirmed these targets (see t08-sandbox.md); D-008 is Accepted.
 
 ## Options tried
 

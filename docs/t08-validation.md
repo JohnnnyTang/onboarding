@@ -1,9 +1,9 @@
 # T08 rules host validation
 
 Production implementation: `codex/t08-host-completion`, merged into main.
-T08 is **not complete**: the Harbor Market benchmark now passes every D-008
-criterion (see [Harbor Market workload](spikes/t08-sandbox.md#harbor-market-workload)),
-but human confirmation of the sandbox choice remains.
+T08 is **complete**. The Harbor Market benchmark passes every D-008 criterion
+(see [Harbor Market workload](spikes/t08-sandbox.md#harbor-market-workload)), and
+the project owner confirmed QuickJS on 2026-11-03; D-008 is Accepted.
 
 ## Implemented and checked
 
@@ -80,16 +80,15 @@ Detailed options, profile comparisons and accounting: [t08-memory.md](spikes/t08
    (12.8–14.2 ms in production including IPC) and production create p95 is
    220–255 ms. Reproduce with `pnpm exec tsx scripts/t08-harbor-market.ts`;
    results in [t08-harbor-market-results.json](spikes/t08-harbor-market-results.json).
-2. **Passed (2026-11-03).** Resource accounting on Harbor Market (Q-011): 21 idle
+2. **Passed (2026-11-03).** Resource accounting on Harbor Market (D-008 memory measurement): 21 idle
    matches, one shared reserve of 51.6–53.0 MiB, 2.46–2.52 MiB per idle match for
    host children and 6.52–7.35 MiB including the whole measurement parent; active
    RSS 66.6–68.6 MiB per match, reported separately. At small match counts the fixed
    reserve is proportionally larger; deployments can set `warmSpareCount: 0`. No
    interpreter, IPC or source limit was reduced.
-3. **Pending.** Obtain human confirmation of the measured sandbox choice, update
-   D-008 and mark T08 complete. AGENTS.md requires a human-agreed status change;
-   a request to finish T08 is not recorded here as acceptance of unseen evidence.
+3. **Passed (2026-11-03).** The project owner reviewed these measurements and
+   confirmed QuickJS; D-008 is Accepted and T08 is complete.
 
-Keep T08 open until gate 3 passes. Q-010 already explicitly forbids substituting
-the small fixture for the required Harbor Market workload. No protocol/manifest
+The small fixture was never substituted for the required Harbor Market workload;
+it remains as the hostile-isolation and lifecycle baseline. No protocol/manifest
 version changes are needed: the new server IPC has its own version 1.
