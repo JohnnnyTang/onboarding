@@ -17,6 +17,7 @@
     "db:generate": "drizzle-kit generate"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "3.1154.0",
     "@bgp/rules-host": "workspace:*",
     "@bgp/schema": "workspace:*",
     "drizzle-orm": "0.45.4",
