@@ -81,6 +81,9 @@ importers:
       drizzle-kit:
         specifier: 0.31.11
         version: 0.31.11
+      harbor-market:
+        specifier: workspace:*
+        version: link:../../games/harbor-market
 
   apps/web:
     dependencies:
