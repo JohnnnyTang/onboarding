@@ -63,7 +63,12 @@ describe("production rules host client", () => {
         timeout: 1500,
         interval: 10,
       });
-      expect(() => process.kill(pid, 0)).toThrow();
+      // The client drops its reference when it sends SIGKILL; the OS may still
+      // report the child until Node has reaped it.
+      await vi.waitFor(() => expect(() => process.kill(pid, 0)).toThrow(), {
+        timeout: 1500,
+        interval: 10,
+      });
     };
     try {
       await add(client, "idle", hashes[0]);
