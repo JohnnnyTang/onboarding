@@ -10,6 +10,7 @@ import { ServicesProvider } from "./app/services";
 import { createAuthService, oidcSettings } from "./auth/auth";
 import { createClaimedSeats, createTokenSource } from "./auth/claimed-seats";
 import { loadWebConfig } from "./config";
+import { openProjectStore, type ProjectStore } from "./projects/project-store";
 import "./styles/global.css";
 
 const config = loadWebConfig(import.meta.env);
@@ -20,6 +21,15 @@ const auth = createAuthService(manager);
 // Guest seats survive a reload in this tab (Q-018); designer tokens stay in memory (D-007).
 const seats = createClaimedSeats(sessionStorage);
 const api = createApiClient({ baseUrl: config.apiUrl, tokens: createTokenSource(auth, seats) });
+// Opened on first use, so pages without projects never touch IndexedDB.
+let projectStore: Promise<ProjectStore> | undefined;
+const projects = () => {
+  projectStore ??= openProjectStore();
+  projectStore.catch(() => {
+    projectStore = undefined;
+  });
+  return projectStore;
+};
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: shouldRetry, refetchOnWindowFocus: false } },
 });
@@ -30,7 +40,7 @@ const root = document.getElementById("root");
 if (!root) throw new Error("Missing #root element");
 createRoot(root).render(
   <StrictMode>
-    <ServicesProvider value={{ api, auth, seats, roomUrl: config.wsUrl }}>
+    <ServicesProvider value={{ api, auth, seats, roomUrl: config.wsUrl, projects }}>
       <QueryClientProvider client={queryClient}>
         <BrowserRouter>
           <AppRoutes />

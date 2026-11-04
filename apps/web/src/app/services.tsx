@@ -2,6 +2,7 @@ import { createContext, type ReactNode, useContext, useSyncExternalStore } from 
 import type { ApiClient } from "../api/client";
 import type { AuthService, AuthUser } from "../auth/auth";
 import type { ClaimedSeats } from "../auth/claimed-seats";
+import type { ProjectStore } from "../projects/project-store";
 
 export interface Services {
   api: ApiClient;
@@ -9,6 +10,8 @@ export interface Services {
   seats: ClaimedSeats;
   /** Room server WebSocket endpoint (`VITE_WS_URL`). */
   roomUrl: string;
+  /** The local project database, opened on first use (D-015). */
+  projects(): Promise<ProjectStore>;
 }
 
 const ServicesContext = createContext<Services | null>(null);
