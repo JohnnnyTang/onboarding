@@ -155,6 +155,8 @@ The project owner confirmed Q-018 (guest seats in session storage) on 2026-11-04
 
 ### T15 Local-first projects and hot-seat play
 
+**Status:** Complete. Local validation and scope: [t15-validation.md](t15-validation.md).
+
 **Deliverables:** IndexedDB stores per [data-model.md](data-model.md#browser-indexeddb-bgp-database); project list; component editor (all Phase 1 kinds); zone editor on the table (draw and resize zones, set layout, owner, visibility); setup editor; image import; hot-seat play in the game worker with a seat switcher and an "all seats" debug view.
 
 **Done when:** E2E-01 passes except card generation; projects survive a browser restart; everything works with the network disabled.
@@ -192,7 +194,7 @@ identified mid-range Android and iPhone hardware; record device model, OS/browse
 DPR, p50/p95 frame intervals, actual graphics backend where exposed, text clarity,
 and real-touch drag/drop, pinch/pan, seat rotation and resizing from 360 px up;
 full browser matrix run; a content security policy for the web app that still allows the
-game worker's blob module, PixiJS and the configured API, room and OIDC origins (Q-018);
+game worker's blob module, the offline service worker (Q-020), PixiJS and the configured API, room and OIDC origins (Q-018);
 a measured designer reload against AC-06 (Q-018); keyboard operation of selection and the action bar; error and empty states reviewed; README and dev-environment.md verified on a clean machine; the acceptance criteria table in [phase-1-spec.md](phase-1-spec.md#acceptance-criteria) checked off with links to passing runs.
 
 **Done when:** every acceptance criterion AC-01 to AC-15 passes.
