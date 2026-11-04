@@ -147,7 +147,7 @@ Physical-phone qualification is deferred to T20. Scope and evidence:
 ### T14 Game worker and match page
 
 **Status:** Complete. Local validation and scope: [t14-validation.md](t14-validation.md).
-Q-018 (guest seats in session storage) awaits the project owner's confirmation.
+The project owner confirmed Q-018 (guest seats in session storage) on 2026-11-04.
 
 **Deliverables:** the game worker (removes globals per D-007 before evaluating the bundle; exposes `present`, `interpret`, `actions` and a hot-seat runtime over `postMessage`); the WebSocket client (hello, patches, resync, reconnect with backoff); the match page wiring view → `present` → table, gestures and action buttons → `move`, plus HUD, prompt, chat, `rejected` messages and the result screen.
 
@@ -191,6 +191,8 @@ comparison and production renderer with 300 draggable items targeting 60 fps on
 identified mid-range Android and iPhone hardware; record device model, OS/browser,
 DPR, p50/p95 frame intervals, actual graphics backend where exposed, text clarity,
 and real-touch drag/drop, pinch/pan, seat rotation and resizing from 360 px up;
-full browser matrix run; keyboard operation of selection and the action bar; error and empty states reviewed; README and dev-environment.md verified on a clean machine; the acceptance criteria table in [phase-1-spec.md](phase-1-spec.md#acceptance-criteria) checked off with links to passing runs.
+full browser matrix run; a content security policy for the web app that still allows the
+game worker's blob module, PixiJS and the configured API, room and OIDC origins (Q-018);
+a measured designer reload against AC-06 (Q-018); keyboard operation of selection and the action bar; error and empty states reviewed; README and dev-environment.md verified on a clean machine; the acceptance criteria table in [phase-1-spec.md](phase-1-spec.md#acceptance-criteria) checked off with links to passing runs.
 
 **Done when:** every acceptance criterion AC-01 to AC-15 passes.

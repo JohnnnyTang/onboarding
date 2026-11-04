@@ -44,8 +44,8 @@ and T13 merged).
   holder). It is documented in http-api.md and registered in `HTTP_CONTRACTS`, with tests.
 - **Claimed seats in session storage** (Q-018). Guest seats, including the guest token, are
   kept in this tab's `sessionStorage`, so a reload returns to the seat (AC-06). The worker
-  cannot read web storage, and designer tokens stay in memory. This needs the owner's
-  confirmation, because D-007 says tokens stay in memory. The T12 test now checks that
+  cannot read web storage, and designer tokens stay in memory. The project owner confirmed
+  this on 2026-11-04 and D-007 was amended to allow it. The T12 test now checks that
   nothing token-like reaches local storage or cookies.
 - **Rules host resume** (Q-019, approved by the owner on 2026-11-03). A move made after
   more than 10 s idle was lost with `GAME_ERROR` under CPU load. Two separate limits caused
@@ -113,5 +113,8 @@ match page panels.
   time (D-008). A heavily overloaded machine can still turn a slow call into `GAME_ERROR`.
 - Owners without a seat and spectators still cannot connect (Q-016). Sandbox matches are not
   hosted yet (Q-017), and the match page says so.
-- A designer who reloads signs in again: OIDC tokens stay in memory (Q-018).
+- A designer who reloads signs in again: OIDC tokens stay in memory (Q-018). That reload is
+  not measured against AC-06's 3 s yet (T20).
+- A guest who closes the tab loses the seat: each seat is claimed once, and a host cannot
+  re-issue a seat's invite yet.
 - Ephemeral drag and pointer relay is not shown on other seats' tables yet.
