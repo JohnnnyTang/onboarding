@@ -95,11 +95,14 @@ export class QuickJsSandbox implements RulesSandbox {
         new URL("../dist/runtime-bundle.js", import.meta.url),
         "utf8",
       );
-      sandbox.deadline = performance.now() + sandbox.timeoutMs;
+      // Our runtime, bridge and lockdown are trusted; the parent bounds them with its recovery
+      // watchdog (Q-019). The game module starts its own `timeoutMs` limit below.
+      sandbox.deadline = Number.POSITIVE_INFINITY;
       sandbox.eval(runtimeSource).dispose();
       const factory = sandbox.eval(BRIDGE_SOURCE);
       try {
         sandbox.eval(LOCKDOWN_SOURCE).dispose();
+        sandbox.deadline = performance.now() + sandbox.timeoutMs;
         const exports = sandbox.eval(gameSource, "game.js", "module");
         try {
           const definition = sandbox.context.getProp(exports, "default");

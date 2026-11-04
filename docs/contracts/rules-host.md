@@ -63,7 +63,8 @@ interrupt uses the same limit. Trusted recovery steps (`prepare`, and `load` and
 `restore` when a process has to be started or replaced) instead share
 `recoveryTimeoutMs` (default 5000; integer `timeoutMs`..30000) for the watchdog and
 the operation; game code inside them is still interrupted at `timeoutMs` per call.
-After a recovery, the operation's game call (`apply`, `views`, `create` and so on)
+In `load`, the interrupt limit starts when the game module is evaluated: the trusted
+runtime, bridge and lockdown before it are bounded by that watchdog. After a recovery, the operation's game call (`apply`, `views`, `create` and so on)
 starts with a full `timeoutMs` (Q-019). Default/maximum interpreter heap: 64 MiB; stack:
 512 KiB. Node old space is separately limited to 128 MiB. These are heap limits,
 not an OS limit on whole-process RSS. Each process gets Node permission flags
