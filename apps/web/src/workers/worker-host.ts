@@ -1,4 +1,4 @@
-import { applyIntent, createMatch, viewFor } from "@bgp/rules";
+import { applyIntent, createSandboxDefinition, replay, viewFor } from "@bgp/rules";
 import {
   type ComponentsFile,
   type GameDefinition,
@@ -11,6 +11,12 @@ import type { WorkerRequest } from "./protocol";
 /** Checks the shape of a bundle's default export before any of it is called. */
 export function asGameDefinition(value: unknown): GameDefinition<Json> | null {
   return GameDefinitionSchema.safeParse(value).success ? (value as GameDefinition<Json>) : null;
+}
+
+/** The built-in manual game for a sandbox components file; throws on invalid declarations. */
+export function sandboxDefinition(components: ComponentsFile): GameDefinition<Json> {
+  // SandboxState and SandboxView are JSON; the definition only ever receives its own values.
+  return createSandboxDefinition(components) as unknown as GameDefinition<Json>;
 }
 
 /**
@@ -45,7 +51,8 @@ export function createWorkerHost(
           ]) ?? []
         );
       case "hotSeatCreate":
-        match = createMatch(definition, request.init);
+        match = null;
+        match = replay(definition, request.init, request.events);
         return null;
       case "hotSeatApply": {
         const result = applyIntent(definition, local(), request.seat, request.intent);

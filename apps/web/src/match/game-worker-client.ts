@@ -16,6 +16,7 @@ import {
   TableSnapshotSchema,
 } from "@bgp/schema";
 import {
+  type GameSource,
   INIT_REPLY_ID,
   type WorkerBooted,
   type WorkerCall,
@@ -64,7 +65,8 @@ export interface GameWorker {
   interpret(gesture: Gesture, view: ClientView, seat: SeatId | null): Promise<MoveIntent | null>;
   actions(view: ClientView, seat: SeatId | null, selection: string[]): Promise<ActionButton[]>;
   hotSeat: {
-    create(init: MatchInit): Promise<void>;
+    /** Starts a match, or resumes one by replaying its accepted events. */
+    create(init: MatchInit, events?: readonly AcceptedEvent[]): Promise<void>;
     apply(seat: SeatId, intent: MoveIntent): Promise<HotSeatOutcome>;
     view(seat: SeatId | null): Promise<ClientView>;
   };
@@ -116,8 +118,8 @@ function parseOutcome(value: unknown): HotSeatOutcome {
 
 /** A started worker that has not loaded a game yet. */
 export interface BootedGameWorker {
-  /** Evaluates the bundle in the worker; call once. */
-  load(source: string, components: ComponentsFile): Promise<GameWorker>;
+  /** Evaluates the bundle (or starts the built-in sandbox) in the worker; call once. */
+  load(game: GameSource, components: ComponentsFile): Promise<GameWorker>;
   destroy(): void;
 }
 
@@ -127,10 +129,10 @@ export interface BootedGameWorker {
  * reply is validated: game code is untrusted, so its output is too.
  */
 export async function startGameWorker(
-  options: GameWorkerOptions & { source: string; components: ComponentsFile },
+  options: GameWorkerOptions & { game: GameSource; components: ComponentsFile },
 ): Promise<GameWorker> {
   const booted = await bootGameWorker(options);
-  return booted.load(options.source, options.components);
+  return booted.load(options.game, options.components);
 }
 
 /**
@@ -205,11 +207,11 @@ export async function bootGameWorker(options: GameWorkerOptions = {}): Promise<B
   if (stopped) throw new GameWorkerError("load");
 
   let loading = false;
-  async function load(source: string, components: ComponentsFile): Promise<GameWorker> {
+  async function load(source: GameSource, components: ComponentsFile): Promise<GameWorker> {
     if (stopped || loading) throw new GameWorkerError("stopped");
     loading = true;
     const loaded = expect(INIT_REPLY_ID, options.loadTimeoutMs ?? GAME_LOAD_TIMEOUT_MS, "load");
-    worker.postMessage({ t: "init", source, components }, [channel.port2]);
+    worker.postMessage({ t: "init", game: source, components }, [channel.port2]);
     try {
       await loaded;
     } catch (error) {
@@ -245,7 +247,8 @@ export async function bootGameWorker(options: GameWorkerOptions = {}): Promise<B
         ActionsSchema.parse(value),
       ),
     hotSeat: {
-      create: (init) => call({ op: "hotSeatCreate", init }, () => undefined),
+      create: (init, events = []) =>
+        call({ op: "hotSeatCreate", init, events: [...events] }, () => undefined),
       apply: (seat, intent) => call({ op: "hotSeatApply", seat, intent }, parseOutcome),
       view: (seat) => call({ op: "hotSeatView", seat }, (value) => ClientViewSchema.parse(value)),
     },

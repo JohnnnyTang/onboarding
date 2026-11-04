@@ -83,7 +83,7 @@ export function useGame(
     (async () => {
       const [booted, pkg] = await Promise.all([booting, loading]);
       if (cancelled) return;
-      const worker = await booted.load(pkg.source, pkg.components);
+      const worker = await booted.load({ kind: "bundle", source: pkg.source }, pkg.components);
       if (cancelled) return;
       setStatus({ kind: "ready", pkg, presenter: createTablePresenter(worker, seat) });
     })().catch((error: unknown) => {
