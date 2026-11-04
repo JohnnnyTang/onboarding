@@ -21,6 +21,8 @@ const api: ApiClient = {
   listMatches: unused,
   getMatch: unused,
   claimInvite: unused,
+  getVersion: unused,
+  getVersionFile: unused,
 };
 
 function fakeAuth(user: AuthUser | null): AuthService {

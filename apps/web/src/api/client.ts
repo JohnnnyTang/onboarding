@@ -15,6 +15,8 @@ import {
   type MatchSummary,
   MatchSummarySchema,
   type ValidationError,
+  type VersionResponse,
+  VersionResponseSchema,
 } from "@bgp/schema";
 
 /** A documented error envelope from the server (contracts/http-api.md#errors). */
@@ -80,6 +82,10 @@ export interface ApiClient {
   listMatches(query?: ListQuery): Promise<MatchListResponse>;
   getMatch(matchId: string): Promise<MatchSummary>;
   claimInvite(token: string, body: ClaimInviteBody): Promise<ClaimInviteResponse>;
+  /** A version and its manifest; `scope` picks the guest token of a match of this version. */
+  getVersion(versionId: string, scope?: TokenScope): Promise<VersionResponse>;
+  /** One raw file of a version (bundle, components file, image). */
+  getVersionFile(versionId: string, path: string, scope?: TokenScope): Promise<Blob>;
 }
 
 const segment = (value: string) => encodeURIComponent(value);
@@ -98,6 +104,18 @@ export function createApiClient(options: ApiClientOptions): ApiClient {
   const fetchImpl = options.fetch ?? globalThis.fetch.bind(globalThis);
   const base = options.baseUrl.replace(/\/$/, "");
 
+  async function failure(response: Response, endpoint: string): Promise<Error> {
+    const parsed = HttpErrorSchema.safeParse(await readJson(response));
+    if (!parsed.success) return new UnexpectedResponseError(response.status, endpoint);
+    const { code, message, errors } = parsed.data.error;
+    return new ApiError(response.status, code, message, errors ?? []);
+  }
+
+  function authorization(scope: TokenScope): Record<string, string> {
+    const token = options.tokens.tokenFor(scope);
+    return token ? { authorization: `Bearer ${token}` } : {};
+  }
+
   async function request<T>(spec: RequestOptions<T>): Promise<T> {
     const contract: Readonly<Record<string, Parser<unknown> | undefined>> =
       HTTP_CONTRACTS[spec.endpoint];
@@ -107,9 +125,10 @@ export function createApiClient(options: ApiClientOptions): ApiClient {
       if (query.limit !== undefined) url.searchParams.set("limit", String(query.limit));
       if (query.cursor !== undefined) url.searchParams.set("cursor", query.cursor);
     }
-    const headers: Record<string, string> = { accept: "application/json" };
-    const token = options.tokens.tokenFor(spec.scope ?? {});
-    if (token) headers.authorization = `Bearer ${token}`;
+    const headers: Record<string, string> = {
+      accept: "application/json",
+      ...authorization(spec.scope ?? {}),
+    };
     let body: string | undefined;
     if (spec.body !== undefined) {
       // Validate outgoing bodies too, so contract drift fails here and not on the server.
@@ -124,13 +143,8 @@ export function createApiClient(options: ApiClientOptions): ApiClient {
       credentials: "omit",
       ...(body === undefined ? {} : { body }),
     });
+    if (!response.ok) throw await failure(response, spec.endpoint);
     const json = await readJson(response);
-    if (!response.ok) {
-      const parsed = HttpErrorSchema.safeParse(json);
-      if (!parsed.success) throw new UnexpectedResponseError(response.status, spec.endpoint);
-      const { code, message, errors } = parsed.data.error;
-      throw new ApiError(response.status, code, message, errors ?? []);
-    }
     try {
       return spec.response.parse(json);
     } catch {
@@ -173,5 +187,23 @@ export function createApiClient(options: ApiClientOptions): ApiClient {
         response: ClaimInviteResponseSchema,
         body,
       }),
+    getVersion: (versionId, scope) =>
+      request({
+        endpoint: "GET /api/versions/:versionId",
+        path: `/api/versions/${segment(versionId)}`,
+        response: VersionResponseSchema,
+        ...(scope ? { scope } : {}),
+      }),
+    async getVersionFile(versionId, path, scope = {}) {
+      const endpoint = "GET /api/versions/:versionId/files/*";
+      const params = HTTP_CONTRACTS[endpoint].params.parse({ versionId, path });
+      const filePath = params.path.split("/").map(segment).join("/");
+      const response = await fetchImpl(
+        new URL(`${base}/api/versions/${segment(params.versionId)}/files/${filePath}`),
+        { method: "GET", headers: authorization(scope), credentials: "omit" },
+      );
+      if (!response.ok) throw await failure(response, endpoint);
+      return response.blob();
+    },
   };
 }
