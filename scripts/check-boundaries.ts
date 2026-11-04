@@ -35,6 +35,7 @@ const POLICIES: Record<string, Policy> = {
       "@tanstack/react-query",
       "oidc-client-ts",
       "fast-json-patch",
+      "idb",
     ],
   },
   "apps/server": {
@@ -143,6 +144,8 @@ export function checkSource(root: string, file: string, source: string): string[
     if (path === "apps/server/drizzle.config.ts" && name === "drizzle-kit") return;
     if (path === "apps/server/vitest.config.ts" && name === "vitest") return;
     if (WEB_TOOL_CONFIGS.has(path) && WEB_BUILD_TOOLS.has(name)) return;
+    // Web unit tests run the IndexedDB store against an in-memory implementation.
+    if (testFile && owner === "apps/web" && name === "fake-indexeddb") return;
     if (specifier.startsWith("node:") || NODE_MODULES.has(specifier)) {
       if (!policy.node) report(node, `Node import ${specifier} is forbidden in ${owner}.`);
       return;

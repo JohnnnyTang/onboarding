@@ -127,7 +127,9 @@ The rules host reads bundles from a local cache directory, `<BUNDLE_CACHE_DIR>/<
 | Store            | Key                 | Value                                                                                                 |
 | ---------------- | ------------------- | ----------------------------------------------------------------------------------------------------- |
 | `projects`       | `id` (UUID)         | `{ id, name, mode, manifest, components, cardTemplates, csvSources, updatedAt, publishedVersionIds }` |
-| `projectAssets`  | `[projectId, path]` | `{ projectId, path, blob, sha256, contentType }`                                                      |
+| `projectAssets`  | `[projectId, path]` | `{ projectId, path, blob, sha256, contentType, size }`                                                |
 | `hotseatMatches` | `id`                | `{ id, projectId, init: { seats, seed, options }, events: AcceptedEvent[], updatedAt }`               |
 
-Hot-seat matches store only init plus events; the state is rebuilt with `replay`.
+Hot-seat matches store only init plus events; the state is rebuilt with `replay`. `hotseatMatches` has a `projectId` index.
+
+The schemas are `LocalProjectSchema`, `ProjectAssetInfoSchema` (the asset record without its `blob`) and `HotSeatMatchRecordSchema` in `@bgp/schema`. The web app validates every record it writes and reads (`apps/web/src/projects/project-store.ts`); records that fail are skipped and counted, never shown. A project's manifest and components always form a valid sandbox game package, so a project can be played at any time. `updatedAt` is an ISO 8601 time. `cardTemplates` and `csvSources` are JSON arrays whose entries T16 defines. Deleting a project deletes its images and hot-seat matches in one transaction.
