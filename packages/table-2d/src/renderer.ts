@@ -104,6 +104,21 @@ const PIPS: Record<string, [number, number][]> = {
   ],
 };
 const LIFT_SCALE = 0.06;
+/** Frames with nothing moving before the ticker stops; the last of them is still drawn. */
+const SETTLED_FRAMES = 3;
+/** Remaining distance (table units) or angle (radians) below which a piece snaps into place. */
+const SNAP = 0.05;
+/** DOM events on the canvas that can change what is drawn. */
+const WAKE_EVENTS = [
+  "pointerdown",
+  "pointermove",
+  "pointerup",
+  "pointercancel",
+  "pointerleave",
+  "wheel",
+  "keydown",
+  "blur",
+] as const;
 const ZOOM_STEP = 1.2;
 
 function shapeOf(def: ComponentDef | undefined): Shape {
@@ -153,6 +168,7 @@ export class PixiTableRenderer implements TableRenderer<HTMLElement> {
   private loaded = new Set<Texture>();
   private generation = 0;
   private mounting = false;
+  private settled = 0;
 
   async mount(container: HTMLElement, init: Init): Promise<void> {
     if (this.app || this.mounting) throw new Error("Table renderer is already mounted");
@@ -196,6 +212,8 @@ export class PixiTableRenderer implements TableRenderer<HTMLElement> {
     container.append(app.canvas);
     this.abort = new AbortController();
     const options = { signal: this.abort.signal };
+    // Registered first, so a handler's changes are drawn by the restarted ticker.
+    for (const type of WAKE_EVENTS) app.canvas.addEventListener(type, this.wake, options);
     app.canvas.addEventListener("pointerdown", this.pointerDown, options);
     app.canvas.addEventListener("pointermove", this.pointerMove, options);
     app.canvas.addEventListener("pointerup", this.pointerUp, options);
@@ -212,6 +230,7 @@ export class PixiTableRenderer implements TableRenderer<HTMLElement> {
 
   setSnapshot(snapshot: TableSnapshot): void {
     const parsed = TableSnapshotSchema.parse(snapshot);
+    this.wake();
     const tableChanged = JSON.stringify(parsed.table) !== JSON.stringify(this.snapshot.table);
     this.snapshot = parsed;
     if (!this.app || !this.init) return;
@@ -271,6 +290,7 @@ export class PixiTableRenderer implements TableRenderer<HTMLElement> {
     };
   }
   setSelection(ids: string[]): void {
+    this.wake();
     const allowed = new Set(
       this.snapshot.items.filter((item) => item.selectable).map((item) => item.id),
     );
@@ -286,6 +306,7 @@ export class PixiTableRenderer implements TableRenderer<HTMLElement> {
 
   resize(): void {
     if (!this.app || !this.host) return;
+    this.wake();
     const width = Math.max(1, this.host.clientWidth),
       height = Math.max(1, this.host.clientHeight);
     this.app.renderer.resize(width, height);
@@ -526,6 +547,7 @@ export class PixiTableRenderer implements TableRenderer<HTMLElement> {
     if (asset) {
       void this.texture(asset).then((texture) => {
         if (!texture || visual.node.destroyed || revision !== visual.revision) return;
+        this.wake();
         const sprite = new Sprite(texture);
         sprite.anchor.set(0.5);
         const scale = Math.min((width - 5) / texture.width, (height - 5) / texture.height);
@@ -609,26 +631,45 @@ export class PixiTableRenderer implements TableRenderer<HTMLElement> {
     return promise;
   }
 
+  /**
+   * Restarts drawing after a change. While nothing moves the ticker is stopped, so an idle
+   * table costs no frames (several tables can share one device, and phones save battery).
+   */
+  private wake = (): void => {
+    this.settled = 0;
+    if (this.app && !this.app.ticker.started) this.app.ticker.start();
+  };
+
   private animate(delta: number): void {
     const step = Math.min(delta, 64);
     const factor = 1 - Math.exp(-step / 55);
     const quick = 1 - Math.exp(-step / 35);
     const dragged = this.dragged()?.item.id;
+    let moving = this.press !== undefined || this.pointers.size > 0;
     for (const visual of this.visuals.values()) {
       const { node, target } = visual;
       const lifted = target.item.id === dragged;
       visual.lift += ((lifted ? 1 : 0) - visual.lift) * quick;
       if (Math.abs(visual.lift) < 0.001) visual.lift = 0;
+      else moving = true;
       node.scale.set(1 + LIFT_SCALE * visual.lift);
       if (!lifted) {
-        node.x += (target.x - node.x) * factor;
-        node.y += (-target.y - node.y) * factor;
         const angle = (target.rotation * Math.PI) / 180;
         const difference = Math.atan2(
           Math.sin(angle - node.rotation),
           Math.cos(angle - node.rotation),
         );
-        node.rotation += difference * factor;
+        const dx = target.x - node.x;
+        const dy = -target.y - node.y;
+        if (Math.abs(dx) < SNAP && Math.abs(dy) < SNAP && Math.abs(difference) < SNAP / 10) {
+          node.position.set(target.x, -target.y);
+          node.rotation = angle;
+        } else {
+          moving = true;
+          node.x += dx * factor;
+          node.y += dy * factor;
+          node.rotation += difference * factor;
+        }
       }
       // Light comes from the top left of the table; lifted pieces cast a longer, softer shadow.
       const ox = 1.2 + 4 * visual.lift,
@@ -643,6 +684,9 @@ export class PixiTableRenderer implements TableRenderer<HTMLElement> {
       // Counts are interface text: keep them upright whatever the seat or card angle.
       if (visual.badge) visual.badge.rotation = -(this.view.angle + node.rotation);
     }
+    this.settled = moving ? 0 : this.settled + 1;
+    // Stopping inside the tick still renders this frame.
+    if (this.settled >= SETTLED_FRAMES) this.app?.ticker.stop();
   }
 
   private point(event: PointerEvent | WheelEvent): Pointer {
