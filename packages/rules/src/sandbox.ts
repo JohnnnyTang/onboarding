@@ -1,11 +1,16 @@
 import {
+  type ActionButton,
+  type ClientView,
   type ComponentsFile,
   ComponentsFileSchema,
   type GameDefinition,
+  type Gesture,
   JsonSchema,
   type ManualOp,
   ManualOpSchema,
   type MoveContext,
+  type MoveIntent,
+  type PresentInfo,
   type Random,
   type SandboxState,
   type SandboxView,
@@ -227,6 +232,131 @@ function visibleItem(
   return view;
 }
 
+type View = ClientView<SandboxView>;
+
+function manual(op: ManualOp): MoveIntent {
+  // Parsing as JSON also guarantees that no optional field is present as `undefined`.
+  return { move: "manual", args: JsonSchema.parse(op) };
+}
+
+/** The seat may change the table: it plays in this match and the match is not over. */
+function actingSeat(view: View, info: PresentInfo): SeatId | null {
+  return info.seat !== null && view.ctx.seats.includes(info.seat) && view.result === null
+    ? info.seat
+    : null;
+}
+
+/**
+ * Gestures become manual operations: dropping an item moves it. Clicks only select, which
+ * the renderer handles. Drops the seat could not make, or that change nothing, give null.
+ */
+function interpretGesture(
+  components: ComponentsFile,
+  gesture: Gesture,
+  view: View,
+  info: PresentInfo,
+): MoveIntent | null {
+  const seat = actingSeat(view, info);
+  if (seat === null || gesture.kind !== "drop") return null;
+  const zones = expandZones(components, view.ctx.seats);
+  const item = view.game.items.find((candidate) => candidate.id === gesture.item);
+  const source = zones.find((zone) => zone.id === item?.zone);
+  const target = zones.find((zone) => zone.id === gesture.to);
+  if (!item || !source || !target || !canTouch(source, seat)) return null;
+  if (target.layout === "free") {
+    if (gesture.pos_mm === undefined) return null;
+    return manual({ op: "move", item: item.id, to: target.id, pos_mm: [...gesture.pos_mm] });
+  }
+  const others = view.game.items.filter(
+    (other) => other.zone === target.id && other.id !== item.id,
+  ).length;
+  const index = Math.min(gesture.index ?? others, others);
+  if (source.id === target.id && index === item.index) return null;
+  return manual({ op: "move", item: item.id, to: target.id, index });
+}
+
+function zoneName(zone: ZoneDef | Zone): string {
+  return zone.label ?? zone.id;
+}
+
+/**
+ * Buttons for one selected item: flip, rotate, roll (dice), shuffle its zone and deal from
+ * it into each seat's zone of every `owner: "each"` declaration. End turn is always offered.
+ */
+function sandboxActions(
+  components: ComponentsFile,
+  view: View,
+  info: PresentInfo,
+  selection: string[],
+): ActionButton[] {
+  const seat = actingSeat(view, info);
+  if (seat === null) return [];
+  const zones = expandZones(components, view.ctx.seats);
+  const endTurn: ActionButton = {
+    id: "end-turn",
+    label: "End turn",
+    enabled: true,
+    intent: manual({ op: "endTurn" }),
+  };
+  const item =
+    selection.length === 1 ? view.game.items.find((other) => other.id === selection[0]) : undefined;
+  const zone = zones.find((candidate) => candidate.id === item?.zone);
+  if (!item || !zone || !canTouch(zone, seat)) {
+    const hint = "Select one item first";
+    return [
+      { id: "flip", label: "Flip", enabled: false, hint },
+      { id: "rotate", label: "Rotate", enabled: false, hint },
+      { id: "shuffle", label: "Shuffle", enabled: false, hint },
+      endTurn,
+    ];
+  }
+  const inZone = view.game.items.filter((other) => other.zone === zone.id).length;
+  const buttons: ActionButton[] = [
+    { id: "flip", label: "Flip", enabled: true, intent: manual({ op: "flip", item: item.id }) },
+    {
+      id: "rotate",
+      label: "Rotate",
+      enabled: true,
+      intent: manual({ op: "rotate", item: item.id, deg: (item.rotation_deg + 90) % 360 }),
+    },
+  ];
+  const def = components.defs.find((candidate) => candidate.id === item.def);
+  if (def?.kind === "die") {
+    buttons.push({
+      id: "roll",
+      label: "Roll",
+      enabled: true,
+      intent: manual({ op: "roll", item: item.id }),
+    });
+  }
+  buttons.push(
+    inZone > 1
+      ? {
+          id: "shuffle",
+          label: `Shuffle ${zoneName(zone)}`,
+          enabled: true,
+          intent: manual({ op: "shuffle", zone: zone.id }),
+        }
+      : { id: "shuffle", label: "Shuffle", enabled: false, hint: "Nothing to shuffle" },
+  );
+  for (const each of components.zones ?? []) {
+    if (each.owner !== "each") continue;
+    const targets = view.ctx.seats.map((other) => `${each.id}:${other}`);
+    if (targets.includes(zone.id)) continue;
+    const enough = inZone >= targets.length;
+    buttons.push({
+      id: `deal:${each.id}`,
+      label: `Deal 1 to each ${zoneName(each)}`,
+      enabled: enough,
+      ...(enough
+        ? { intent: manual({ op: "deal", from: zone.id, to: targets, count: 1 }) }
+        : { hint: `Needs ${targets.length} items` }),
+    });
+  }
+  buttons.push(endTurn);
+  return buttons;
+}
+
 /** Built-in manual game. Declarations are validated and detached before use. */
 export function createSandboxDefinition(
   input: ComponentsFile,
@@ -308,6 +438,8 @@ export function createSandboxDefinition(
         ),
       };
     },
+    interpret: (gesture, view, info) => interpretGesture(components, gesture, view, info),
+    actions: (view, info, selection) => sandboxActions(components, view, info, selection),
     present(view, info): TableSnapshot {
       const zones = expandZones(components, view.ctx.seats);
       const canAct =

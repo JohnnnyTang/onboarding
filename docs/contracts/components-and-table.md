@@ -159,7 +159,7 @@ local layout axes. This optional SDK 1 field leaves existing snapshots unchanged
 
 ## Gestures
 
-Emitted by renderers, turned into intents by `interpret` (enforced) or by the platform (sandbox).
+Emitted by renderers, turned into intents by `interpret` (enforced) or by the platform (sandbox: the built-in definition's own `interpret`, see [Platform gestures and buttons](#platform-gestures-and-buttons)).
 
 ```ts
 export type Gesture =
@@ -300,6 +300,24 @@ Otherwise the view omits `def` (cards show their back). Moving an item between z
   zone center; entering a free zone without pos_mm uses that center, while moving
   within it preserves position. Leaving a free zone removes pos_mm.
   These defaults are tracked in decisions.md, Q-009.
+
+### Platform gestures and buttons
+
+The sandbox definition also implements `interpret` and `actions`, so the game worker
+handles sandbox and enforced games the same way. Both read only the seat's view and the
+declarations. A spectator, a seat outside the match, or a finished match gets no intent and
+no buttons.
+
+- `interpret`: a `drop` becomes `move`. Ordered layouts send the gesture's index, clamped
+  to the destination's length without the dragged item; free zones send `pos_mm`. A drop
+  from a zone the seat may not manipulate, onto an unknown zone, or back to the same place
+  gives `null`. Clicks give `null`: they only select.
+- `actions`, for exactly one selected item the seat may manipulate: Flip, Rotate (by 90°
+  clockwise, as an absolute `rotate`), Roll (dice whose identity the seat knows), Shuffle
+  the item's zone (when it holds two or more items) and, for every `owner: "each"` zone
+  declaration that does not contain the item, "Deal 1 to each <label>" from the item's zone
+  (enabled when it holds one item per seat). Otherwise Flip, Rotate and Shuffle are shown
+  disabled. End turn is always offered.
 
 ## Schema validation
 
