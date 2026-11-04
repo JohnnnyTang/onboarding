@@ -53,7 +53,9 @@ function appServers() {
       },
     },
     {
-      command: "pnpm --filter @bgp/web dev",
+      // A production build, so load-time criteria (AC-06) measure what users get. The
+      // VITE_* settings are baked in at build time.
+      command: "pnpm --filter @bgp/web exec vite build && pnpm --filter @bgp/web preview",
       url: "http://localhost:5173/",
       reuseExistingServer,
       env: {

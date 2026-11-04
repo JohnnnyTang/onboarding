@@ -67,7 +67,13 @@ export async function designerToken(browser: Browser, username: string): Promise
   }
 }
 
-async function api(token: string, method: string, path: string, body?: unknown): Promise<unknown> {
+/** Calls the API as a designer and returns the parsed JSON body. */
+export async function api(
+  token: string,
+  method: string,
+  path: string,
+  body?: unknown,
+): Promise<unknown> {
   const response = await fetch(`${API_URL}${path}`, {
     method,
     headers: {
@@ -82,7 +88,7 @@ async function api(token: string, method: string, path: string, body?: unknown):
 }
 
 /** A real 1×1 PNG for placeholder card art. */
-const PNG = Buffer.from(
+export const PNG = Buffer.from(
   "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==",
   "base64",
 );
@@ -134,8 +140,52 @@ export async function createSandboxMatch(token: string, seatCount: number): Prom
     players: { min: 1, max: 4 },
     components: "components.json",
   })) as { id: string };
+  await uploadAndFinalize(token, version.id, files);
+  const created = (await api(token, "POST", "/api/matches", {
+    versionId: version.id,
+    seatCount,
+    options: {},
+  })) as { match: { id: string }; invites: { seat: string; url: string }[] };
+  return { matchId: created.match.id, invites: created.invites };
+}
+
+/**
+ * Publishes an enforced game under a fresh slug (create game, draft, upload, finalize) and
+ * creates a lobby match with one invite per seat.
+ */
+export async function createEnforcedMatch(
+  token: string,
+  game: { name: string; manifest: Record<string, unknown>; files: Record<string, Buffer> },
+  seatCount: number,
+  options: Record<string, unknown> = {},
+): Promise<FixtureMatch> {
+  const slug = `e2e-${randomBytes(6).toString("hex")}`;
+  const created = (await api(token, "POST", "/api/games", {
+    slug,
+    name: game.name,
+    visibility: "unlisted",
+  })) as { id: string };
+  const version = (await api(token, "POST", `/api/games/${created.id}/versions`, {
+    ...game.manifest,
+    id: slug,
+  })) as { id: string };
+  await uploadAndFinalize(token, version.id, game.files);
+  const match = (await api(token, "POST", "/api/matches", {
+    versionId: version.id,
+    seatCount,
+    options,
+  })) as { match: { id: string }; invites: { seat: string; url: string }[] };
+  return { matchId: match.match.id, invites: match.invites };
+}
+
+/** Uploads every file of a draft version, then finalizes it. */
+export async function uploadAndFinalize(
+  token: string,
+  versionId: string,
+  files: Record<string, Buffer>,
+): Promise<void> {
   for (const [path, bytes] of Object.entries(files)) {
-    const response = await fetch(`${API_URL}/api/versions/${version.id}/files/${path}`, {
+    const response = await fetch(`${API_URL}/api/versions/${versionId}/files/${path}`, {
       method: "PUT",
       headers: {
         authorization: `Bearer ${token}`,
@@ -146,13 +196,7 @@ export async function createSandboxMatch(token: string, seatCount: number): Prom
     });
     if (response.status !== 204) throw new Error(`upload ${path}: ${await response.text()}`);
   }
-  await api(token, "POST", `/api/versions/${version.id}/finalize`, {});
-  const created = (await api(token, "POST", "/api/matches", {
-    versionId: version.id,
-    seatCount,
-    options: {},
-  })) as { match: { id: string }; invites: { seat: string; url: string }[] };
-  return { matchId: created.match.id, invites: created.invites };
+  await api(token, "POST", `/api/versions/${versionId}/finalize`, {});
 }
 
 /** Everything in web storage, to check that no token was persisted. */
