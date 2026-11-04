@@ -59,7 +59,12 @@ code. Other move rejection codes retain their documented game messages.
 
 IPC envelopes have an 8 MiB serialized UTF-8 cap in both directions. A parent
 watchdog kills the child at `timeoutMs` (default/maximum 1000 ms). The QuickJS
-interrupt uses the same limit. Default/maximum interpreter heap: 64 MiB; stack:
+interrupt uses the same limit. Trusted recovery steps (`prepare`, and `load` and
+`restore` when a process has to be started or replaced) instead share
+`recoveryTimeoutMs` (default 5000; integer `timeoutMs`..30000) for the watchdog and
+the operation; game code inside them is still interrupted at `timeoutMs` per call.
+After a recovery, the operation's game call (`apply`, `views`, `create` and so on)
+starts with a full `timeoutMs` (Q-019). Default/maximum interpreter heap: 64 MiB; stack:
 512 KiB. Node old space is separately limited to 128 MiB. These are heap limits,
 not an OS limit on whole-process RSS. Each process gets Node permission flags
 allowing reads only in the built host directory, with no writes, subprocesses,
@@ -77,6 +82,7 @@ After inactivity the client queues a checkpoint, compacts acknowledged events
 and destroys that match's process. A subsequent operation reloads the pinned
 source and restores the checkpoint before executing; all API methods remain
 available. Idle cleanup shares the match's serial queue and operation deadline.
+Resuming runs on the recovery budget above, so a slow resume never shortens the move.
 Failures retain the previous checkpoint and acknowledged journal for recovery.
 
 The small reserve contains only unassigned processes. `prepare` loads trusted

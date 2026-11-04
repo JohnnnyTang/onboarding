@@ -16,6 +16,8 @@ export class HostPool {
   constructor(
     private readonly options: Required<SandboxOptions>,
     private readonly capacity: number,
+    /** Watchdog for starting a process and loading trusted interpreter code. */
+    private readonly prepareTimeoutMs = options.timeoutMs,
   ) {
     this.fill();
   }
@@ -23,7 +25,7 @@ export class HostPool {
   private prepare(): Spare {
     const host = new HostProcess(this.options);
     const ready = host
-      .call({ op: "prepare" })
+      .call({ op: "prepare" }, this.prepareTimeoutMs, this.prepareTimeoutMs)
       .then(() => host)
       .catch(() => {
         host.dispose();

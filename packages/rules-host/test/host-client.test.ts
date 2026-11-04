@@ -222,6 +222,40 @@ describe("production rules host client", () => {
     }
   }, 15_000);
 
+  it("validates the recovery budget", () => {
+    for (const recoveryTimeoutMs of [0, 999, 30_001, 1.5]) {
+      expect(() => fixture([GAME_SOURCE], { recoveryTimeoutMs })).toThrow(GameError);
+    }
+    for (const recoveryTimeoutMs of [1000, 30_000]) {
+      fixture([GAME_SOURCE], { recoveryTimeoutMs }).client.close();
+    }
+  });
+
+  it("gives resuming a retired match its own budget, then a full one for the move", async () => {
+    // Q-019: a busy server resumed the match too slowly for one shared 1000 ms deadline and
+    // lost a legal move. Blocking the parent's event loop while the process reloads stands in
+    // for that load: wall time passes, the child still finishes its trusted work.
+    const { client, hashes } = fixture([GAME_SOURCE], { idleTimeoutMs: 40 });
+    const busy = (ms: number) => {
+      const until = performance.now() + ms;
+      while (performance.now() < until) {
+        // Hold the event loop.
+      }
+    };
+    try {
+      await add(client, "slow-resume", hashes[0]);
+      await vi.waitFor(() => expect(client.processId("slow-resume")).toBeUndefined(), {
+        timeout: 2000,
+      });
+      const moving = client.apply("slow-resume", "0", { move: "tick" });
+      setTimeout(() => busy(1500), 0);
+      expect(await moving).toMatchObject({ ok: true, event: { seq: 1 } });
+      expect(client.processId("slow-resume")).toBeTypeOf("number");
+    } finally {
+      client.close();
+    }
+  }, 15_000);
+
   it("orders moves queued around idle cleanup without dropping acknowledged events", async () => {
     const { client, hashes } = fixture([GAME_SOURCE], { idleTimeoutMs: 1 });
     const direct = await QuickJsSandbox.load(GAME_SOURCE);
