@@ -146,6 +146,9 @@ Physical-phone qualification is deferred to T20. Scope and evidence:
 
 ### T14 Game worker and match page
 
+**Status:** Complete. Local validation and scope: [t14-validation.md](t14-validation.md).
+Q-018 (guest seats in session storage) awaits the project owner's confirmation.
+
 **Deliverables:** the game worker (removes globals per D-007 before evaluating the bundle; exposes `present`, `interpret`, `actions` and a hot-seat runtime over `postMessage`); the WebSocket client (hello, patches, resync, reconnect with backoff); the match page wiring view → `present` → table, gestures and action buttons → `move`, plus HUD, prompt, chat, `rejected` messages and the result screen.
 
 **Done when:** E2E-04 and E2E-05 pass using a Harbor Market version uploaded by a test fixture script; the worker's `fetch` and `indexedDB` are unavailable to game code (unit test in the browser).
