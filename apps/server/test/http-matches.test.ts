@@ -5,6 +5,7 @@ import {
   MatchListResponseSchema,
   MatchSummarySchema,
   ReplayResponseSchema,
+  VersionResponseSchema,
 } from "@bgp/schema";
 import { eq } from "drizzle-orm";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
@@ -235,6 +236,30 @@ describe("invites and match access", () => {
         (await claim(api, otherToken ?? "", "Else")).json(),
       );
       expect((await api.call("GET", file, { token: otherGuest.guestToken })).statusCode).toBe(403);
+    });
+  });
+
+  it("lets seat holders read the version's manifest", async () => {
+    await withApi(harness, async (api) => {
+      const { owner, tokens, versionId } = await lobby(api);
+      const guest = ClaimInviteResponseSchema.parse(
+        (await claim(api, tokens[0] ?? "", "Guest")).json(),
+      );
+      const path = `/api/versions/${versionId}`;
+      const read = (token?: string) => api.call("GET", path, { token });
+      const byGuest = await read(guest.guestToken);
+      expect(byGuest.statusCode).toBe(200);
+      const version = VersionResponseSchema.parse(byGuest.json());
+      expect(version).toMatchObject({ id: versionId, status: "ready" });
+      expect(version.manifest.components).toBe("components.json");
+      expect((await read(owner)).statusCode).toBe(200);
+      const outsider = await read(await api.designer("designer-2"));
+      expect([outsider.statusCode, code(outsider)]).toEqual([403, "FORBIDDEN"]);
+      expect((await read()).statusCode).toBe(401);
+      const missing = await api.call("GET", "/api/versions/00000000-0000-7000-8000-000000000000", {
+        token: owner,
+      });
+      expect([missing.statusCode, code(missing)]).toEqual([404, "NOT_FOUND"]);
     });
   });
 });
