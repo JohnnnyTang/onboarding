@@ -1,7 +1,14 @@
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { type BrowserContext, expect, type Locator, type Page, test } from "@playwright/test";
+import {
+  type BrowserContext,
+  type BrowserType,
+  expect,
+  type Locator,
+  type Page,
+  test,
+} from "@playwright/test";
 import { WEB_URL } from "./support/app.js";
 import { solidPng } from "./support/png.js";
 
@@ -16,11 +23,10 @@ const IMAGES = [
 
 /** Starts a browser with a profile on disk, so closing it is a real browser restart. */
 async function launch(
-  playwright: typeof import("@playwright/test"),
-  browserName: "chromium" | "firefox" | "webkit",
+  type: BrowserType,
   profile: string,
 ): Promise<{ context: BrowserContext; page: Page; failed: string[] }> {
-  const context = await playwright[browserName].launchPersistentContext(profile, {
+  const context = await type.launchPersistentContext(profile, {
     viewport: { width: 1280, height: 900 },
   });
   const failed: string[] = [];
@@ -110,7 +116,7 @@ test("E2E-01 (without card generation): an offline project played hot-seat survi
   // test-results folder (MAX_PATH), and the registration never completes there.
   const profile = mkdtempSync(join(tmpdir(), "bgp-e2e-"));
   test.info().attach("profile", { body: profile });
-  let { context, page, failed } = await launch(playwright, browserName, profile);
+  let { context, page, failed } = await launch(playwright[browserName], profile);
 
   // The first visit installs the service worker; from then on the network is off.
   await page.goto(`${WEB_URL}/projects`);
@@ -233,7 +239,7 @@ test("E2E-01 (without card generation): an offline project played hot-seat survi
 
   // Restart the browser, still offline: the project and its game are still there.
   await context.close();
-  ({ context, page, failed } = await launch(playwright, browserName, profile));
+  ({ context, page, failed } = await launch(playwright[browserName], profile));
   await context.setOffline(true);
   await page.goto(`${WEB_URL}/projects`);
   await expect(page.getByRole("link", { name: "Harbor Sketch" })).toBeVisible();
