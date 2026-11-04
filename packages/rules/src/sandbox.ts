@@ -349,7 +349,16 @@ function sandboxActions(
       label: `Deal 1 to each ${zoneName(each)}`,
       enabled: enough,
       ...(enough
-        ? { intent: manual({ op: "deal", from: zone.id, to: targets, count: 1 }) }
+        ? {
+            // Only the owner sees an owner zone, so its cards arrive face up for the owner.
+            intent: manual({
+              op: "deal",
+              from: zone.id,
+              to: targets,
+              count: 1,
+              ...(each.visibility === "owner" ? { face: "up" as const } : {}),
+            }),
+          }
         : { hint: `Needs ${targets.length} items` }),
     });
   }

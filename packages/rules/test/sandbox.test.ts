@@ -578,11 +578,20 @@ describe("platform gestures and actions", () => {
       "2",
       buttons.find((button) => button.id === "deal:hand")?.intent ?? null,
     );
+    // Dealt face up into owner zones: the owner sees the card, nobody else does.
     expect(["hand:0", "hand:1", "hand:2"].map((zone) => item(state, zone, 1).face)).toEqual([
-      "down",
-      "down",
-      "down",
+      "up",
+      "up",
+      "up",
     ]);
+    const dealt = item(state, "hand:1", 1);
+    expect(view(state, "1").game.items.find((other) => other.id === dealt.id)).toMatchObject({
+      def: dealt.def,
+      face: "up",
+    });
+    expect(view(state, "0").game.items.find((other) => other.id === dealt.id)).not.toHaveProperty(
+      "def",
+    );
 
     const die = item(state, "market", 0);
     const roll = actions(state, "0", [die.id]).find((button) => button.id === "roll");

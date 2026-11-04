@@ -316,7 +316,8 @@ no buttons.
   clockwise, as an absolute `rotate`), Roll (dice whose identity the seat knows), Shuffle
   the item's zone (when it holds two or more items) and, for every `owner: "each"` zone
   declaration that does not contain the item, "Deal 1 to each <label>" from the item's zone
-  (enabled when it holds one item per seat). Otherwise Flip, Rotate and Shuffle are shown
+  (enabled when it holds one item per seat). Into owner-visible zones it deals face up,
+  which only the owner can see; into public zones it keeps each item's face. Otherwise Flip, Rotate and Shuffle are shown
   disabled. End turn is always offered.
 
 ## Schema validation
