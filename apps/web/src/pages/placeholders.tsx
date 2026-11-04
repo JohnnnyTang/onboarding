@@ -1,20 +1,5 @@
-import { Link, useParams } from "react-router";
+import { Link } from "react-router";
 import { EmptyState, PageHeader } from "../components/ui";
-
-/** `/matches/:matchId`: the table, HUD and room connection arrive with T14. */
-export function MatchPage() {
-  const { matchId = "" } = useParams();
-  return (
-    <>
-      <PageHeader title="Match" />
-      <EmptyState title="The table is not available yet">
-        <p>
-          <Link to={`/matches/${encodeURIComponent(matchId)}/lobby`}>Back to the lobby</Link>
-        </p>
-      </EmptyState>
-    </>
-  );
-}
 
 /** `/matches/:matchId/replay`: the replay viewer arrives with T18. */
 export function ReplayPage() {

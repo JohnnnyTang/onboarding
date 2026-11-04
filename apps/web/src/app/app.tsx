@@ -5,8 +5,9 @@ import { GamePage, GamesPage } from "../pages/games";
 import { HomePage } from "../pages/home";
 import { JoinPage } from "../pages/join";
 import { LobbyPage } from "../pages/lobby";
+import { MatchPage } from "../pages/match";
 import { MatchesPage } from "../pages/matches";
-import { MatchPage, NotFoundPage, ReplayPage } from "../pages/placeholders";
+import { NotFoundPage, ReplayPage } from "../pages/placeholders";
 import { ProjectsPage } from "../pages/projects";
 import { Layout } from "./layout";
 

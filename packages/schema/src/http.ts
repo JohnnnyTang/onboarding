@@ -168,6 +168,7 @@ export const HTTP_CONTRACTS = {
     body: EmptyBodySchema,
     response: FinalizeResponseSchema,
   },
+  "GET /api/versions/:versionId": { response: VersionResponseSchema },
   "GET /api/versions/:versionId/files/*": { params: FileParamsSchema },
   "POST /api/matches": { body: CreateMatchBodySchema, response: CreateMatchResponseSchema },
   "GET /api/matches": { query: ListQuerySchema, response: MatchListResponseSchema },

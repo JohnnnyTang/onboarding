@@ -34,9 +34,34 @@ interface HostedMatch {
   idleTimer?: ReturnType<typeof setTimeout>;
 }
 
+/**
+ * Time left for one queued operation. Recovering a process (taking or starting one, loading
+ * the pinned source, restoring the checkpoint) runs on its own budget; the game call that
+ * follows then starts a fresh one, so a slow resume never eats into a move's time.
+ */
+class Deadline {
+  private at: number;
+  constructor(private readonly callMs: number) {
+    this.at = performance.now() + callMs;
+  }
+  remaining(): number {
+    return Math.floor(this.at - performance.now());
+  }
+  /** Starts a new budget: `ms` for recovery, or the game call limit by default. */
+  restart(ms = this.callMs): void {
+    this.at = performance.now() + ms;
+  }
+}
+
 export interface RulesHostClientOptions extends SandboxOptions {
   /** Checkpoint and retire a process after this many idle milliseconds; 0 disables. */
   idleTimeoutMs?: number;
+  /**
+   * Budget for recovering a match's process: taking or starting one, loading the runtime and
+   * pinned source, and restoring the checkpoint. Default 5000; integer `timeoutMs`..30000.
+   * Game code inside those steps is still interrupted after `timeoutMs` per call (Q-019).
+   */
+  recoveryTimeoutMs?: number;
   /** Unassigned prewarmed processes only; never reuse a process that ran a game. */
   warmSpareCount?: number;
   /**
@@ -53,6 +78,7 @@ export class RulesHostClient {
   private readonly matches = new Map<string, HostedMatch>();
   private readonly options: Required<SandboxOptions>;
   private readonly idleTimeoutMs: number;
+  private readonly recoveryTimeoutMs: number;
   private readonly pool: HostPool;
   private readonly onProcessExit: ((matchId: string) => void) | undefined;
   private closed = false;
@@ -74,8 +100,12 @@ export class RulesHostClient {
       throw new GameError();
     this.options = { timeoutMs, memoryLimitBytes };
     this.idleTimeoutMs = options.idleTimeoutMs ?? 10_000;
+    this.recoveryTimeoutMs = options.recoveryTimeoutMs ?? 5000;
     const warmSpareCount = options.warmSpareCount ?? 1;
     if (
+      !Number.isInteger(this.recoveryTimeoutMs) ||
+      this.recoveryTimeoutMs < timeoutMs ||
+      this.recoveryTimeoutMs > 30_000 ||
       !Number.isInteger(this.idleTimeoutMs) ||
       this.idleTimeoutMs < 0 ||
       this.idleTimeoutMs > 3_600_000 ||
@@ -84,7 +114,7 @@ export class RulesHostClient {
       warmSpareCount > 2
     )
       throw new GameError();
-    this.pool = new HostPool(this.options, warmSpareCount);
+    this.pool = new HostPool(this.options, warmSpareCount, this.recoveryTimeoutMs);
     this.onProcessExit = options.onProcessExit;
   }
 
@@ -118,8 +148,8 @@ export class RulesHostClient {
       this.matches.set(matchId, record);
       try {
         await this.enqueue(record, async (deadline) => {
-          const host = await this.spawn(record);
-          await this.send(host, { op: "load", source, ...this.options }, deadline);
+          const host = await this.loaded(record, deadline);
+          deadline.restart();
           const { buildHash: _buildHash, ...matchInit } = init;
           await this.send(host, { op: "create", init: matchInit }, deadline);
           await this.checkpoint(record, host, deadline);
@@ -214,7 +244,13 @@ export class RulesHostClient {
         if (JSON.stringify(checkpoint.ctx.seats) !== JSON.stringify(record.snapshot?.ctx.seats))
           throw new GameError();
         const host = await this.loaded(record, deadline);
-        await this.send(host, { op: "restore", snapshot: checkpoint, events: journal }, deadline);
+        deadline.restart(this.recoveryTimeoutMs);
+        await this.send(
+          host,
+          { op: "restore", snapshot: checkpoint, events: journal },
+          deadline,
+          this.recoveryTimeoutMs,
+        );
         record.snapshot = checkpoint;
         record.events = journal;
       });
@@ -270,7 +306,8 @@ export class RulesHostClient {
     return host;
   }
 
-  private async ready(record: HostedMatch, deadline: number): Promise<HostProcess> {
+  /** The match's live process, recovered from its checkpoint if needed. */
+  private async ready(record: HostedMatch, deadline: Deadline): Promise<HostProcess> {
     if (record.host?.alive) return record.host;
     const host = await this.loaded(record, deadline);
     if (!record.snapshot) throw new GameError();
@@ -278,25 +315,40 @@ export class RulesHostClient {
       host,
       { op: "restore", snapshot: record.snapshot, events: record.events },
       deadline,
+      this.recoveryTimeoutMs,
+    );
+    // The operation's own game call starts with its full limit.
+    deadline.restart();
+    return host;
+  }
+
+  /** A process with the pinned source loaded, on the recovery budget if it had to start. */
+  private async loaded(record: HostedMatch, deadline: Deadline): Promise<HostProcess> {
+    if (record.host?.alive) return record.host;
+    deadline.restart(this.recoveryTimeoutMs);
+    const host = await this.spawn(record);
+    await this.send(
+      host,
+      { op: "load", source: record.source, ...this.options },
+      deadline,
+      this.recoveryTimeoutMs,
     );
     return host;
   }
 
-  private async loaded(record: HostedMatch, deadline: number): Promise<HostProcess> {
-    if (record.host?.alive) return record.host;
-    const host = await this.spawn(record);
-    await this.send(host, { op: "load", source: record.source, ...this.options }, deadline);
-    return host;
-  }
-
-  private async send(host: HostProcess, command: HostCommand, deadline: number): Promise<unknown> {
-    return host.call(command, Math.floor(deadline - performance.now()));
+  private async send(
+    host: HostProcess,
+    command: HostCommand,
+    deadline: Deadline,
+    capMs = this.options.timeoutMs,
+  ): Promise<unknown> {
+    return host.call(command, deadline.remaining(), capMs);
   }
 
   private async checkpoint(
     record: HostedMatch,
     host: HostProcess,
-    deadline: number,
+    deadline: Deadline,
   ): Promise<MatchState> {
     const snapshot = MatchStateSchema.parse(await this.send(host, { op: "exportState" }, deadline));
     const seq = record.events.at(-1)?.seq ?? record.snapshot?.ctx.moveNumber ?? 0;
@@ -329,16 +381,16 @@ export class RulesHostClient {
     record.idleTimer.unref();
   }
 
-  private enqueue<T>(record: HostedMatch, run: (deadline: number) => Promise<T>): Promise<T> {
+  private enqueue<T>(record: HostedMatch, run: (deadline: Deadline) => Promise<T>): Promise<T> {
     this.cancelIdle(record);
     return this.queue(record, run).finally(() => this.armIdle(record));
   }
 
-  private queue<T>(record: HostedMatch, run: (deadline: number) => Promise<T>): Promise<T> {
+  private queue<T>(record: HostedMatch, run: (deadline: Deadline) => Promise<T>): Promise<T> {
     const result = record.queue.then(async () => {
       if (record.disposed || this.closed) throw new GameError();
       // Bound complete recovery/load/setup sequences as well as individual IPCs.
-      const deadline = performance.now() + this.options.timeoutMs;
+      const deadline = new Deadline(this.options.timeoutMs);
       try {
         return await run(deadline);
       } catch {

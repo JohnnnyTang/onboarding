@@ -78,6 +78,13 @@ describe("package boundaries", () => {
     expect(check("apps/web/src/game.worker.ts", source)).toEqual([]);
   });
 
+  test("only the game module loader may import a computed URL", () => {
+    const source = "const module = await import(url);";
+    expect(check("apps/web/src/workers/game-module.ts", source)).toEqual([]);
+    expect(check("apps/web/src/workers/game-worker.ts", source)).not.toEqual([]);
+    expect(check("apps/web/src/match/match-page.tsx", source)).not.toEqual([]);
+  });
+
   test("the rules host may import SDK types but evaluates rules only inside its sandbox", () => {
     expect(
       check("packages/rules-host/src/index.ts", 'import type { MatchState } from "@bgp/rules";'),

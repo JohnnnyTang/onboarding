@@ -21,6 +21,7 @@ describe("HTTP contracts and JSON Schema export", () => {
       [HTTP_CONTRACTS["GET /api/games"].response, { items: [game], cursor: null }],
       [HTTP_CONTRACTS["GET /api/games/:gameId"].response, { ...game, versions: [version] }],
       [HTTP_CONTRACTS["POST /api/games/:gameId/versions"].response, version],
+      [HTTP_CONTRACTS["GET /api/versions/:versionId"].response, version],
       [HTTP_CONTRACTS["POST /api/versions/:versionId/finalize"].response, { buildHash: hash }],
       [
         HTTP_CONTRACTS["POST /api/matches"].response,
@@ -56,7 +57,7 @@ describe("HTTP contracts and JSON Schema export", () => {
     ).toBe(false);
   });
   test("all documented endpoints have a contract", () => {
-    expect(Object.keys(HTTP_CONTRACTS)).toHaveLength(18);
+    expect(Object.keys(HTTP_CONTRACTS)).toHaveLength(19);
     for (const [route, contract] of Object.entries(HTTP_CONTRACTS)) {
       expect("response" in contract || route.includes("/files/*")).toBe(true);
     }

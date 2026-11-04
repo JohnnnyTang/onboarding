@@ -206,6 +206,16 @@ export const versionRoutes: FastifyPluginAsync<AppDependencies> = async (app, de
     return FinalizeResponseSchema.parse({ buildHash: result.buildHash });
   });
 
+  // Seat holders need the manifest to find the bundle and components file (T14).
+  app.get("/api/versions/:versionId", { config: { auth: "any" } }, async (request) => {
+    const params = request.params as Record<string, unknown>;
+    const versionId = resourceId(params.versionId, "Version");
+    const [version] = await db.select().from(gameVersions).where(eq(gameVersions.id, versionId));
+    if (!version) throw notFound("Version");
+    if (!(await canDownload(db, request, version))) throw forbidden();
+    return versionResponse(version);
+  });
+
   app.get(
     "/api/versions/:versionId/files/*",
     { config: { auth: "any" } },

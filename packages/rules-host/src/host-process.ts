@@ -76,7 +76,16 @@ export class HostProcess {
     }
   }
 
-  call(command: HostCommand, timeoutMs = this.options.timeoutMs): Promise<unknown> {
+  /**
+   * Sends one command; the watchdog kills the child after `timeoutMs`, capped at `capMs`.
+   * The cap is the game call limit unless the caller runs a trusted recovery step (prepare,
+   * load, restore), whose game code is still interrupted inside QuickJS at `timeoutMs`.
+   */
+  call(
+    command: HostCommand,
+    timeoutMs = this.options.timeoutMs,
+    capMs = this.options.timeoutMs,
+  ): Promise<unknown> {
     if (this.dead || this.pending) return Promise.reject(new GameError());
     return new Promise((resolve, reject) => {
       try {
@@ -87,7 +96,7 @@ export class HostProcess {
         });
         if (Buffer.byteLength(JSON.stringify(request)) > MAX_IPC_BYTES) throw new GameError();
         if (timeoutMs < 1) throw new GameError();
-        const timer = setTimeout(() => this.dispose(), Math.min(timeoutMs, this.options.timeoutMs));
+        const timer = setTimeout(() => this.dispose(), Math.min(timeoutMs, capMs));
         this.pending = { resolve, reject, id: request.id, op: command.op, timer };
         this.child.send(request, (error) => {
           if (error) this.dispose();

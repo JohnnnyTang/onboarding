@@ -83,6 +83,18 @@ describe("QuickJS rules sandbox", () => {
     }
   });
 
+  it("charges only the game module, not the trusted runtime, to the load limit", async () => {
+    // Evaluating the runtime bundle takes far longer than 5 ms; the small game module does not.
+    // Under load the runtime used to exhaust the shared limit and fail the resume (Q-019).
+    const sandbox = await QuickJsSandbox.load(GAME_SOURCE, { timeoutMs: 5 });
+    sandbox.dispose();
+    const started = performance.now();
+    await expect(QuickJsSandbox.load("while (true) {}", { timeoutMs: 5 })).rejects.toThrow(
+      "Game execution failed",
+    );
+    expect(performance.now() - started).toBeLessThan(2000);
+  });
+
   it("bounds module evaluation, blocks static imports, and sanitizes thrown secrets", async () => {
     await expect(QuickJsSandbox.load("while (true) {}", { timeoutMs: 50 })).rejects.toThrow(
       "Game execution failed",

@@ -53,6 +53,41 @@ for (const width of [360, 1440]) {
   });
 }
 
+test("an idle table stops drawing frames and wakes up for changes", async ({ page }) => {
+  // Count WebGL draw calls. PixiJS keeps a cheap event ticker running for hover checks, so
+  // animation frame requests alone do not show whether the table redraws.
+  await page.addInitScript(() => {
+    const counter = window as unknown as { draws: number };
+    counter.draws = 0;
+    for (const context of [WebGLRenderingContext, WebGL2RenderingContext]) {
+      for (const name of ["drawElements", "drawArrays"] as const) {
+        const original = context.prototype[name] as (...args: unknown[]) => void;
+        context.prototype[name] = function (this: unknown, ...args: unknown[]) {
+          counter.draws += 1;
+          return original.apply(this, args);
+        } as never;
+      }
+    }
+  });
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await ready(page);
+  const draws = () => page.evaluate(() => (window as unknown as { draws: number }).draws);
+  await page.waitForTimeout(1500);
+  const idle = await draws();
+  expect(idle).toBeGreaterThan(0);
+  await page.waitForTimeout(600);
+  expect(await draws()).toBe(idle);
+  await page.getByRole("button", { name: "300 items" }).click();
+  await expect.poll(draws).toBeGreaterThan(idle);
+  await page.waitForTimeout(2500);
+  const settled = await draws();
+  await page.waitForTimeout(600);
+  expect(await draws()).toBe(settled);
+  // Hovering wakes it for the hover feedback, and it settles again.
+  await page.mouse.move(700, 500);
+  await expect.poll(draws).toBeGreaterThan(settled);
+});
+
 test("selection, clickZone, and drops use contract shapes without predicting the move", async ({
   page,
 }) => {

@@ -135,4 +135,53 @@ describe("API client", () => {
     await api.getGame("../matches");
     expect(calls[0]?.url).toBe("http://api.test/api/games/..%2Fmatches");
   });
+
+  test("version reads and file downloads use the match scope and keep the bytes", async () => {
+    const version = {
+      id: "version-1",
+      gameId: "game-1",
+      manifest: {
+        schemaVersion: 1,
+        id: "harbor-market",
+        name: "Harbor Market",
+        version: "0.1.0",
+        mode: "enforced",
+        sdk: 1,
+        players: { min: 2, max: 4 },
+        entry: "dist/game.js",
+        components: "components.json",
+      },
+      status: "ready",
+      buildHash: HASH,
+      validationErrors: null,
+    };
+    const { api, calls, scopes } = harness(
+      (url) =>
+        url.pathname.includes("/files/")
+          ? new Response("export default 1;", { headers: { "content-type": "text/javascript" } })
+          : json(version),
+      (scope) => (scope.matchId === "match-1" ? "guest-token" : null),
+    );
+    await expect(api.getVersion("version-1", { matchId: "match-1" })).resolves.toEqual(version);
+    const file = await api.getVersionFile("version-1", "dist/game.js", { matchId: "match-1" });
+    expect(await file.text()).toBe("export default 1;");
+    expect(calls.map((call) => call.url)).toEqual([
+      "http://api.test/api/versions/version-1",
+      "http://api.test/api/versions/version-1/files/dist/game.js",
+    ]);
+    expect(scopes).toEqual([{ matchId: "match-1" }, { matchId: "match-1" }]);
+    expect(headers(calls[1]).authorization).toBe("Bearer guest-token");
+    expect(calls[1]?.init.credentials).toBe("omit");
+  });
+
+  test("file downloads reject unsafe paths and report error envelopes", async () => {
+    const { api, calls } = harness(() =>
+      json({ error: { code: "FORBIDDEN", message: "Forbidden" } }, 403),
+    );
+    await expect(api.getVersionFile("version-1", "../secret")).rejects.toThrow();
+    expect(calls).toHaveLength(0);
+    const error = await api.getVersionFile("version-1", "assets/a.png").catch((e) => e);
+    expect(error).toBeInstanceOf(ApiError);
+    expect(error.code).toBe("FORBIDDEN");
+  });
 });

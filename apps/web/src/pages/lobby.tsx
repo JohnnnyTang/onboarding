@@ -1,12 +1,13 @@
 import type { MatchSummary, SeatInfo } from "@bgp/schema";
 import { useQuery } from "@tanstack/react-query";
-import { Link, useParams } from "react-router";
+import { useEffect } from "react";
+import { Link, useNavigate, useParams } from "react-router";
 import { seatLabel } from "../app/messages";
 import { useAuthUser, useServices } from "../app/services";
 import { EmptyState, ErrorNotice, Loading, PageHeader, SignInButton, ui } from "../components/ui";
 import { matchPath, STATUS_LABELS } from "./matches";
 
-/** The lobby refreshes over HTTP until the room server connection arrives (T14). */
+/** The lobby refreshes over HTTP while it waits; the table connects to the room server. */
 export const LOBBY_REFRESH_MS = 3000;
 
 export function SeatList({
@@ -65,6 +66,14 @@ export function LobbyPage() {
     enabled: identity !== undefined,
     refetchInterval: (query) => (query.state.data?.status === "lobby" ? LOBBY_REFRESH_MS : false),
   });
+  const navigate = useNavigate();
+  const started = match.data?.status === "active";
+  const seated = claimed !== undefined;
+  // A seated player goes to the table as soon as the host starts the match.
+  useEffect(() => {
+    if (started && seated)
+      void navigate(matchPath({ id: matchId, status: "active" }), { replace: true });
+  }, [started, seated, matchId, navigate]);
 
   if (identity === undefined) {
     return (
