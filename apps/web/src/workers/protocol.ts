@@ -7,10 +7,15 @@ import type {
   SeatId,
 } from "@bgp/schema";
 
-/**
- * Messages between the page and the game worker. The page posts one `WorkerInit` to the
- * worker with a MessagePort; every later request and reply goes over that port.
- */
+// Messages between the page and the game worker. The worker announces `WorkerBooted`; the
+// page then posts one `WorkerInit` with a MessagePort, and every later request and reply goes
+// over that port.
+
+/** Posted by the worker on its global channel once its own code has loaded. */
+export interface WorkerBooted {
+  t: "booted";
+}
+
 export interface WorkerInit {
   t: "init";
   /** The version's `game.js`: one ES module with a default-exported GameDefinition. */

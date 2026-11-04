@@ -17,6 +17,7 @@ import {
 } from "@bgp/schema";
 import {
   INIT_REPLY_ID,
+  type WorkerBooted,
   type WorkerCall,
   type WorkerInit,
   type WorkerReply,
@@ -26,6 +27,8 @@ import {
 /** Time limit per call into game code (D-008), and for evaluating the bundle. */
 export const GAME_CALL_TIMEOUT_MS = 1000;
 export const GAME_LOAD_TIMEOUT_MS = 5000;
+/** Time for the worker to fetch and start its own trusted code, before any game code. */
+export const WORKER_BOOT_TIMEOUT_MS = 30_000;
 
 export type GameWorkerFailure = "load" | "timeout" | "failed" | "invalid" | "stopped";
 
@@ -48,6 +51,8 @@ export interface WorkerLike {
   postMessage(message: WorkerInit, transfer: Transferable[]): void;
   terminate(): void;
   onerror: ((event: ErrorEvent) => void) | null;
+  /** Receives `WorkerBooted` once the worker script has started; nothing else. */
+  onmessage: ((event: MessageEvent) => void) | null;
 }
 
 export type HotSeatOutcome =
@@ -69,11 +74,10 @@ export interface GameWorker {
 }
 
 export interface GameWorkerOptions {
-  source: string;
-  components: ComponentsFile;
   createWorker?(): WorkerLike;
   timeoutMs?: number;
   loadTimeoutMs?: number;
+  bootTimeoutMs?: number;
   setTimeout?(callback: () => void, ms: number): unknown;
   clearTimeout?(handle: unknown): void;
 }
@@ -110,12 +114,30 @@ function parseOutcome(value: unknown): HotSeatOutcome {
   throw new GameWorkerError("invalid");
 }
 
+/** A started worker that has not loaded a game yet. */
+export interface BootedGameWorker {
+  /** Evaluates the bundle in the worker; call once. */
+  load(source: string, components: ComponentsFile): Promise<GameWorker>;
+  destroy(): void;
+}
+
 /**
  * Starts a game worker for one bundle and talks to it over a private MessagePort. Each call
  * has a deadline; a call that misses it terminates the worker, and later calls fail. Every
  * reply is validated: game code is untrusted, so its output is too.
  */
-export async function startGameWorker(options: GameWorkerOptions): Promise<GameWorker> {
+export async function startGameWorker(
+  options: GameWorkerOptions & { source: string; components: ComponentsFile },
+): Promise<GameWorker> {
+  const booted = await bootGameWorker(options);
+  return booted.load(options.source, options.components);
+}
+
+/**
+ * Starts the worker and waits until its own code has loaded, without any game code. Booting
+ * while the game files download saves time when a page opens.
+ */
+export async function bootGameWorker(options: GameWorkerOptions = {}): Promise<BootedGameWorker> {
   const worker = (options.createWorker ?? defaultWorker)();
   const schedule = options.setTimeout ?? ((callback, ms) => globalThis.setTimeout(callback, ms));
   const cancel =
@@ -166,15 +188,35 @@ export async function startGameWorker(options: GameWorkerOptions): Promise<GameW
   };
   worker.onerror = () => stop("failed");
 
-  const loaded = expect(INIT_REPLY_ID, options.loadTimeoutMs ?? GAME_LOAD_TIMEOUT_MS, "load");
-  worker.postMessage({ t: "init", source: options.source, components: options.components }, [
-    channel.port2,
-  ]);
-  try {
-    await loaded;
-  } catch (error) {
-    stop("load");
-    throw error instanceof GameWorkerError ? error : new GameWorkerError("load");
+  // The worker first fetches its own code, which can be slow on a cold cache; only evaluating
+  // the game counts against the load deadline.
+  await new Promise<void>((resolve, reject) => {
+    const timer = schedule(() => {
+      stop("load");
+      reject(new GameWorkerError("load"));
+    }, options.bootTimeoutMs ?? WORKER_BOOT_TIMEOUT_MS);
+    worker.onmessage = (event: MessageEvent<unknown>) => {
+      if ((event.data as Partial<WorkerBooted> | null)?.t !== "booted") return;
+      worker.onmessage = null;
+      cancel(timer);
+      resolve();
+    };
+  });
+  if (stopped) throw new GameWorkerError("load");
+
+  let loading = false;
+  async function load(source: string, components: ComponentsFile): Promise<GameWorker> {
+    if (stopped || loading) throw new GameWorkerError("stopped");
+    loading = true;
+    const loaded = expect(INIT_REPLY_ID, options.loadTimeoutMs ?? GAME_LOAD_TIMEOUT_MS, "load");
+    worker.postMessage({ t: "init", source, components }, [channel.port2]);
+    try {
+      await loaded;
+    } catch (error) {
+      stop("load");
+      throw error instanceof GameWorkerError ? error : new GameWorkerError("load");
+    }
+    return game;
   }
 
   async function call<T>(request: WorkerRequest, parse: (value: unknown) => T): Promise<T> {
@@ -191,7 +233,7 @@ export async function startGameWorker(options: GameWorkerOptions): Promise<GameW
     }
   }
 
-  return {
+  const game: GameWorker = {
     present: (view, seat) =>
       call({ op: "present", view, seat }, (value) => TableSnapshotSchema.parse(value)),
     interpret: (gesture, view, seat) =>
@@ -212,4 +254,5 @@ export async function startGameWorker(options: GameWorkerOptions): Promise<GameW
     },
     destroy: () => stop("stopped"),
   };
+  return { load, destroy: () => stop("stopped") };
 }

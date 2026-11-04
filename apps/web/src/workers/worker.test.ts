@@ -72,8 +72,14 @@ const GAMES: Record<string, unknown> = {
 /** Runs the real worker entry on a MessageChannel port instead of a Worker thread. */
 class FakeWorker implements WorkerLike {
   onerror: WorkerLike["onerror"] = null;
+  onmessage: WorkerLike["onmessage"] = null;
   terminated = false;
-  constructor(private readonly deps: Partial<WorkerDeps> = {}) {}
+  constructor(
+    private readonly deps: Partial<WorkerDeps> = {},
+    boot = true,
+  ) {
+    if (boot) setTimeout(() => this.onmessage?.({ data: { t: "booted" } } as MessageEvent), 0);
+  }
   postMessage(message: WorkerInit, transfer: Transferable[]) {
     const port = transfer[0] as MessagePort;
     const deps: WorkerDeps = {
@@ -165,6 +171,12 @@ describe("game worker", () => {
       components: COMPONENTS,
       createWorker: () => ({
         onerror: null,
+        get onmessage() {
+          return worker.onmessage;
+        },
+        set onmessage(handler) {
+          worker.onmessage = handler;
+        },
         terminate: () => worker.terminate(),
         postMessage(message, transfer) {
           const port = transfer[0] as MessagePort;
@@ -185,6 +197,19 @@ describe("game worker", () => {
     expect(worker.terminated).toBe(true);
     expect(game.stopped).toBe(true);
     await expect(game.actions(view(1), "0", [])).rejects.toMatchObject({ reason: "stopped" });
+  });
+
+  it("gives up when the worker script never starts", async () => {
+    const worker = new FakeWorker({}, false);
+    await expect(
+      startGameWorker({
+        source: "counter",
+        components: COMPONENTS,
+        createWorker: () => worker,
+        bootTimeoutMs: 20,
+      }),
+    ).rejects.toMatchObject({ reason: "load" });
+    expect(worker.terminated).toBe(true);
   });
 
   it("refuses to load a bundle without a game definition", async () => {

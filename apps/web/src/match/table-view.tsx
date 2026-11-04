@@ -12,6 +12,11 @@ export interface TableViewProps {
   onSelectionChange(ids: string[]): void;
 }
 
+/** Starts downloading the renderer early; repeated calls share one download. */
+export function preloadTable(): Promise<typeof import("@bgp/table-2d")> {
+  return import("@bgp/table-2d");
+}
+
 /**
  * Hosts the 2D table renderer. PixiJS is loaded on demand, so pages without a table do not
  * download it. The renderer draws only the snapshot it is given.
@@ -30,7 +35,7 @@ export function TableView(props: TableViewProps) {
     let cancelled = false;
     let instance: TableRenderer<HTMLElement> | null = null;
     const unsubscribe: (() => void)[] = [];
-    void import("@bgp/table-2d")
+    void preloadTable()
       .then(async ({ PixiTableRenderer }) => {
         if (cancelled) return;
         instance = new PixiTableRenderer();

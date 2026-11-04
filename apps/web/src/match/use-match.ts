@@ -4,7 +4,7 @@ import type { ApiClient } from "../api/client";
 import type { AuthService } from "../auth/auth";
 import type { ClaimedSeats } from "../auth/claimed-seats";
 import { type GamePackage, loadGamePackage } from "./game-package";
-import { startGameWorker } from "./game-worker-client";
+import { bootGameWorker } from "./game-worker-client";
 import { createRoomClient, type RoomAuth, type RoomClient, type RoomState } from "./room-client";
 import { createTablePresenter, type TablePresenter, type TableState } from "./table-presenter";
 
@@ -66,24 +66,28 @@ export function useGame(
   useEffect(() => {
     if (versionId === undefined || seat === undefined) return;
     let cancelled = false;
-    let release = () => {};
     setStatus({ kind: "loading" });
+    // Download the version while the worker boots; neither depends on the other.
+    const booting = bootGameWorker();
+    const loading = loadGamePackage(api, versionId, matchId);
+    const release = () => {
+      void booting.then(
+        (booted) => booted.destroy(),
+        () => {},
+      );
+      void loading.then(
+        (pkg) => pkg.dispose(),
+        () => {},
+      );
+    };
     (async () => {
-      const pkg = await loadGamePackage(api, versionId, matchId);
-      if (cancelled) return pkg.dispose();
-      try {
-        const worker = await startGameWorker({ source: pkg.source, components: pkg.components });
-        release = () => {
-          worker.destroy();
-          pkg.dispose();
-        };
-        if (cancelled) return release();
-        setStatus({ kind: "ready", pkg, presenter: createTablePresenter(worker, seat) });
-      } catch (error) {
-        pkg.dispose();
-        throw error;
-      }
+      const [booted, pkg] = await Promise.all([booting, loading]);
+      if (cancelled) return;
+      const worker = await booted.load(pkg.source, pkg.components);
+      if (cancelled) return;
+      setStatus({ kind: "ready", pkg, presenter: createTablePresenter(worker, seat) });
     })().catch((error: unknown) => {
+      release();
       if (!cancelled) setStatus({ kind: "error", error });
     });
     return () => {

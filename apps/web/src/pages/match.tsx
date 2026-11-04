@@ -16,7 +16,7 @@ import {
   ResultPanel,
   roomErrorMessage,
 } from "../match/match-panels";
-import { TableView } from "../match/table-view";
+import { preloadTable, TableView } from "../match/table-view";
 import { roomAuth, useGame, useRoom, useTable } from "../match/use-match";
 
 /** Game failures carry no details by design; request failures use the shared messages. */
@@ -48,6 +48,10 @@ export function MatchPage() {
   const presenter = game.kind === "ready" ? game.presenter : null;
   const table = useTable(presenter);
   const [dismissed, setDismissed] = useState(0);
+  // The renderer is only needed once the game is ready; fetch it meanwhile.
+  useEffect(() => {
+    void preloadTable().catch(() => {});
+  }, []);
 
   const view = room?.view ?? null;
   useEffect(() => {

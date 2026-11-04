@@ -1,11 +1,12 @@
 // Entry point of the game worker (D-007). Created by src/match/game-worker-client.ts.
 import { importGameModule } from "./game-module";
 import { lockDownGlobals } from "./lockdown";
-import type { WorkerInit } from "./protocol";
+import type { WorkerBooted, WorkerInit } from "./protocol";
 import { startWorker } from "./worker-main";
 
 // The web app is typed with the DOM library; only these worker members are used here.
 interface WorkerScope {
+  postMessage(message: WorkerBooted): void;
   addEventListener(
     type: "message",
     listener: (event: MessageEvent<WorkerInit>) => void,
@@ -29,3 +30,6 @@ scope.addEventListener(
   },
   { once: true },
 );
+
+// Tell the page this worker is ready for the bundle; the lockdown later removes postMessage.
+scope.postMessage({ t: "booted" });
