@@ -55,8 +55,15 @@ test("a guest claims an invite and reaches the lobby", async ({ browser }) => {
   await expect(seats.nth(0)).toContainText("Guest");
   await expect(seats.nth(1)).toContainText("Seat 2 Open");
 
-  // The guest token is held in memory only.
-  expect(await webStorage(page)).not.toMatch(/eyJ|guestToken/);
+  // The guest seat is kept for this tab only (Q-018): session storage, never local storage or
+  // cookies.
+  const persistent = await page.evaluate(() =>
+    JSON.stringify([Object.entries(localStorage), document.cookie]),
+  );
+  expect(persistent).not.toMatch(/eyJ|guestToken/);
+  expect(await page.evaluate(() => sessionStorage.getItem("bgp.claimedSeats"))).toContain(
+    '"seat":"0"',
+  );
 
   // The invite is single-use: a second guest is turned away with the server's message.
   const other = await context.browser()?.newContext();

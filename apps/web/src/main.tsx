@@ -17,7 +17,8 @@ const manager = new UserManager(oidcSettings(config, window.location.origin, ses
 // Abandoned sign-in attempts leave request state behind; it holds no tokens.
 void manager.clearStaleState();
 const auth = createAuthService(manager);
-const seats = createClaimedSeats();
+// Guest seats survive a reload in this tab (Q-018); designer tokens stay in memory (D-007).
+const seats = createClaimedSeats(sessionStorage);
 const api = createApiClient({ baseUrl: config.apiUrl, tokens: createTokenSource(auth, seats) });
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: shouldRetry, refetchOnWindowFocus: false } },
