@@ -38,7 +38,9 @@ function fakeAuth(user: AuthUser | null): AuthService {
 
 function render(node: ReactNode, path = "/", user: AuthUser | null = null): string {
   return renderToStaticMarkup(
-    <ServicesProvider value={{ api, auth: fakeAuth(user), seats: createClaimedSeats() }}>
+    <ServicesProvider
+      value={{ api, auth: fakeAuth(user), seats: createClaimedSeats(), roomUrl: "ws://test/ws" }}
+    >
       <QueryClientProvider client={new QueryClient()}>
         <MemoryRouter initialEntries={[path]}>{node}</MemoryRouter>
       </QueryClientProvider>
@@ -66,7 +68,7 @@ describe("routes", () => {
     ["/", "Playtest your board games"],
     ["/projects", "No projects yet"],
     ["/join/abc", "Display name"],
-    ["/matches/m-1", "The table is not available yet"],
+    ["/matches/m-1", "You are not seated in this match"],
     ["/matches/m-1/replay", "Replays are not available yet"],
     ["/auth/callback", "Signing in"],
     ["/nowhere", "Page not found"],

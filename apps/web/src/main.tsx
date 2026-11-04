@@ -30,7 +30,7 @@ const root = document.getElementById("root");
 if (!root) throw new Error("Missing #root element");
 createRoot(root).render(
   <StrictMode>
-    <ServicesProvider value={{ api, auth, seats }}>
+    <ServicesProvider value={{ api, auth, seats, roomUrl: config.wsUrl }}>
       <QueryClientProvider client={queryClient}>
         <BrowserRouter>
           <AppRoutes />

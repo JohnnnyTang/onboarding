@@ -7,6 +7,8 @@ export interface Services {
   api: ApiClient;
   auth: AuthService;
   seats: ClaimedSeats;
+  /** Room server WebSocket endpoint (`VITE_WS_URL`). */
+  roomUrl: string;
 }
 
 const ServicesContext = createContext<Services | null>(null);

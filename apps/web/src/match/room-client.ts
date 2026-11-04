@@ -32,6 +32,8 @@ export interface RoomSocket {
 export type RoomStatus = "connecting" | "open" | "reconnecting" | "closed";
 
 export interface ChatEntry {
+  /** Increases with each message received on this page. */
+  id: number;
   from: SeatId;
   name: string;
   text: string;
@@ -163,6 +165,7 @@ export function createRoomClient(options: RoomClientOptions): RoomClient {
   let resyncing = false;
   let stopped = false;
   let rejections = 0;
+  let chats = 0;
 
   function update(patch: Partial<RoomState>): void {
     state = { ...state, ...patch };
@@ -239,10 +242,17 @@ export function createRoomClient(options: RoomClientOptions): RoomClient {
         if (state.match) update({ match: { ...state.match, seats: message.seats } });
         return;
       case "chat":
+        chats += 1;
         update({
           chat: [
             ...state.chat.slice(-(CHAT_HISTORY - 1)),
-            { from: message.from, name: message.name, text: message.text, at: message.at },
+            {
+              id: chats,
+              from: message.from,
+              name: message.name,
+              text: message.text,
+              at: message.at,
+            },
           ],
         });
         return;

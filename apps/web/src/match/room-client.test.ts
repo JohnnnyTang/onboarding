@@ -189,7 +189,7 @@ describe("room client", () => {
     expect(client.getState().match?.seats).toEqual(seats);
     last().receive({ t: "chat", from: "1", name: "Bo", text: "hi", at: "2026-11-03T10:00:00Z" });
     expect(client.getState().chat).toEqual([
-      { from: "1", name: "Bo", text: "hi", at: "2026-11-03T10:00:00Z" },
+      { id: 1, from: "1", name: "Bo", text: "hi", at: "2026-11-03T10:00:00Z" },
     ]);
     last().receive({ t: "ended", result: { winners: ["1"] } });
     expect(client.getState().result).toEqual({ winners: ["1"] });
