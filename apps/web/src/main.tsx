@@ -36,6 +36,13 @@ const queryClient = new QueryClient({
 // Cached responses belong to one identity; drop them when it changes.
 auth.subscribe(() => queryClient.clear());
 
+// Production builds work offline: the service worker caches the app's own files (T15).
+if (import.meta.env.PROD && "serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    void navigator.serviceWorker.register("/sw.js").catch(() => {});
+  });
+}
+
 const root = document.getElementById("root");
 if (!root) throw new Error("Missing #root element");
 createRoot(root).render(

@@ -147,6 +147,8 @@ export function checkSource(root: string, file: string, source: string): string[
     // Web unit tests run the IndexedDB store against an in-memory implementation.
     if (testFile && owner === "apps/web" && name === "fake-indexeddb") return;
     if (specifier.startsWith("node:") || NODE_MODULES.has(specifier)) {
+      // The web app's build configs run in Node (the service worker manifest hashes files).
+      if (WEB_TOOL_CONFIGS.has(path)) return;
       if (!policy.node) report(node, `Node import ${specifier} is forbidden in ${owner}.`);
       return;
     }
