@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "x": {
+      "$ref": "#/$defs/__schema0"
+    },
+    "y": {
+      "$ref": "#/$defs/__schema0"
+    },
+    "w": {
+      "$ref": "#/$defs/__schema1"
+    },
+    "h": {
+      "$ref": "#/$defs/__schema1"
+    }
+  },
+  "required": ["x", "y", "w", "h"],
+  "additionalProperties": false,
+  "$defs": {
+    "__schema0": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1000
+    },
+    "__schema1": {
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "maximum": 1000
+    }
+  },
+  "title": "CardFieldRect"
+}

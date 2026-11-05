@@ -1,5 +1,6 @@
 import { z } from "zod";
-import { IsoTimeSchema, JsonSchema, Sha256Schema, VersionPathSchema } from "./common.js";
+import { CardTemplateSchema, CsvSourceSchema } from "./cards.js";
+import { IsoTimeSchema, Sha256Schema, unique, VersionPathSchema } from "./common.js";
 import { GamePackageSchema, ManifestSchema } from "./manifest.js";
 import { AcceptedEventSchema, MatchInitSchema } from "./rules.js";
 import { ComponentsFileSchema } from "./table.js";
@@ -29,16 +30,31 @@ export const LocalProjectSchema = z
     mode: z.literal("sandbox"),
     manifest: ManifestSchema,
     components: ComponentsFileSchema,
-    /** Card generator templates; T16 defines their shape. */
-    cardTemplates: z.array(JsonSchema),
-    /** Imported CSV files for the card generator; T16 defines their shape. */
-    csvSources: z.array(JsonSchema),
+    /** Card generator templates (contracts/card-generator.md). */
+    cardTemplates: z.array(CardTemplateSchema),
+    /** CSV files imported for the card generator. */
+    csvSources: z.array(CsvSourceSchema),
     updatedAt: IsoTimeSchema,
     publishedVersionIds: z.array(z.uuid()),
   })
   .refine(
     (project) => project.manifest.mode === project.mode && project.manifest.name === project.name,
     "The manifest must match the project's mode and name",
+  )
+  .refine(
+    (project) =>
+      unique(project.cardTemplates.map((template) => template.id)) &&
+      unique(project.csvSources.map((source) => source.id)),
+    "Card template and CSV source ids must be unique",
+  )
+  .refine(
+    (project) =>
+      project.cardTemplates.every(
+        (template) =>
+          template.data.source === null ||
+          project.csvSources.some((source) => source.id === template.data.source),
+      ),
+    "A card template names a CSV source the project does not have",
   )
   .refine(
     (project) =>

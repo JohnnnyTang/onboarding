@@ -25,3 +25,4 @@ The JSON blocks in these contracts are executable fixtures, checked directly by
 | [manifest.md](manifest.md)                         | `bgp.json`, version limits, upload flow, build hash                                                                         | `schemaVersion: 1`                      |
 | [protocol.md](protocol.md)                         | WebSocket messages, ordering, rate limits, error codes                                                                      | `PROTOCOL_VERSION = 1`                  |
 | [http-api.md](http-api.md)                         | REST endpoints, authentication, error body                                                                                  | —                                       |
+| [card-generator.md](card-generator.md)             | Card layout templates, CSV sources, how rows become card faces                                                              | —                                       |

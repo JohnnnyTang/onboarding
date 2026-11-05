@@ -1,0 +1,94 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "maxLength": 40,
+      "pattern": "^[a-z0-9-]+$"
+    },
+    "label": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 40
+    },
+    "rect_mm": {
+      "type": "object",
+      "properties": {
+        "x": {
+          "$ref": "#/$defs/__schema0"
+        },
+        "y": {
+          "$ref": "#/$defs/__schema0"
+        },
+        "w": {
+          "$ref": "#/$defs/__schema1"
+        },
+        "h": {
+          "$ref": "#/$defs/__schema1"
+        }
+      },
+      "required": ["x", "y", "w", "h"],
+      "additionalProperties": false
+    },
+    "kind": {
+      "type": "string",
+      "const": "text"
+    },
+    "text": {
+      "type": "string",
+      "maxLength": 2000
+    },
+    "size_mm": {
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "maximum": 200
+    },
+    "color": {
+      "type": "string",
+      "pattern": "^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$"
+    },
+    "font": {
+      "type": "string",
+      "enum": ["sans-serif", "serif", "monospace"]
+    },
+    "bold": {
+      "type": "boolean"
+    },
+    "align": {
+      "type": "string",
+      "enum": ["left", "center", "right"]
+    },
+    "valign": {
+      "type": "string",
+      "enum": ["top", "middle", "bottom"]
+    }
+  },
+  "required": [
+    "id",
+    "label",
+    "rect_mm",
+    "kind",
+    "text",
+    "size_mm",
+    "color",
+    "font",
+    "bold",
+    "align",
+    "valign"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "__schema0": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1000
+    },
+    "__schema1": {
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "maximum": 1000
+    }
+  },
+  "title": "CardTextField"
+}
