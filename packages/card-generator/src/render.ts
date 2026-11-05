@@ -1,12 +1,46 @@
 import type { CardTemplate } from "@bgp/schema";
-import { CARD_DPI, type CardImage, paintCard, pixelSize } from "./paint.js";
+import { CARD_DPI, type CardContext, type CardImage, paintCard, pixelSize } from "./paint.js";
 import type { CardValues } from "./values.js";
 
-// Card faces as PNG files, drawn on an OffscreenCanvas (tech-stack: Canvas 2D). Runs in a
-// page or a worker; no network, so generation works offline.
+// Card faces as PNG files, drawn with Canvas 2D (tech-stack) on an OffscreenCanvas. Where a
+// browser has none (Playwright's WebKit on Windows), a page <canvas> draws the same pixels.
+// No network, so generation works offline.
 
 export class CardRenderError extends Error {
   override readonly name = "CardRenderError";
+}
+
+interface Surface {
+  ctx: CardContext;
+  toPng(): Promise<Blob>;
+}
+
+function createSurface(width: number, height: number): Surface {
+  if (typeof OffscreenCanvas === "function") {
+    const canvas = new OffscreenCanvas(width, height);
+    const ctx = canvas.getContext("2d");
+    if (ctx) return { ctx, toPng: () => canvas.convertToBlob({ type: "image/png" }) };
+  }
+  if (typeof document !== "undefined") {
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext("2d");
+    if (ctx) {
+      return {
+        ctx,
+        toPng: () =>
+          new Promise<Blob>((resolve, reject) =>
+            canvas.toBlob(
+              (blob) =>
+                blob ? resolve(blob) : reject(new CardRenderError("A card face was not encoded.")),
+              "image/png",
+            ),
+          ),
+      };
+    }
+  }
+  throw new CardRenderError("This browser cannot draw card faces.");
 }
 
 /** Decodes project images for drawing; images that cannot be decoded are left out. */
@@ -33,11 +67,9 @@ export async function renderCardPng(
   dpi: number = CARD_DPI,
 ): Promise<Blob> {
   const [width, height] = pixelSize(template.size_mm, dpi);
-  const canvas = new OffscreenCanvas(width, height);
-  const ctx = canvas.getContext("2d");
-  if (!ctx) throw new CardRenderError("This browser cannot draw card faces.");
-  paintCard(ctx, template, values, images, dpi);
-  return canvas.convertToBlob({ type: "image/png" });
+  const surface = createSurface(width, height);
+  paintCard(surface.ctx, template, values, images, dpi);
+  return surface.toPng();
 }
 
 export interface RenderOptions {
