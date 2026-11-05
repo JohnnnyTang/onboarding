@@ -1,5 +1,7 @@
 import { describe, expect, test } from "vitest";
 import {
+  CARD_FONT_IDS,
+  CardFontSchema,
   type CardTemplate,
   CardTemplateSchema,
   type CsvSource,
@@ -89,9 +91,23 @@ describe("card templates", () => {
     ["an unknown field kind", { ...template, fields: [{ ...template.fields[0], kind: "line" }] }],
     ["duplicate generated ids", { ...template, generated: ["a", "a"] }],
     ["an unknown property", { ...template, extra: true }],
+    [
+      "a font that is not bundled",
+      { ...template, fields: [{ ...template.fields[1], font: "comic-sans" }] },
+    ],
   ])("reject %s", (_name, value) => {
     expect(CardTemplateSchema.safeParse(value).success).toBe(false);
   });
+});
+
+test("text fields accept every bundled font and the generic aliases", () => {
+  for (const font of CardFontSchema.options) {
+    const fields = template.fields.map((field) =>
+      field.kind === "text" ? { ...field, font } : field,
+    );
+    expect(CardTemplateSchema.safeParse({ ...template, fields }).success).toBe(true);
+  }
+  expect(CardFontSchema.options).toEqual([...CARD_FONT_IDS, "sans-serif", "serif", "monospace"]);
 });
 
 describe("CSV sources", () => {

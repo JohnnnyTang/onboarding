@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "string",
+  "enum": [
+    "inter",
+    "atkinson-hyperlegible",
+    "source-serif-4",
+    "cinzel",
+    "oswald",
+    "jetbrains-mono",
+    "sans-serif",
+    "serif",
+    "monospace"
+  ],
+  "title": "CardFont"
+}

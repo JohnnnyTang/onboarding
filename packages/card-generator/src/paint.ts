@@ -1,4 +1,5 @@
 import type { CardTemplate, CardTextField } from "@bgp/schema";
+import { cardFont } from "./fonts.js";
 import type { CardValues } from "./values.js";
 
 // Draws a card template with Canvas 2D (contracts/card-generator.md#layout). The same code
@@ -89,8 +90,10 @@ export function wrapText(text: string, width: number, measure: (text: string) =>
   return lines;
 }
 
+/** The canvas font for a text field: its bundled family, with a generic fallback. */
 export function fontFor(field: CardTextField, sizePx: number): string {
-  return `${field.bold ? "bold " : ""}${sizePx.toFixed(2)}px ${field.font}`;
+  const info = cardFont(field.font);
+  return `${field.bold ? "bold " : ""}${sizePx.toFixed(2)}px "${info.family}", ${info.fallback}`;
 }
 
 export interface TextLayout {

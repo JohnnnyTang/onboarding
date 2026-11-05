@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ui } from "../components/ui";
 import { Problems, TextField } from "../projects/fields";
 import styles from "../projects/projects.module.css";
@@ -6,6 +6,7 @@ import type { SectionProps } from "../projects/sections";
 import { addTemplate } from "./card-model";
 import cards from "./cards.module.css";
 import { CsvPanel } from "./csv-panel";
+import { ensureCardFonts } from "./fonts";
 import { TemplateEditor } from "./template-editor";
 import { useCardImages } from "./use-card-images";
 
@@ -16,6 +17,17 @@ export function CardsSection({ project, editor, images }: SectionProps) {
   const [problems, setProblems] = useState<string[]>([]);
   const assets = editor.data.status === "ready" ? editor.data.assets : [];
   const bitmaps = useCardImages(assets);
+  const [fonts, setFonts] = useState<"loading" | "ready" | "failed">("loading");
+  useEffect(() => {
+    let cancelled = false;
+    ensureCardFonts().then(
+      () => !cancelled && setFonts("ready"),
+      () => !cancelled && setFonts("failed"),
+    );
+    return () => {
+      cancelled = true;
+    };
+  }, []);
   const template =
     project.cardTemplates.find((candidate) => candidate.id === selected) ??
     project.cardTemplates[0];
@@ -47,7 +59,13 @@ export function CardsSection({ project, editor, images }: SectionProps) {
             </button>
           </p>
         </div>
-        <Problems problems={problems} />
+        <Problems
+          problems={
+            fonts === "failed"
+              ? [...problems, "The card fonts could not be loaded; previews use system fonts."]
+              : problems
+          }
+        />
         {project.cardTemplates.length === 0 ? (
           <p className={ui.muted}>
             A template lays out text, images and colored boxes on a card. Each CSV row becomes one
@@ -77,6 +95,7 @@ export function CardsSection({ project, editor, images }: SectionProps) {
             editor={editor}
             images={images}
             bitmaps={bitmaps}
+            fontsReady={fonts === "ready"}
           />
         ) : null}
       </section>

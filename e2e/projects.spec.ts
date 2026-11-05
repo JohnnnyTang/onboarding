@@ -274,6 +274,15 @@ test("E2E-01: an offline project with generated cards, played hot-seat, survives
   await expect.poll(() => previewPixel(page, 10, 10)).toBe("#c0612b");
   await template.getByRole("button", { name: "Generate 10 cards" }).click();
   await expect(template.getByText(/^Generated 10 cards in [\d.]+ s at 300 dpi/)).toBeVisible();
+  // All 24 bundled font faces loaded, offline, from the service worker's cache.
+  expect(
+    await page.evaluate(
+      () =>
+        [...document.fonts].filter(
+          (face) => face.family.includes("BGP ") && face.status === "loaded",
+        ).length,
+    ),
+  ).toBe(24);
   expect(await storedFace(page, "assets/cards/spice-1.png")).toEqual({
     type: "image/png",
     size: [744, 1039],

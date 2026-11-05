@@ -102,7 +102,7 @@ describe("painting", () => {
       ["rect", 0, 0, 630, 880],
       ["fill", "#2f6fb0"],
       ["rect", 40, 30, 550, 100],
-      ["fillText", "Fish 1", 315, 80, "bold 60.00px serif", "center"],
+      ["fillText", "Fish 1", 315, 80, 'bold 60.00px "BGP Source Serif 4", serif', "center"],
       ["rect", 40, 140, 550, 600],
       // contain: 100 × 50 scaled by 5.5 to 550 × 275, centered vertically in the field.
       ["drawImage", fish, 40, 302.5, 550, 275],

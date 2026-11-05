@@ -32,7 +32,7 @@ export interface CardTextField extends FieldBase {
   text: string; // default text; "\n" breaks a line
   size_mm: number; // font size (em height)
   color: HexColor;
-  font: "sans-serif" | "serif" | "monospace";
+  font: CardFont; // a bundled font, see Fonts
   bold: boolean;
   align: "left" | "center" | "right";
   valign: "top" | "middle" | "bottom";
@@ -72,11 +72,37 @@ export interface CardTemplateData {
 - **Text** wraps at spaces to the field width and breaks at `"\n"`; a word longer than the
   width is broken between characters. When the lines do not fit the field, the size shrinks
   in steps of 5 % down to half of `size_mm`; lines that still do not fit are cut off. Line
-  height is 1.2 × the size. Fonts are the browser's generic families, so generation works
-  offline.
+  height is 1.2 × the size, in the field's bundled font (see Fonts).
 - **Image**: `contain` shows the whole image inside the field, centered; `cover` fills the
   field and crops the overflow, centered. A missing image draws nothing.
 - **Box**: a filled rectangle with rounded corners (radius capped at half the shorter side).
+
+### Fonts
+
+Text is drawn only with fonts bundled with the app, so a card looks the same on every system
+and generation works offline. All are under the SIL Open Font License 1.1; the app ships
+them as self-hosted WOFF2 files (Latin and Latin Extended subsets, regular 400 and bold
+700, from the pinned Fontsource packages) with their license texts under
+`/licenses/fonts/`.
+
+```ts
+export type CardFont =
+  | "inter" // sans serif, the default for new text fields
+  | "atkinson-hyperlegible" // sans serif built for legibility, for rules text
+  | "source-serif-4" // serif
+  | "cinzel" // display capitals, for titles
+  | "oswald" // condensed, for large numbers
+  | "jetbrains-mono" // monospace
+  | "sans-serif" // alias of inter
+  | "serif" // alias of source-serif-4
+  | "monospace"; // alias of jetbrains-mono
+```
+
+The generic names are aliases kept for templates saved before fonts were bundled; editors
+offer only the six named fonts. Each face is registered under a family name of its own
+(`"BGP Inter"`, …) so an installed font of the same name is never used, and previews and
+generation wait until every face is loaded. Characters outside the bundled subsets (for
+example Chinese) fall back to a system font; other scripts are left for after Phase 1.
 
 ### Values from a CSV row
 
@@ -133,7 +159,7 @@ their images and setup lines. "Add to setup" places each generated card in a cho
       "text": "Good",
       "size_mm": 6,
       "color": "#ffffff",
-      "font": "serif",
+      "font": "cinzel",
       "bold": true,
       "align": "center",
       "valign": "middle"

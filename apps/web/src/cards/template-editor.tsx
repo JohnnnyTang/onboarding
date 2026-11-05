@@ -1,5 +1,8 @@
 import {
   CARD_DPI,
+  CARD_FONTS,
+  type CardFontId,
+  cardFont,
   defaultValues,
   missingColumns,
   paintCard,
@@ -83,11 +86,14 @@ function CardPreview({
   values,
   images,
   label,
+  fontsReady,
 }: {
   template: CardTemplate;
   values: Readonly<Record<string, string | null>>;
   images: ReadonlyMap<string, ImageBitmap>;
   label: string;
+  /** Repaints once the bundled fonts are loaded. */
+  fontsReady: boolean;
 }) {
   const ref = useRef<HTMLCanvasElement>(null);
   useEffect(() => {
@@ -100,7 +106,9 @@ function CardPreview({
     canvas.width = width;
     canvas.height = height;
     paintCard(ctx, template, values, images, dpi);
-  }, [template, values, images]);
+    // Repainted once the bundled fonts load; until then text uses the generic fallback.
+    canvas.dataset.fonts = fontsReady ? "bundled" : "fallback";
+  }, [template, values, images, fontsReady]);
   return (
     <canvas
       ref={ref}
@@ -188,14 +196,10 @@ function FieldForm({
               value={field.size_mm}
               onChange={(size_mm) => onChange({ ...field, size_mm })}
             />
-            <SelectField
+            <SelectField<CardFontId>
               label="Font"
-              value={field.font}
-              options={[
-                { value: "sans-serif", label: "Sans serif" },
-                { value: "serif", label: "Serif" },
-                { value: "monospace", label: "Monospace" },
-              ]}
+              value={cardFont(field.font).id}
+              options={CARD_FONTS.map((font) => ({ value: font.id, label: font.label }))}
               onChange={(font) => onChange({ ...field, font })}
             />
             <SelectField
@@ -285,12 +289,14 @@ export function TemplateEditor({
   editor,
   images,
   bitmaps,
+  fontsReady,
 }: {
   project: LocalProject;
   template: CardTemplate;
   editor: ProjectEditor;
   images: readonly string[];
   bitmaps: ReadonlyMap<string, ImageBitmap>;
+  fontsReady: boolean;
 }) {
   const [draft, setDraft] = useState(template);
   const [problems, setProblems] = useState<string[]>([]);
@@ -633,6 +639,7 @@ export function TemplateEditor({
           template={draft}
           values={preview.values}
           images={bitmaps}
+          fontsReady={fontsReady}
           label={`Preview of ${draft.name}${source && rowCount > 0 ? `, row ${previewRow}` : ""}`}
         />
         {source && rowCount > 0 ? (

@@ -34,8 +34,17 @@ merged).
   and `art/goods.csv` (15 rows) are drawn by `pnpm art:harbor` in headless Chromium into the
   16 committed PNGs (744 × 1039 px, about 0.8 MB). A test checks they are exactly the images
   `components.json` uses; the E2E fixture now uploads them instead of a 1 × 1 placeholder.
-- **Dependencies**: `papaparse` 5.7.0 and `@types/papaparse` 5.5.2 (dev), recorded in
-  tech-stack.md and admitted for `apps/web` by the boundary check.
+- **Bundled fonts** (Q-023, chosen by the project owner). Card text uses six SIL OFL fonts:
+  Inter, Atkinson Hyperlegible, Source Serif 4, Cinzel, Oswald and JetBrains Mono, in Latin
+  and Latin Extended, regular and bold (24 WOFF2 files, 436 KB). The web app self-hosts them
+  from pinned Fontsource packages, the service worker precaches them, and `ensureCardFonts`
+  loads them with `FontFace` under unique family names before previews and generation.
+  The generic names stay valid as aliases. The OFL texts ship under `/licenses/fonts/`,
+  and a test keeps them equal to the packages' licenses. The Harbor Market art is drawn with
+  the same files (Cinzel titles, Oswald values, Atkinson Hyperlegible captions).
+- **Dependencies**: `papaparse` 5.7.0, `@types/papaparse` 5.5.2 (dev) and six
+  `@fontsource/*` packages (5.3.0; `source-serif-4` 5.3.1), recorded in tech-stack.md and
+  admitted for `apps/web` by the boundary check.
 
 ## Things found and fixed on the way
 
@@ -67,7 +76,7 @@ ten cards are generated and one stored face is read back from IndexedDB (PNG, 74
 the CSV color). Zones are drawn, the generated cards go face down and shuffled into the deck,
 and hot-seat play deals one to each hand: each seat knows only its own generated card, "All
 seats" shows both and hides the deck, and after a browser restart the same hidden hands come
-back. The second test generates 100 cards through the page and fails above 10 s:
+back. It also checks that all 24 bundled font faces loaded offline. The second test generates 100 cards through the page and fails above 10 s:
 
 | Browser  | 100 cards, click to saved |
 | -------- | ------------------------- |
@@ -77,8 +86,10 @@ back. The second test generates 100 cards through the page and fails above 10 s:
 
 ## Not covered here
 
-- Fonts are the browser's generic families only, so a template looks different per system
-  (Q-023); generated PNGs are not byte-identical across machines (Q-024).
+- Generated PNGs are not byte-identical across machines; the project owner accepted this
+  (Q-024).
+- Only Latin scripts are bundled; other scripts (such as Chinese) fall back to system fonts.
+  Multi-language support comes after the Phase 1 features.
 - Fields are positioned with numbers, not by dragging on the preview.
 - Text color, font size and image fit cannot come from CSV columns; only text, images and
   box colors can.

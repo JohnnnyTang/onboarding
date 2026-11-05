@@ -3,6 +3,19 @@
 // templates with CardTemplateSchema before drawing them.
 
 export {
+  CARD_FONT_SUBSETS,
+  CARD_FONT_WEIGHTS,
+  CARD_FONTS,
+  type CardFontFace,
+  type CardFontId,
+  type CardFontInfo,
+  type CardFontSubset,
+  type CardFontWeight,
+  cardFont,
+  cardFontFileName,
+  loadCardFonts,
+} from "./fonts.js";
+export {
   CARD_DPI,
   type CardContext,
   type CardImage,

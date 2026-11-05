@@ -120,7 +120,7 @@ function textField(
     text,
     size_mm: 5,
     color: INK,
-    font: "sans-serif",
+    font: "inter",
     bold: false,
     align: "center",
     valign: "middle",

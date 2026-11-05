@@ -913,7 +913,17 @@
             },
             "font": {
               "type": "string",
-              "enum": ["sans-serif", "serif", "monospace"]
+              "enum": [
+                "inter",
+                "atkinson-hyperlegible",
+                "source-serif-4",
+                "cinzel",
+                "oswald",
+                "jetbrains-mono",
+                "sans-serif",
+                "serif",
+                "monospace"
+              ]
             },
             "bold": {
               "type": "boolean"

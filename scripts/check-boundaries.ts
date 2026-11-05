@@ -37,6 +37,13 @@ const POLICIES: Record<string, Policy> = {
       "fast-json-patch",
       "idb",
       "papaparse",
+      // Card fonts: WOFF2 files and their unicode ranges only (T16, Q-023).
+      "@fontsource/inter",
+      "@fontsource/atkinson-hyperlegible",
+      "@fontsource/source-serif-4",
+      "@fontsource/cinzel",
+      "@fontsource/oswald",
+      "@fontsource/jetbrains-mono",
     ],
   },
   "apps/server": {

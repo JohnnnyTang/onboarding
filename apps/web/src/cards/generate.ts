@@ -10,6 +10,7 @@ import {
   findTemplate,
   generationErrors,
 } from "./card-model";
+import { ensureCardFonts } from "./fonts";
 
 // Generating a template's cards: plan them, draw every face at 300 dpi, then save the faces
 // and the card components together (contracts/card-generator.md#generated-cards).
@@ -33,6 +34,14 @@ export async function renderGeneration(
 ): Promise<GenerationResult> {
   const template = findTemplate(project, templateId);
   if (!template) return { ok: false, errors: ["The template no longer exists."] };
+  try {
+    await ensureCardFonts();
+  } catch {
+    return {
+      ok: false,
+      errors: ["The card fonts could not be loaded; reload the page and try again."],
+    };
+  }
   const paths = assets.map((asset) => asset.path);
   const plan = planCards(template, findSource(project, template.data.source), paths);
   const errors = generationErrors(project, template, plan);

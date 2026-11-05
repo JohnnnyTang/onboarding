@@ -15,6 +15,23 @@ export const HexColorSchema = z
   .string()
   .regex(/^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/, "Colors are written #rgb or #rrggbb");
 
+/** Fonts bundled with the app (SIL Open Font License), named by their Fontsource ids. */
+export const CARD_FONT_IDS = [
+  "inter",
+  "atkinson-hyperlegible",
+  "source-serif-4",
+  "cinzel",
+  "oswald",
+  "jetbrains-mono",
+] as const;
+
+/**
+ * A bundled font. The generic names are aliases kept for templates saved before fonts were
+ * bundled: sans-serif = Inter, serif = Source Serif 4, monospace = JetBrains Mono.
+ */
+export const CardFontSchema = z.enum([...CARD_FONT_IDS, "sans-serif", "serif", "monospace"]);
+export type CardFont = z.infer<typeof CardFontSchema>;
+
 const OffsetSchema = z.number().min(0).max(1000);
 const ExtentSchema = z.number().positive().max(1000);
 
@@ -40,7 +57,7 @@ export const CardTextFieldSchema = z.strictObject({
   /** Font size (em height) in mm. Text that does not fit shrinks, down to half this size. */
   size_mm: z.number().positive().max(200),
   color: HexColorSchema,
-  font: z.enum(["sans-serif", "serif", "monospace"]),
+  font: CardFontSchema,
   bold: z.boolean(),
   align: z.enum(["left", "center", "right"]),
   valign: z.enum(["top", "middle", "bottom"]),
