@@ -1,4 +1,5 @@
 import { Link, NavLink, useParams } from "react-router";
+import { CardsSection } from "../cards/cards-section";
 import { EmptyState, Loading, PageHeader, ui } from "../components/ui";
 import { missingImages } from "../projects/project-model";
 import styles from "../projects/projects.module.css";
@@ -17,6 +18,7 @@ const SECTIONS = [
   { path: "", label: "Details" },
   { path: "images", label: "Images" },
   { path: "components", label: "Components" },
+  { path: "cards", label: "Cards" },
   { path: "table", label: "Table" },
   { path: "setup", label: "Setup" },
 ] as const;
@@ -27,6 +29,8 @@ function Section({ section, ...props }: SectionProps & { section: string }) {
       return <ImagesSection {...props} />;
     case "components":
       return <ComponentsSection {...props} />;
+    case "cards":
+      return <CardsSection {...props} />;
     case "table":
       return <ZoneEditor project={props.project} editor={props.editor} />;
     case "setup":

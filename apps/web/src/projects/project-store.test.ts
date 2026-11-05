@@ -129,6 +129,35 @@ describe("project store", () => {
     expect(await projects.getHotSeatMatch(B)).toBeNull();
   });
 
+  it("saves a project with added and removed images in one transaction", async () => {
+    const { store: projects } = await store();
+    const saved = project(A, "Cards", "2026-11-01T00:00:00.000Z");
+    await projects.putProject(saved);
+    await projects.putAsset(asset(A, "assets/cards/old.png"));
+    await projects.putAsset(asset(A, "assets/keep.png"));
+    const renamed = { ...saved, name: "Cards 2", manifest: { ...saved.manifest, name: "Cards 2" } };
+    await projects.putProjectWithAssets(
+      renamed,
+      [asset(A, "assets/cards/new.png")],
+      ["assets/cards/old.png"],
+    );
+    expect((await projects.getProject(A))?.name).toBe("Cards 2");
+    expect((await projects.listAssets(A)).map((entry) => entry.path)).toEqual([
+      "assets/cards/new.png",
+      "assets/keep.png",
+    ]);
+
+    // A bad image leaves everything as it was.
+    await expect(
+      projects.putProjectWithAssets(saved, [{ ...asset(A, "assets/cards/x.png"), size: 99 }], []),
+    ).rejects.toThrow();
+    await expect(
+      projects.putProjectWithAssets(saved, [asset(B, "assets/cards/x.png")], []),
+    ).rejects.toThrow();
+    expect((await projects.getProject(A))?.name).toBe("Cards 2");
+    expect(await projects.listAssets(A)).toHaveLength(2);
+  });
+
   it("keeps data across connections", async () => {
     const { store: first, name } = await store();
     await first.putProject(project(A, "Kept", "2026-11-01T00:00:00.000Z"));

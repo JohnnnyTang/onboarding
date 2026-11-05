@@ -45,6 +45,12 @@ export interface ProjectStore {
   listProjects(): Promise<ProjectList>;
   getProject(id: string): Promise<LocalProject | null>;
   putProject(project: LocalProject): Promise<void>;
+  /** Saves the project, adds or replaces images and deletes others, in one transaction. */
+  putProjectWithAssets(
+    project: LocalProject,
+    put: readonly ProjectAsset[],
+    remove: readonly string[],
+  ): Promise<void>;
   /** Deletes the project with its images and hot-seat matches. */
   deleteProject(id: string): Promise<void>;
   listAssets(projectId: string): Promise<ProjectAsset[]>;
@@ -69,6 +75,14 @@ function parseAsset(value: unknown): ProjectAsset | null {
   const parsed = ProjectAssetInfoSchema.safeParse(info);
   if (!parsed.success || !(blob instanceof Blob) || blob.size !== parsed.data.size) return null;
   return { ...parsed.data, blob };
+}
+
+/** The record stored for an asset, validated, with its bytes. */
+function assetRecord(asset: ProjectAsset): ProjectAssetInfo & { blob: Blob } {
+  const { blob, ...info } = asset;
+  const parsed = ProjectAssetInfoSchema.parse(info);
+  if (blob.size !== parsed.size) throw new Error("Asset size does not match its bytes");
+  return { ...parsed, blob };
 }
 
 function assetRange(projectId: string): IDBKeyRange {
@@ -110,6 +124,21 @@ export async function openProjectStore(name = DATABASE_NAME): Promise<ProjectSto
     async putProject(project) {
       await db.put("projects", LocalProjectSchema.parse(project));
     },
+    async putProjectWithAssets(project, put, remove) {
+      const parsed = LocalProjectSchema.parse(project);
+      const records = put.map(assetRecord);
+      if (records.some((record) => record.projectId !== parsed.id)) {
+        throw new Error("Assets belong to another project");
+      }
+      const tx = db.transaction(["projects", "projectAssets"], "readwrite");
+      const assets = tx.objectStore("projectAssets");
+      await Promise.all([
+        tx.objectStore("projects").put(parsed),
+        ...remove.map((path) => assets.delete([parsed.id, path])),
+        ...records.map((record) => assets.put(record)),
+      ]);
+      await tx.done;
+    },
     async deleteProject(id) {
       const tx = db.transaction(["projects", "projectAssets", "hotseatMatches"], "readwrite");
       const matches = tx.objectStore("hotseatMatches");
@@ -128,10 +157,7 @@ export async function openProjectStore(name = DATABASE_NAME): Promise<ProjectSto
       });
     },
     async putAsset(asset) {
-      const { blob, ...info } = asset;
-      const parsed = ProjectAssetInfoSchema.parse(info);
-      if (blob.size !== parsed.size) throw new Error("Asset size does not match its bytes");
-      await db.put("projectAssets", { ...parsed, blob });
+      await db.put("projectAssets", assetRecord(asset));
     },
     async deleteAsset(projectId, path) {
       await db.delete("projectAssets", [projectId, path]);

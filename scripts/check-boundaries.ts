@@ -36,6 +36,7 @@ const POLICIES: Record<string, Policy> = {
       "oidc-client-ts",
       "fast-json-patch",
       "idb",
+      "papaparse",
     ],
   },
   "apps/server": {
