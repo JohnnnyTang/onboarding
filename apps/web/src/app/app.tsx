@@ -3,11 +3,13 @@ import { CALLBACK_PATH } from "../auth/auth";
 import { AuthCallbackPage } from "../pages/auth-callback";
 import { GamePage, GamesPage } from "../pages/games";
 import { HomePage } from "../pages/home";
+import { HotSeatPage } from "../pages/hot-seat";
 import { JoinPage } from "../pages/join";
 import { LobbyPage } from "../pages/lobby";
 import { MatchPage } from "../pages/match";
 import { MatchesPage } from "../pages/matches";
 import { NotFoundPage, ReplayPage } from "../pages/placeholders";
+import { ProjectPage } from "../pages/project";
 import { ProjectsPage } from "../pages/projects";
 import { Layout } from "./layout";
 
@@ -17,6 +19,9 @@ export function AppRoutes() {
       <Route element={<Layout />}>
         <Route index element={<HomePage />} />
         <Route path="projects" element={<ProjectsPage />} />
+        <Route path="projects/:projectId" element={<ProjectPage />} />
+        <Route path="projects/:projectId/play" element={<HotSeatPage />} />
+        <Route path="projects/:projectId/:section" element={<ProjectPage />} />
         <Route path="games" element={<GamesPage />} />
         <Route path="games/:gameId" element={<GamePage />} />
         <Route path="matches" element={<MatchesPage />} />

@@ -1,0 +1,135 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "id": {
+      "$ref": "#/$defs/__schema0"
+    },
+    "projectId": {
+      "$ref": "#/$defs/__schema1"
+    },
+    "init": {
+      "$ref": "#/$defs/__schema2"
+    },
+    "events": {
+      "$ref": "#/$defs/__schema5"
+    },
+    "updatedAt": {
+      "$ref": "#/$defs/__schema6"
+    }
+  },
+  "required": ["id", "projectId", "init", "events", "updatedAt"],
+  "additionalProperties": false,
+  "$defs": {
+    "__schema0": {
+      "type": "string",
+      "format": "uuid",
+      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+    },
+    "__schema1": {
+      "type": "string",
+      "format": "uuid",
+      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+    },
+    "__schema2": {
+      "type": "object",
+      "properties": {
+        "seats": {
+          "minItems": 1,
+          "maxItems": 8,
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/__schema3"
+          }
+        },
+        "seed": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295,
+          "$ref": "#/$defs/__schema4"
+        },
+        "options": {
+          "$ref": "#/$defs/IntegerJson"
+        }
+      },
+      "required": ["seats", "seed", "options"],
+      "additionalProperties": false
+    },
+    "__schema3": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)$"
+    },
+    "__schema4": {
+      "type": "integer",
+      "minimum": -9007199254740991,
+      "maximum": 9007199254740991
+    },
+    "__schema5": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "seq": {
+            "exclusiveMinimum": 0,
+            "$ref": "#/$defs/__schema4"
+          },
+          "seat": {
+            "$ref": "#/$defs/__schema3"
+          },
+          "intent": {
+            "type": "object",
+            "properties": {
+              "move": {
+                "type": "string",
+                "minLength": 1
+              },
+              "args": {
+                "$ref": "#/$defs/IntegerJson"
+              }
+            },
+            "required": ["move"],
+            "additionalProperties": false
+          }
+        },
+        "required": ["seq", "seat", "intent"],
+        "additionalProperties": false
+      }
+    },
+    "__schema6": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+    },
+    "IntegerJson": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        },
+        {
+          "type": "string"
+        },
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/IntegerJson"
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/IntegerJson"
+          }
+        }
+      ]
+    }
+  },
+  "title": "HotSeatMatchRecord"
+}

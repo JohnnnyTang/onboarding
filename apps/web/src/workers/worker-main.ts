@@ -1,5 +1,5 @@
 import { INIT_REPLY_ID, type WorkerCall, type WorkerInit, type WorkerReply } from "./protocol";
-import { asGameDefinition, createWorkerHost } from "./worker-host";
+import { asGameDefinition, createWorkerHost, sandboxDefinition } from "./worker-host";
 
 /** The parts of a MessagePort the worker uses. */
 export interface WorkerPort {
@@ -29,8 +29,13 @@ export async function startWorker(init: WorkerInit, port: WorkerPort, deps: Work
   };
   let handle: ((request: WorkerCall) => unknown) | undefined;
   try {
+    // Sandbox games run trusted platform code, but the worker is locked the same way, so
+    // both kinds behave alike.
     if (deps.lockDown().length > 0) throw new Error("Lockdown incomplete");
-    const definition = asGameDefinition(await deps.importGame(init.source));
+    const definition =
+      init.game.kind === "sandbox"
+        ? sandboxDefinition(init.components)
+        : asGameDefinition(await deps.importGame(init.game.source));
     if (!definition) throw new Error("Not a game definition");
     handle = createWorkerHost(definition, init.components);
   } catch {

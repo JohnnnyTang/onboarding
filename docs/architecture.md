@@ -140,7 +140,8 @@ Rules that matter here:
 
 A **project** is a designer's editable workspace, stored in IndexedDB: draft manifest, component declarations, zones, card templates, CSV data and images. It works offline and needs no account.
 
-- **Hot-seat play:** the game worker runs the full runtime locally. The designer can view any seat or the "all seats" debug view.
+- **Hot-seat play:** the game worker runs the full runtime locally. The designer can view any seat or the "all seats" debug view, which merges the seats' snapshots and so never shows what no seat may see (Q-021). Sandbox projects run the built-in sandbox definition in the worker; no bundle is involved.
+- **Offline:** production builds register a service worker that caches the app's own files, so the editor, the worker and the table load with the network disabled (Q-020). Projects themselves never leave IndexedDB.
 - **Publishing** (requires sign-in) builds the project into a game version and uploads it. Only published versions can host remote matches.
 
 Code-based games follow the same path through the CLI: `bgp dev` serves the game to a local hot-seat table with hot reload; `bgp publish` uploads a version.

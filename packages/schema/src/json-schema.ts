@@ -3,6 +3,7 @@ import * as auth from "./auth.js";
 import * as common from "./common.js";
 import * as http from "./http.js";
 import * as manifest from "./manifest.js";
+import * as project from "./project.js";
 import * as protocol from "./protocol.js";
 import * as rules from "./rules.js";
 import * as rulesHost from "./rules-host.js";
@@ -43,6 +44,7 @@ export function contractJsonSchemas() {
     ...common,
     ...http,
     ...manifest,
+    ...project,
     ...protocol,
     ...rules,
     ...rulesHost,

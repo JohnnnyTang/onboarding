@@ -22,6 +22,17 @@ describe("package boundaries", () => {
     expect(check("apps/web/vite.config.ts", 'import "vite";')).toEqual([]);
     expect(check("apps/web/src/main.tsx", 'import "vite";')).not.toEqual([]);
     expect(check("apps/web/src/main.tsx", 'import "@vitejs/plugin-react";')).not.toEqual([]);
+    // Build configs run in Node; the app itself may not use Node built-ins.
+    expect(check("apps/web/vite.config.ts", 'import { createHash } from "node:crypto";')).toEqual(
+      [],
+    );
+    expect(check("apps/web/src/main.tsx", 'import "node:crypto";')).not.toEqual([]);
+    // Only web unit tests may use the in-memory IndexedDB.
+    expect(check("apps/web/src/projects/store.test.ts", 'import "fake-indexeddb/auto";')).toEqual(
+      [],
+    );
+    expect(check("apps/web/src/main.tsx", 'import "fake-indexeddb/auto";')).not.toEqual([]);
+    expect(check("apps/web/src/main.tsx", 'import { openDB } from "idb";')).toEqual([]);
   });
 
   test("the web app admits its UI libraries but no game package", () => {

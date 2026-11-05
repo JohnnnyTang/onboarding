@@ -1,11 +1,16 @@
 import {
   type AcceptedEvent,
+  ActionButtonSchema,
+  type ClientView,
   type ComponentsFile,
+  type Gesture,
   JsonSchema,
   type ManualOp,
   type MatchState,
+  type MoveIntent,
   type SandboxState,
   SandboxStateSchema,
+  type SandboxView,
   SandboxViewSchema,
   sandboxSnapshotForSeatSchema,
   TableSnapshotSchema,
@@ -487,4 +492,151 @@ test("setup shuffles each flagged zone once after all entries and supports fixed
   expect(state.game.items.map((item) => item.id)).toEqual(expectedIds);
   expect(viewFor(local, state, "0").game.items.every((item) => item.def !== undefined)).toBe(true);
   expect(viewFor(local, state, "1").game.items.every((item) => item.def === undefined)).toBe(true);
+});
+
+describe("platform gestures and actions", () => {
+  const view = (state: MatchState<SandboxState>, seat: string | null) =>
+    viewFor(def, state, seat) as ClientView<SandboxView>;
+  const info = (seat: string | null) => ({ seat, components });
+  const interpret = (gesture: Gesture, state: MatchState<SandboxState>, seat: string | null) =>
+    def.interpret?.(gesture, view(state, seat), info(seat)) ?? null;
+  const actions = (state: MatchState<SandboxState>, seat: string | null, selection: string[]) =>
+    def.actions?.(view(state, seat), info(seat), selection) ?? [];
+  const accepted = (state: MatchState<SandboxState>, seat: string, intent: MoveIntent | null) => {
+    if (!intent) throw new Error("Expected an intent");
+    const result = applyIntent(def, state, seat, intent);
+    if (!result.ok) throw new Error(`${result.code}: ${result.message}`);
+    return result.state;
+  };
+
+  test("drops become moves the runtime accepts; index is clamped and free drops keep pos_mm", () => {
+    const state = createMatch(def, init);
+    const top = item(state, "deck", 8);
+    const intent = interpret(
+      { kind: "drop", item: top.id, from: "deck", to: "market", index: 9 },
+      state,
+      "0",
+    );
+    expect(intent).toEqual({
+      move: "manual",
+      args: { op: "move", item: top.id, to: "market", index: 2 },
+    });
+    expect(item(accepted(state, "0", intent), "market", 2).id).toBe(top.id);
+
+    const coin = item(state, "market", 1);
+    const free = interpret(
+      { kind: "drop", item: coin.id, from: "market", to: "table", pos_mm: [120, -30] },
+      state,
+      "1",
+    );
+    expect(free).toEqual({
+      move: "manual",
+      args: { op: "move", item: coin.id, to: "table", pos_mm: [120, -30] },
+    });
+    expect(item(accepted(state, "1", free), "table", 1).pos_mm).toEqual([120, -30]);
+  });
+
+  test("drops that change nothing, touch another seat's hand, or come from spectators give null", () => {
+    const state = createMatch(def, init);
+    const die = item(state, "market", 0);
+    const mine = item(state, "hand:1");
+    expect(
+      interpret({ kind: "drop", item: die.id, from: "market", to: "market", index: 0 }, state, "0"),
+    ).toBeNull();
+    expect(
+      interpret({ kind: "drop", item: mine.id, from: "hand:1", to: "market" }, state, "0"),
+    ).toBeNull();
+    expect(
+      interpret({ kind: "drop", item: die.id, from: "market", to: "deck" }, state, null),
+    ).toBeNull();
+    expect(interpret({ kind: "click", item: die.id }, state, "0")).toBeNull();
+    expect(
+      interpret({ kind: "drop", item: die.id, from: "market", to: "nowhere" }, state, "0"),
+    ).toBeNull();
+    expect(
+      interpret({ kind: "drop", item: mine.id, from: "hand:1", to: "market" }, state, "1"),
+    ).not.toBeNull();
+  });
+
+  test("buttons for one selected item carry intents the runtime accepts", () => {
+    let state = createMatch(def, init);
+    const top = item(state, "deck", 8);
+    const buttons = actions(state, "2", [top.id]);
+    expect(buttons.map((button) => [button.id, button.label, button.enabled])).toEqual([
+      ["flip", "Flip", true],
+      ["rotate", "Rotate", true],
+      ["shuffle", "Shuffle deck", true],
+      ["deal:hand", "Deal 1 to each hand", true],
+      ["end-turn", "End turn", true],
+    ]);
+    for (const button of buttons) {
+      expect(ActionButtonSchema.safeParse(button).success).toBe(true);
+      accepted(state, "2", button.intent ?? null);
+    }
+    state = accepted(
+      state,
+      "2",
+      buttons.find((button) => button.id === "deal:hand")?.intent ?? null,
+    );
+    // Dealt face up into owner zones: the owner sees the card, nobody else does.
+    expect(["hand:0", "hand:1", "hand:2"].map((zone) => item(state, zone, 1).face)).toEqual([
+      "up",
+      "up",
+      "up",
+    ]);
+    const dealt = item(state, "hand:1", 1);
+    expect(view(state, "1").game.items.find((other) => other.id === dealt.id)).toMatchObject({
+      def: dealt.def,
+      face: "up",
+    });
+    expect(view(state, "0").game.items.find((other) => other.id === dealt.id)).not.toHaveProperty(
+      "def",
+    );
+
+    const die = item(state, "market", 0);
+    const roll = actions(state, "0", [die.id]).find((button) => button.id === "roll");
+    expect(roll?.enabled).toBe(true);
+    accepted(state, "0", roll?.intent ?? null);
+    expect(actions(state, "0", [top.id]).some((button) => button.id === "roll")).toBe(false);
+    const rotated = accepted(state, "0", actions(state, "0", [die.id])[1]?.intent ?? null);
+    expect(actions(rotated, "0", [die.id])[1]?.intent).toEqual({
+      move: "manual",
+      args: { op: "rotate", item: die.id, deg: 180 },
+    });
+  });
+
+  test("without a usable selection, buttons are disabled; spectators and finished matches get none", () => {
+    const state = createMatch(def, init);
+    const other = item(state, "hand:1");
+    for (const selection of [[], [other.id], [item(state, "deck").id, item(state, "deck", 1).id]]) {
+      const buttons = actions(state, "0", selection);
+      expect(buttons.map((button) => [button.id, button.enabled])).toEqual([
+        ["flip", false],
+        ["rotate", false],
+        ["shuffle", false],
+        ["end-turn", true],
+      ]);
+      expect(JSON.stringify(buttons)).not.toContain(other.id);
+    }
+    expect(actions(state, null, [item(state, "deck").id])).toEqual([]);
+    expect(actions({ ...state, result: { winners: ["0"] } }, "0", [])).toEqual([]);
+    const hand = actions(state, "1", [other.id]);
+    expect(hand.find((button) => button.id === "shuffle")).toMatchObject({ enabled: false });
+    expect(hand.some((button) => button.id.startsWith("deal:"))).toBe(false);
+  });
+
+  test("dealing needs one item per seat", () => {
+    let state = createMatch(def, init);
+    const coin = item(state, "market", 1);
+    state = accepted(state, "0", {
+      move: "manual",
+      args: { op: "move", item: coin.id, to: "grid" },
+    });
+    expect(actions(state, "0", [coin.id]).find((button) => button.id === "deal:hand")).toEqual({
+      id: "deal:hand",
+      label: "Deal 1 to each hand",
+      enabled: false,
+      hint: "Needs 3 items",
+    });
+  });
 });

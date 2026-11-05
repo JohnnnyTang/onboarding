@@ -10,6 +10,8 @@ import { createClaimedSeats } from "../auth/claimed-seats";
 import { GameList, VersionList } from "../pages/games";
 import { LobbyStatus, SeatList } from "../pages/lobby";
 import { MatchList, matchPath } from "../pages/matches";
+import { ProjectListView } from "../pages/projects";
+import { createProject } from "../projects/project-model";
 import { AppRoutes } from "./app";
 import { ServicesProvider } from "./services";
 
@@ -39,7 +41,13 @@ function fakeAuth(user: AuthUser | null): AuthService {
 function render(node: ReactNode, path = "/", user: AuthUser | null = null): string {
   return renderToStaticMarkup(
     <ServicesProvider
-      value={{ api, auth: fakeAuth(user), seats: createClaimedSeats(), roomUrl: "ws://test/ws" }}
+      value={{
+        api,
+        auth: fakeAuth(user),
+        seats: createClaimedSeats(),
+        roomUrl: "ws://test/ws",
+        projects: unused,
+      }}
     >
       <QueryClientProvider client={new QueryClient()}>
         <MemoryRouter initialEntries={[path]}>{node}</MemoryRouter>
@@ -66,7 +74,9 @@ function summary(status: MatchSummary["status"]): MatchSummary {
 describe("routes", () => {
   test.each([
     ["/", "Playtest your board games"],
-    ["/projects", "No projects yet"],
+    ["/projects", "Opening projects"],
+    ["/projects/p-1", "Opening the project"],
+    ["/projects/p-1/play", "Opening the project"],
     ["/join/abc", "Display name"],
     ["/matches/m-1", "You are not seated in this match"],
     ["/matches/m-1/replay", "Replays are not available yet"],
@@ -101,6 +111,26 @@ describe("routes", () => {
 });
 
 describe("empty states and lists", () => {
+  test("projects", () => {
+    const empty = render(
+      <ProjectListView list={{ projects: [], unreadable: 0 }} onDelete={() => {}} />,
+    );
+    expect(empty).toContain("No projects yet");
+    expect(empty).not.toContain("could not be read");
+    const project = createProject(
+      "Fish Market",
+      "0192f3a4-5b6c-7d8e-9f01-23456789aaaa",
+      "2026-11-04T10:00:00.000Z",
+    );
+    const html = render(
+      <ProjectListView list={{ projects: [project], unreadable: 2 }} onDelete={() => {}} />,
+    );
+    expect(html).toContain("2 saved projects could not be read");
+    expect(html).toContain(`href="/projects/${project.id}"`);
+    expect(html).toContain(`href="/projects/${project.id}/play"`);
+    expect(html).toContain("2–4 players");
+  });
+
   test("games", () => {
     expect(render(<GameList games={[]} />)).toContain("No games yet");
     const html = render(

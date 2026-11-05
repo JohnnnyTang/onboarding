@@ -97,7 +97,7 @@ class FakeWorker implements WorkerLike {
 const started: GameWorker[] = [];
 async function start(source: string, worker = new FakeWorker(), timeoutMs = 200) {
   const game = await startGameWorker({
-    source,
+    game: { kind: "bundle", source },
     components: COMPONENTS,
     createWorker: () => worker,
     timeoutMs,
@@ -146,6 +146,97 @@ describe("game worker", () => {
     expect(await play()).toEqual(a);
   });
 
+  it("resumes a hot-seat match from its events and refuses an invalid log", async () => {
+    const init = { seats: ["0", "1"], seed: 7, options: {} };
+    const live = await start("counter");
+    await live.hotSeat.create(init);
+    const events = [];
+    for (const seat of ["0", "1", "0"]) {
+      const outcome = await live.hotSeat.apply(seat, { move: "add" });
+      if (!outcome.ok) throw new Error("move rejected");
+      events.push(outcome.event);
+    }
+    const resumed = await start("counter");
+    await resumed.hotSeat.create(init, events);
+    expect(await resumed.hotSeat.view("1")).toEqual(await live.hotSeat.view("1"));
+    await expect(
+      resumed.hotSeat.create(init, [{ seq: 2, seat: "0", intent: { move: "add" } }]),
+    ).rejects.toMatchObject({ reason: "failed" });
+    // A failed resume leaves no match behind.
+    await expect(resumed.hotSeat.view("0")).rejects.toMatchObject({ reason: "failed" });
+  });
+
+  it("runs the built-in sandbox game without a bundle", async () => {
+    let imported = false;
+    const worker = new FakeWorker({
+      importGame: async () => {
+        imported = true;
+        return counter;
+      },
+    });
+    const sandbox: ComponentsFile = {
+      ...COMPONENTS,
+      zones: [
+        {
+          id: "pool",
+          layout: "row",
+          rect_mm: { x: 0, y: 0, w: 200, h: 100 },
+          visibility: "public",
+        },
+        {
+          id: "hand",
+          layout: "fan",
+          rect_mm: { x: 0, y: -200, w: 200, h: 100 },
+          visibility: "owner",
+          owner: "each",
+        },
+      ],
+      setup: { instances: [{ def: "token", zone: "pool", count: 2 }] },
+    };
+    const game = await startGameWorker({
+      game: { kind: "sandbox" },
+      components: sandbox,
+      createWorker: () => worker,
+      timeoutMs: 200,
+      loadTimeoutMs: 500,
+    });
+    started.push(game);
+    expect(imported).toBe(false);
+    await game.hotSeat.create({ seats: ["0", "1"], seed: 3, options: {} });
+    const seatView = await game.hotSeat.view("1");
+    const snapshot = await game.present(seatView, "1");
+    const token = snapshot.items[0];
+    if (!token) throw new Error("missing token");
+    expect(snapshot.zones.map((zone) => zone.id)).toEqual(["pool", "hand:0", "hand:1"]);
+    const intent = await game.interpret(
+      { kind: "drop", item: token.id, from: "pool", to: "hand:1", index: 0 },
+      seatView,
+      "1",
+    );
+    expect(intent).toEqual({
+      move: "manual",
+      args: { op: "move", item: token.id, to: "hand:1", index: 0 },
+    });
+    if (!intent) throw new Error("no intent");
+    expect(await game.hotSeat.apply("1", intent)).toMatchObject({ ok: true });
+    const other = await game.present(await game.hotSeat.view("0"), "0");
+    expect(other.items.find((item) => item.zone === "hand:1")).not.toHaveProperty("def");
+    expect((await game.actions(seatView, "1", [token.id])).map((action) => action.id)).toContain(
+      "flip",
+    );
+  });
+
+  it("refuses a sandbox components file without zones", async () => {
+    await expect(
+      startGameWorker({
+        game: { kind: "sandbox" },
+        components: COMPONENTS,
+        createWorker: () => new FakeWorker(),
+        loadTimeoutMs: 500,
+      }),
+    ).rejects.toMatchObject({ reason: "load" });
+  });
+
   it("reports game errors without their messages", async () => {
     const game = await start("counter");
     const error = await game.present(view(-1), "0").catch((caught: unknown) => caught);
@@ -167,7 +258,7 @@ describe("game worker", () => {
     const worker = new FakeWorker();
     // A promise cannot be cloned, so make the host hang instead: never answer "present".
     const game = await startGameWorker({
-      source: "counter",
+      game: { kind: "bundle", source: "counter" },
       components: COMPONENTS,
       createWorker: () => ({
         onerror: null,
@@ -203,7 +294,7 @@ describe("game worker", () => {
     const worker = new FakeWorker({}, false);
     await expect(
       startGameWorker({
-        source: "counter",
+        game: { kind: "bundle", source: "counter" },
         components: COMPONENTS,
         createWorker: () => worker,
         bootTimeoutMs: 20,
