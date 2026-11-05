@@ -163,6 +163,8 @@ The project owner confirmed Q-018 (guest seats in session storage) on 2026-11-04
 
 ### T16 Card generator
 
+**Status:** Complete. Local validation and scope: [t16-validation.md](t16-validation.md).
+
 **Deliverables:** `@bgp/card-generator` (template of text and image fields positioned in mm, rendered at 300 dpi to PNG with `OffscreenCanvas`); template editor UI with live preview; CSV import with column-to-field mapping (Papa Parse); generated faces added to the project's assets and component defs; Harbor Market art generated with it and committed.
 
 **Done when:** E2E-01 passes in full; generating 100 cards takes under 10 seconds on a mid-range laptop.
