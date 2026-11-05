@@ -1,9 +1,10 @@
+import { readFile } from "node:fs/promises";
 import { type Browser, type BrowserContext, expect, type Page } from "@playwright/test";
 import { build } from "esbuild";
 import manifest from "../../games/harbor-market/bgp.json" with { type: "json" };
 import declarations from "../../games/harbor-market/components.json" with { type: "json" };
 import { ComponentsFileSchema, componentAssetRefs } from "../../packages/schema/src/index.js";
-import { api, createEnforcedMatch, type FixtureMatch, PNG, WEB_URL } from "./app.js";
+import { api, createEnforcedMatch, type FixtureMatch, WEB_URL } from "./app.js";
 
 /** The Harbor Market bundle, built the way `bgp build` does: one ES module, no imports. */
 async function harborBundle(): Promise<Buffer> {
@@ -20,7 +21,7 @@ async function harborBundle(): Promise<Buffer> {
   return Buffer.from(output.contents);
 }
 
-/** Publishes Harbor Market with placeholder art for every image and creates a lobby match. */
+/** Publishes Harbor Market with its committed card art (pnpm art:harbor) and creates a lobby match. */
 export async function createHarborMatch(
   token: string,
   seatCount: number,
@@ -31,7 +32,9 @@ export async function createHarborMatch(
     "components.json": Buffer.from(JSON.stringify(components)),
     [manifest.entry]: await harborBundle(),
   };
-  for (const ref of componentAssetRefs(components)) files[ref] = PNG;
+  for (const ref of componentAssetRefs(components)) {
+    files[ref] = await readFile(new URL(`../../games/harbor-market/${ref}`, import.meta.url));
+  }
   return createEnforcedMatch(token, { name: "Harbor Market", manifest, files }, seatCount, options);
 }
 

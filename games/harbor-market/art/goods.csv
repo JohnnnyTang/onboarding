@@ -1,0 +1,16 @@
+id,name,good,value,color
+fish-1,Fish 1,Fish,1,#2f6fb0
+fish-2,Fish 2,Fish,2,#2f6fb0
+fish-3,Fish 3,Fish,3,#2f6fb0
+salt-1,Salt 1,Salt,1,#7d8590
+salt-2,Salt 2,Salt,2,#7d8590
+salt-3,Salt 3,Salt,3,#7d8590
+silk-1,Silk 1,Silk,1,#9b3f74
+silk-2,Silk 2,Silk,2,#9b3f74
+silk-3,Silk 3,Silk,3,#9b3f74
+spice-1,Spice 1,Spice,1,#c0612b
+spice-2,Spice 2,Spice,2,#c0612b
+spice-3,Spice 3,Spice,3,#c0612b
+tea-1,Tea 1,Tea,1,#3a7d44
+tea-2,Tea 2,Tea,2,#3a7d44
+tea-3,Tea 3,Tea,3,#3a7d44
