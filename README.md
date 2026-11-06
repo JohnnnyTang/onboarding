@@ -4,7 +4,7 @@
 
 Board Game Platform is an in-progress, browser-based toolkit for indie board game designers. The idea is to let a designer start with components and manual play, add enforceable rules when ready, and invite remote playtesters without asking them to install an app. The platform supplies the table, networking, accounts, storage, and replay machinery; game packages supply the game.
 
-> **Development status:** This repository is a Phase 1 work in progress, not a ready-to-use playtest service. The deterministic headless core, schema contracts, local database and auth groundwork, isolated rules host, and PixiJS table renderer have substantial implementations. The end-to-end designer and guest flows are still being built. See [the task tracker](docs/tasks.md) for the exact status and validation notes.
+> **Development status:** Phase 1 is implemented and runs locally end to end: offline sandbox projects with generated cards, hot-seat play, publishing, remote matches with guests, the Harbor Market reference game, replays and the `bgp` CLI. It is not a hosted service yet; hosting is an open decision. The last handoff checks (physical phones, a clean-machine run) are tracked in [the task tracker](docs/tasks.md) with the validation notes.
 
 ## The story
 
@@ -35,18 +35,18 @@ The intended full system is described in [architecture.md](docs/architecture.md)
 
 ## What is in this repository
 
-| Area                      | Role                                                              | Current state                                                         |
-| ------------------------- | ----------------------------------------------------------------- | --------------------------------------------------------------------- |
-| `packages/schema`         | Zod contracts and generated JSON Schemas                          | Implemented                                                           |
-| `packages/rules`          | Seeded RNG, rules runtime, sandbox operations, replay and hashing | Implemented                                                           |
-| `packages/testing`        | Headless runner, random bot, leak and determinism checks          | Implemented                                                           |
-| `packages/rules-host`     | Isolated server-side game execution and recovery client           | Implemented; T08 closure has remaining gates                          |
-| `packages/table-2d`       | PixiJS table renderer and gesture handling                        | Implemented; physical-phone qualification remains                     |
-| `apps/server`             | Database schema, migrations, and auth foundation                  | HTTP game and match API / room server are pending                     |
-| `apps/web`                | Browser application                                               | App shell and product flows are pending; table fixture harness exists |
-| `games/harbor-market`     | Enforced reference game                                           | Planned; currently a scaffold                                         |
-| `packages/card-generator` | Card faces from templates and CSV rows                            | Implemented (T16)                                                     |
-| `packages/cli`            | `bgp init`, `dev`, `validate`, `build`, `publish`                 | Implemented (T19)                                                     |
+| Area                      | Role                                                              | Current state                                     |
+| ------------------------- | ----------------------------------------------------------------- | ------------------------------------------------- |
+| `packages/schema`         | Zod contracts and generated JSON Schemas                          | Implemented                                       |
+| `packages/rules`          | Seeded RNG, rules runtime, sandbox operations, replay and hashing | Implemented                                       |
+| `packages/testing`        | Headless runner, random bot, leak and determinism checks          | Implemented                                       |
+| `packages/rules-host`     | Isolated server-side game execution (QuickJS) and recovery client | Implemented                                       |
+| `packages/table-2d`       | PixiJS table renderer, gestures and keyboard play                 | Implemented; physical-phone qualification remains |
+| `apps/server`             | HTTP API, room server, database, auth and uploads                 | Implemented                                       |
+| `apps/web`                | Browser application: projects, publishing, matches, replays       | Implemented                                       |
+| `games/harbor-market`     | Enforced reference game                                           | Implemented                                       |
+| `packages/card-generator` | Card faces from templates and CSV rows                            | Implemented (T16)                                 |
+| `packages/cli`            | `bgp init`, `dev`, `validate`, `build`, `publish`                 | Implemented (T19)                                 |
 
 The [Phase 1 specification](docs/phase-1-spec.md) defines the complete designer sandbox, remote match, replay, and SDK acceptance criteria. Later 3D and balance-analysis phases are direction, not current features.
 
@@ -59,19 +59,28 @@ pnpm install --frozen-lockfile
 # Copy .env.example to .env and set GUEST_TOKEN_SECRET for local use.
 docker compose -f infra/docker-compose.yml up -d --wait
 pnpm db:migrate
-pnpm typecheck
-pnpm lint
-pnpm test
+pnpm dev        # API and room server on :3000, web app on http://localhost:5173
 ```
 
-`pnpm dev` starts the local services and workspace watchers. At this stage the API and web entries are scaffold watchers, so this command does **not** yet open the finished product. To explore the implemented table renderer independently of Docker:
+Sign in as `designer1` / `designer1` (or `designer2`) to publish and host; guests join from an invite link without an account. Projects live in the browser and work offline. Checks:
+
+```sh
+pnpm typecheck
+pnpm lint
+pnpm test       # unit, property and PostgreSQL integration tests
+pnpm build
+pnpm test:e2e   # Playwright; starts its own API and web app
+pnpm perf       # PERF-01: 20 concurrent matches, p95 move round trip
+```
+
+To explore the table renderer on its own, without Docker:
 
 ```sh
 pnpm dev:table
 # Open http://127.0.0.1:4313/dev/table/
 ```
 
-For browser tests, install Playwright browsers first with `pnpm exec playwright install --with-deps`, then run `pnpm test:e2e`. PostgreSQL-backed tests require the Compose services. See [development environment](docs/dev-environment.md) for configuration, test users, ports, and database notes; see [table-2d](packages/table-2d/README.md) for the renderer harness.
+For browser tests, install Playwright browsers first with `pnpm exec playwright install --with-deps`. PostgreSQL-backed tests and `pnpm perf` require the Compose services. See [development environment](docs/dev-environment.md) for configuration, test users, ports, and database notes; see [table-2d](packages/table-2d/README.md) for the renderer harness.
 
 ## Build a game
 
