@@ -8,9 +8,10 @@ import { JoinPage } from "../pages/join";
 import { LobbyPage } from "../pages/lobby";
 import { MatchPage } from "../pages/match";
 import { MatchesPage } from "../pages/matches";
-import { NotFoundPage, ReplayPage } from "../pages/placeholders";
+import { NotFoundPage } from "../pages/placeholders";
 import { ProjectPage } from "../pages/project";
 import { ProjectsPage } from "../pages/projects";
+import { ReplayPage } from "../pages/replay";
 import { VersionPage } from "../pages/version";
 import { Layout } from "./layout";
 

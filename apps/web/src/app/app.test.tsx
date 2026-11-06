@@ -12,6 +12,7 @@ import { GameList, VersionList } from "../pages/games";
 import { LobbyStatus, SeatList } from "../pages/lobby";
 import { MatchList, matchPath } from "../pages/matches";
 import { ProjectListView } from "../pages/projects";
+import { HashCheckNotice, stepCaption } from "../pages/replay";
 import { createProject } from "../projects/project-model";
 import { fakeApi } from "../test/fake-api";
 import { AppRoutes } from "./app";
@@ -74,7 +75,7 @@ describe("routes", () => {
     ["/projects/p-1/play", "Opening the project"],
     ["/join/abc", "Display name"],
     ["/matches/m-1", "You are not seated in this match"],
-    ["/matches/m-1/replay", "Replays are not available yet"],
+    ["/matches/m-1/replay", "You are not in this match"],
     ["/auth/callback", "Signing in"],
     ["/nowhere", "Page not found"],
   ])("%s renders its page", (path, text) => {
@@ -156,5 +157,37 @@ describe("empty states and lists", () => {
     expect(html).toContain("Guest");
     expect(render(<LobbyStatus match={summary("lobby")} />)).toContain("Waiting for the host");
     expect(render(<LobbyStatus match={summary("active")} />)).toContain("Go to the table");
+  });
+});
+
+describe("replay page parts", () => {
+  test("the hash check says whether the replayed final state matches the server's", () => {
+    const here = "c".repeat(64);
+    expect(render(<HashCheckNotice check={{ status: "pending" }} />)).toBe("");
+    const match = render(<HashCheckNotice check={{ status: "match", hash: here }} />);
+    expect(match).toContain("matches the server");
+    expect(match).toContain("cccccccccccc…");
+    const mismatch = render(
+      <HashCheckNotice check={{ status: "mismatch", hash: here, expected: HASH }} />,
+    );
+    expect(mismatch).toContain('role="alert"');
+    expect(mismatch).toContain("bbbbbbbbbbbb… on the server");
+    expect(render(<HashCheckNotice check={{ status: "unavailable" }} />)).toContain(
+      "could not be checked",
+    );
+  });
+
+  test("each step names the move that led to it", () => {
+    const replay = {
+      buildHash: HASH,
+      seats: ["0", "1"],
+      seed: 1,
+      options: {},
+      events: [{ seq: 1, seat: "0", intent: { move: "restock" } }],
+      finalHash: HASH,
+    };
+    const seats = summary("finished").seats;
+    expect(stepCaption(replay, 0, seats)).toBe("Setup");
+    expect(stepCaption(replay, 1, seats)).toBe("Seat 1 · Tess: restock");
   });
 });
