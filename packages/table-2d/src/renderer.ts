@@ -10,6 +10,9 @@ import type {
 } from "@bgp/schema";
 import { ComponentsFileSchema, TableSnapshotSchema } from "@bgp/schema";
 import { Application, Color, Container, Graphics, Sprite, Text, Texture } from "pixi.js";
+// Replaces PixiJS's generated shader code (`new Function`) so the web app's content
+// security policy needs no 'unsafe-eval' (T20).
+import "pixi.js/unsafe-eval";
 import type { PlacedItem, Viewport } from "./layout.js";
 import {
   dropGesture,

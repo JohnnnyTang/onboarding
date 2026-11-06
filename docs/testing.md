@@ -177,6 +177,12 @@ matches at once with scripted clients that apply patches with the web app's code
 trip is `move` sent to the mover's own `patch` received; 250 ms of think time between moves
 gives about 60 moves per second across the server. Run `pnpm build` first.
 
+T20 also adds `e2e/csp.spec.ts`. Every app test already runs the production build under the
+content security policy (Q-031), so a blocked resource breaks its flow; this spec checks the
+header and the meta tag, and plays a move in a 2-seat Harbor Market match while recording
+`securitypolicyviolation` events (`e2e/support/csp.ts`): there must be none, and the game
+worker's script must arrive with its own stricter policy.
+
 Physical Android/iPhone renderer profiling is a T20 gate, deferred from T13 by
 the project owner on 2026-10-27. Run both the three-engine spike and production
 `/dev/table/?stress=1` on identified hardware. Record 300-item frame cadence

@@ -1,4 +1,6 @@
 // Entry point of the game worker (D-007). Created by src/match/game-worker-client.ts.
+// First: Zod must not probe for `new Function` under the worker's policy (T20).
+import "@bgp/schema/jitless";
 import { importGameModule } from "./game-module";
 import { lockDownGlobals } from "./lockdown";
 import type { WorkerBooted, WorkerInit } from "./protocol";
