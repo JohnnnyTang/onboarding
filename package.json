@@ -24,7 +24,7 @@
     "check:boundaries": "tsx scripts/check-boundaries.ts",
     "check:wasm": "tsx scripts/check-wasm-inventory.ts",
     "json-schema": "pnpm --filter @bgp/schema json-schema",
-    "perf": "tsx scripts/pending-task.ts T20 PERF-01",
+    "perf": "tsx scripts/perf/perf-01.ts",
     "art:harbor": "tsx scripts/generate-harbor-art.ts"
   },
   "devDependencies": {

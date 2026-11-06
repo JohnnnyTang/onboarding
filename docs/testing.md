@@ -121,7 +121,7 @@ T01 implements the pipeline in `.github/workflows/ci.yml`. It builds before the 
 so emitted binaries are included. Contract export and Docker integration services are enabled.
 CI checks Drizzle migration metadata and schema drift before starting the services. Server
 tests migrate the test database automatically and fail if PostgreSQL is unavailable;
-browser tests verify local Keycloak login. PERF-01 remains conditional until T20.
+browser tests verify local Keycloak login. The nightly job also runs PERF-01.
 Packages without implementations still have scaffold tests.
 
 T03 adds `e2e/rules.spec.ts`, which loads the compiled runtime and the installed
@@ -169,6 +169,13 @@ hash, and re-publishes identical files with `BGP_TOKEN` (no new version). In eve
 source file and checks that the rebuild keeps the move, then breaks the build and checks that
 the table keeps running and lists the error. `bgp validate`'s own checks (planted leaks,
 `Math.random`, `Date`, an endless move, nondeterminism) are unit tests in `packages/cli/test/`.
+
+T20 adds PERF-01 (`pnpm perf`, [scripts/perf/README.md](../scripts/perf/README.md)). It
+starts the API and room server as its own process on loopback against a `bgp_perf` database,
+with a local token issuer instead of Keycloak, publishes Harbor Market and plays 20 4-seat
+matches at once with scripted clients that apply patches with the web app's code. The round
+trip is `move` sent to the mover's own `patch` received; 250 ms of think time between moves
+gives about 60 moves per second across the server. Run `pnpm build` first.
 
 Physical Android/iPhone renderer profiling is a T20 gate, deferred from T13 by
 the project owner on 2026-10-27. Run both the three-engine spike and production

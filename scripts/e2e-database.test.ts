@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { e2eDatabaseUrl } from "./e2e-database.js";
+import { e2eDatabaseUrl, perfDatabaseUrl } from "./e2e-database.js";
 
 describe("end-to-end database", () => {
   test("defaults to bgp_e2e on the development database server", () => {
@@ -23,4 +23,19 @@ describe("end-to-end database", () => {
   ])("refuses %s", (url) => {
     expect(() => e2eDatabaseUrl({ E2E_DATABASE_URL: url })).toThrow(/_e2e/);
   });
+});
+
+describe("performance database", () => {
+  test("defaults to bgp_perf on the development database server", () => {
+    expect(perfDatabaseUrl({ DATABASE_URL: "postgres://u:p@db.local:15432/bgp" })).toBe(
+      "postgres://u:p@db.local:15432/bgp_perf",
+    );
+  });
+
+  test.each(["postgres://u:p@db.local/bgp", "postgres://u:p@db.local/bgp_e2e"])(
+    "refuses %s",
+    (url) => {
+      expect(() => perfDatabaseUrl({ PERF_DATABASE_URL: url })).toThrow(/_perf/);
+    },
+  );
 });

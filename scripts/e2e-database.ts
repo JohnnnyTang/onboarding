@@ -27,12 +27,40 @@ export function e2eDatabaseUrl(env: NodeJS.ProcessEnv): string {
   return url.href;
 }
 
+/**
+ * The PERF-01 database (scripts/perf): PERF_DATABASE_URL, or a `bgp_perf` database on the
+ * same server as DATABASE_URL. The name must end in `_perf`, for the same reason as above.
+ */
+export function perfDatabaseUrl(env: NodeJS.ProcessEnv): string {
+  let url: URL;
+  if (env.PERF_DATABASE_URL) {
+    url = new URL(env.PERF_DATABASE_URL);
+  } else {
+    url = new URL(env.DATABASE_URL || DEFAULT_DATABASE_URL);
+    url.pathname = "/bgp_perf";
+  }
+  if (
+    !["postgres:", "postgresql:"].includes(url.protocol) ||
+    !/^\/[a-z0-9_]+_perf$/.test(url.pathname)
+  ) {
+    throw new Error("PERF_DATABASE_URL must name a PostgreSQL database ending in _perf.");
+  }
+  return url.href;
+}
+
 /** Creates the end-to-end database if it is missing, then applies the migrations. */
 async function prepare(): Promise<void> {
   const root = fileURLToPath(new URL("../", import.meta.url));
   const envFile = resolve(root, ".env");
   if (existsSync(envFile)) process.loadEnvFile(envFile);
-  const target = new URL(e2eDatabaseUrl(process.env));
+  const url = e2eDatabaseUrl(process.env);
+  await prepareDatabase(url);
+  console.info(`End-to-end database ${new URL(url).pathname.slice(1)} is ready.`);
+}
+
+/** Creates the database if it is missing, then applies the migrations. */
+export async function prepareDatabase(url: string): Promise<void> {
+  const target = new URL(url);
   const name = target.pathname.slice(1);
   const maintenance = new URL(target);
   maintenance.pathname = "/postgres";
@@ -47,7 +75,6 @@ async function prepare(): Promise<void> {
     await admin.close();
   }
   await migrateDatabase(target.href);
-  console.info(`End-to-end database ${name} is ready.`);
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
