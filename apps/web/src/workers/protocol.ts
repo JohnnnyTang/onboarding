@@ -39,7 +39,16 @@ export type WorkerRequest =
    */
   | { op: "hotSeatCreate"; init: MatchInit; events: AcceptedEvent[] }
   | { op: "hotSeatApply"; seat: SeatId; intent: MoveIntent }
-  | { op: "hotSeatView"; seat: SeatId | null };
+  | { op: "hotSeatView"; seat: SeatId | null }
+  /**
+   * Replays: the worker rebuilds a finished match from its init and accepted events, in
+   * chunks so each call stays within its deadline, and keeps the state after every event.
+   */
+  | { op: "replayStart"; init: MatchInit }
+  | { op: "replayAppend"; events: AcceptedEvent[] }
+  | { op: "replayView"; seq: number; seat: SeatId | null }
+  /** `hashState` of the state after event `seq`; the only asynchronous request. */
+  | { op: "replayHash"; seq: number };
 
 export type WorkerCall = WorkerRequest & { id: number };
 

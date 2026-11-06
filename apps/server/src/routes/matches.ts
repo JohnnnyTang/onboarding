@@ -27,6 +27,7 @@ import {
   matches,
   matchFeedback,
   matchSeats,
+  matchSnapshots,
 } from "../db/schema.js";
 import { currentUser, listQuery, page } from "../http/access.js";
 import {
@@ -361,12 +362,19 @@ export const matchRoutes: FastifyPluginAsync<AppDependencies> = async (app, deps
       .from(matchEvents)
       .where(eq(matchEvents.matchId, match.id))
       .orderBy(asc(matchEvents.seq));
+    // The room writes a snapshot with the move that ends the match (data-model.md).
+    const [final] = await db
+      .select({ stateHash: matchSnapshots.stateHash })
+      .from(matchSnapshots)
+      .where(and(eq(matchSnapshots.matchId, match.id), eq(matchSnapshots.seq, match.lastSeq)));
+    if (!final) throw new Error("Finished match has no final snapshot");
     return ReplayResponseSchema.parse({
       buildHash: version?.buildHash,
       seats: seats.sort(bySeat).map((seat) => seat.seat),
       seed: match.seed,
       options: match.options,
       events,
+      finalHash: final.stateHash,
     });
   });
 

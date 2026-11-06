@@ -23,6 +23,8 @@ import {
   MatchListResponseSchema,
   type MatchSummary,
   MatchSummarySchema,
+  type ReplayResponse,
+  ReplayResponseSchema,
   type UpdateGameBody,
   type ValidationError,
   type VersionResponse,
@@ -91,6 +93,8 @@ export interface ApiClient {
   getGame(gameId: string): Promise<GameDetailResponse>;
   listMatches(query?: ListQuery): Promise<MatchListResponse>;
   getMatch(matchId: string): Promise<MatchSummary>;
+  /** Seed, seats and accepted events of a finished match, with the stored final hash. */
+  getReplay(matchId: string): Promise<ReplayResponse>;
   claimInvite(token: string, body: ClaimInviteBody): Promise<ClaimInviteResponse>;
   /** A version and its manifest; `scope` picks the guest token of a match of this version. */
   getVersion(versionId: string, scope?: TokenScope): Promise<VersionResponse>;
@@ -208,6 +212,13 @@ export function createApiClient(options: ApiClientOptions): ApiClient {
         endpoint: "GET /api/matches/:matchId",
         path: `/api/matches/${segment(matchId)}`,
         response: MatchSummarySchema,
+        scope: { matchId },
+      }),
+    getReplay: (matchId) =>
+      request({
+        endpoint: "GET /api/matches/:matchId/replay",
+        path: `/api/matches/${segment(matchId)}/replay`,
+        response: ReplayResponseSchema,
         scope: { matchId },
       }),
     claimInvite: (token, body) =>

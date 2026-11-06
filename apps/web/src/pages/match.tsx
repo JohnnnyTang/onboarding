@@ -149,6 +149,11 @@ export function MatchPage() {
         </div>
         <aside className={styles.side} aria-label="Match">
           {result ? <ResultPanel result={result} seats={seatsInfo} mySeat={mySeat} /> : null}
+          {result ? (
+            <p>
+              <Link to={`/matches/${encodeURIComponent(matchId)}/replay`}>Watch the replay</Link>
+            </p>
+          ) : null}
           {table.snapshot?.prompt ? (
             <p className={styles.prompt} aria-live="polite" data-testid="prompt">
               {table.snapshot.prompt}

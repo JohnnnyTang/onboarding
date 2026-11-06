@@ -16,6 +16,9 @@
     },
     "hint": {
       "$ref": "#/$defs/__schema4"
+    },
+    "confirm": {
+      "$ref": "#/$defs/__schema5"
     }
   },
   "required": ["id", "label", "enabled"],
@@ -46,6 +49,11 @@
     },
     "__schema4": {
       "type": "string"
+    },
+    "__schema5": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200
     },
     "IntegerJson": {
       "anyOf": [

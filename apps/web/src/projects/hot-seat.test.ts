@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import { type GameWorker, startGameWorker, type WorkerLike } from "../match/game-worker-client";
 import type { WorkerInit } from "../workers/protocol";
 import { startWorker } from "../workers/worker-main";
-import { createHotSeat, type HotSeatController, mergeSnapshots } from "./hot-seat";
+import { createHotSeat, type HotSeatController } from "./hot-seat";
 
 const COMPONENTS: ComponentsFile = {
   schemaVersion: 1,
@@ -205,44 +205,5 @@ describe("hot-seat play", () => {
     await until(hotSeat, () => hotSeat.getState().snapshot?.hud?.length === 3);
     expect(saved.at(-1)?.init.seats).toEqual(["0", "1", "2"]);
     expect(hotSeat.getState().viewing).toBe("1");
-  });
-});
-
-describe("all seats view", () => {
-  const base: TableSnapshot = {
-    table: { size_mm: [800, 600] },
-    zones: [{ id: "z", layout: "row", rect_mm: { x: 0, y: 0, w: 100, h: 100 }, droppable: true }],
-    items: [],
-  };
-  it("prefers any seat's identified copy of an item and keeps unknown items hidden", () => {
-    const merged = mergeSnapshots([
-      {
-        ...base,
-        items: [
-          { id: "a", zone: "z", index: 0, face: "down", back: "back", draggable: true },
-          { id: "b", zone: "z", index: 1, face: "up", def: "fish", selectable: true },
-          { id: "c", zone: "z", index: 2, face: "down", back: "back" },
-        ],
-      },
-      {
-        ...base,
-        table: { size_mm: [900, 600] },
-        items: [
-          { id: "a", zone: "z", index: 0, face: "up", def: "tea", highlight: "legal" },
-          { id: "b", zone: "z", index: 1, face: "down", back: "back" },
-          { id: "c", zone: "z", index: 2, face: "down", back: "back" },
-        ],
-      },
-    ]);
-    expect(merged).toEqual({
-      table: { size_mm: [900, 600] },
-      zones: [{ ...base.zones[0], droppable: false }],
-      items: [
-        { id: "a", zone: "z", index: 0, face: "up", def: "tea" },
-        { id: "b", zone: "z", index: 1, face: "up", def: "fish" },
-        { id: "c", zone: "z", index: 2, face: "down", back: "back" },
-      ],
-    });
-    expect(mergeSnapshots([])).toBeNull();
   });
 });

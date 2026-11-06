@@ -107,6 +107,7 @@ export const ActionButtonSchema = z
     enabled: z.boolean(),
     intent: MoveIntentSchema.optional(),
     hint: z.string().optional(),
+    confirm: z.string().min(1).max(200).optional(),
   })
   .refine(
     (button) => !button.enabled || button.intent !== undefined,

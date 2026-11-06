@@ -2,6 +2,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, test } from "vitest";
 import {
   ActionBar,
+  ConfirmAction,
   ConnectionBanner,
   Hud,
   playerName,
@@ -53,6 +54,33 @@ describe("match panels", () => {
       <ActionBar actions={actions} disabled onAction={() => {}} />,
     );
     expect(pending).toMatch(/<button[^>]*disabled=""[^>]*>Restock/);
+  });
+
+  test("an action with a question asks it before sending, with a way back", () => {
+    const end = {
+      id: "end-game",
+      label: "End game",
+      enabled: true,
+      intent: { move: "manual", args: { op: "endGame" } },
+      confirm: "End the game for everyone?",
+    };
+    // Until it is clicked, the bar shows the button like any other.
+    const bar = renderToStaticMarkup(
+      <ActionBar actions={[end]} disabled={false} onAction={() => {}} />,
+    );
+    expect(bar).toContain(">End game</button>");
+    expect(bar).not.toContain("End the game for everyone?");
+    const prompt = renderToStaticMarkup(
+      <ConfirmAction action={end} disabled={false} onConfirm={() => {}} onCancel={() => {}} />,
+    );
+    expect(prompt).toContain('role="alertdialog"');
+    expect(prompt).toContain('aria-label="End game"');
+    expect(prompt).toContain("<p>End the game for everyone?</p>");
+    expect(prompt).toMatch(/<button[^>]*>End game<\/button><button[^>]*>Cancel<\/button>/);
+    const waiting = renderToStaticMarkup(
+      <ConfirmAction action={end} disabled onConfirm={() => {}} onCancel={() => {}} />,
+    );
+    expect(waiting).toMatch(/<button[^>]*disabled=""[^>]*>End game/);
   });
 
   test("a rejected move shows the game's message as an alert", () => {

@@ -3,22 +3,21 @@
   "type": "object",
   "properties": {
     "buildHash": {
-      "type": "string",
-      "pattern": "^[a-f0-9]{64}$"
+      "$ref": "#/$defs/__schema0"
     },
     "seats": {
       "minItems": 1,
       "maxItems": 8,
       "type": "array",
       "items": {
-        "$ref": "#/$defs/__schema0"
+        "$ref": "#/$defs/__schema1"
       }
     },
     "seed": {
       "type": "integer",
       "minimum": 0,
       "maximum": 4294967295,
-      "$ref": "#/$defs/__schema1"
+      "$ref": "#/$defs/__schema2"
     },
     "options": {
       "$ref": "#/$defs/IntegerJson"
@@ -30,10 +29,10 @@
         "properties": {
           "seq": {
             "exclusiveMinimum": 0,
-            "$ref": "#/$defs/__schema1"
+            "$ref": "#/$defs/__schema2"
           },
           "seat": {
-            "$ref": "#/$defs/__schema0"
+            "$ref": "#/$defs/__schema1"
           },
           "intent": {
             "type": "object",
@@ -53,16 +52,23 @@
         "required": ["seq", "seat", "intent"],
         "additionalProperties": false
       }
+    },
+    "finalHash": {
+      "$ref": "#/$defs/__schema0"
     }
   },
-  "required": ["buildHash", "seats", "seed", "options", "events"],
+  "required": ["buildHash", "seats", "seed", "options", "events", "finalHash"],
   "additionalProperties": false,
   "$defs": {
     "__schema0": {
       "type": "string",
-      "pattern": "^(0|[1-9][0-9]*)$"
+      "pattern": "^[a-f0-9]{64}$"
     },
     "__schema1": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)$"
+    },
+    "__schema2": {
       "type": "integer",
       "minimum": -9007199254740991,
       "maximum": 9007199254740991

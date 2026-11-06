@@ -138,6 +138,7 @@ describe("components, snapshots and gestures", () => {
     { op: "deal", from: "deck", to: ["hand:0", "hand:1"], count: 3 },
     { op: "roll", item: "i2" },
     { op: "endTurn" },
+    { op: "endGame" },
   ])("accepts manual operation %#", (value) => {
     expect(ManualOpSchema.parse(value)).toEqual(value);
   });
@@ -148,6 +149,7 @@ describe("components, snapshots and gestures", () => {
     { op: "deal", from: "deck", to: ["hand:0"], count: 0 },
     { op: "flip", item: "i1", def: "fish" },
     { op: "invented" },
+    { op: "endGame", winners: ["0"] },
   ])("rejects invalid manual operation %#", (value) => {
     expect(ManualOpSchema.safeParse(value).success).toBe(false);
   });

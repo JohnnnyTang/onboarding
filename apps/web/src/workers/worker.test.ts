@@ -1,5 +1,12 @@
-import { invalid } from "@bgp/rules";
-import type { ClientView, ComponentsFile, GameDefinition, TableSnapshot } from "@bgp/schema";
+import { hashState, invalid, replay } from "@bgp/rules";
+import type {
+  AcceptedEvent,
+  ClientView,
+  ComponentsFile,
+  GameDefinition,
+  Json,
+  TableSnapshot,
+} from "@bgp/schema";
 import { afterEach, describe, expect, it } from "vitest";
 import {
   type GameWorker,
@@ -164,6 +171,51 @@ describe("game worker", () => {
     ).rejects.toMatchObject({ reason: "failed" });
     // A failed resume leaves no match behind.
     await expect(resumed.hotSeat.view("0")).rejects.toMatchObject({ reason: "failed" });
+  });
+
+  it("replays a match step by step and hashes each step like hashState", async () => {
+    const init = { seats: ["0", "1"], seed: 11, options: {} };
+    const live = await start("counter");
+    await live.hotSeat.create(init);
+    const events: AcceptedEvent[] = [];
+    const liveViews = [await live.hotSeat.view("1")];
+    for (const seat of ["0", "1", "0", "1", "0"]) {
+      const outcome = await live.hotSeat.apply(seat, { move: "add" });
+      if (!outcome.ok) throw new Error("move rejected");
+      events.push(outcome.event);
+      liveViews.push(await live.hotSeat.view("1"));
+    }
+    const game = await start(
+      "counter",
+      new FakeWorker({ digest: (bytes) => crypto.subtle.digest("SHA-256", bytes) }),
+    );
+    expect(await game.replay.start(init)).toBe(0);
+    expect(await game.replay.append(events.slice(0, 2))).toBe(2);
+    // An event out of sequence is refused and leaves the replay where it was.
+    await expect(game.replay.append(events.slice(3))).rejects.toMatchObject({ reason: "failed" });
+    expect(await game.replay.append(events.slice(2))).toBe(5);
+    for (const [seq, liveView] of liveViews.entries()) {
+      expect(await game.replay.view(seq, "1")).toEqual(liveView);
+    }
+    await expect(game.replay.view(6, "1")).rejects.toMatchObject({ reason: "failed" });
+    const definition = counter as unknown as GameDefinition<Json>;
+    for (const seq of [0, 3, 5]) {
+      expect(await game.replay.hash(seq)).toBe(
+        await hashState(replay(definition, init, events.slice(0, seq))),
+      );
+    }
+    // Starting again drops the previous replay.
+    expect(await game.replay.start(init)).toBe(0);
+    await expect(game.replay.view(1, "1")).rejects.toMatchObject({ reason: "failed" });
+  });
+
+  it("refuses rejected replay events and hashes only with a digest", async () => {
+    const game = await start("counter");
+    await game.replay.start({ seats: ["0", "1"], seed: 11, options: {} });
+    await expect(
+      game.replay.append([{ seq: 1, seat: "1", intent: { move: "add" } }]),
+    ).rejects.toMatchObject({ reason: "failed" });
+    await expect(game.replay.hash(0)).rejects.toMatchObject({ reason: "failed" });
   });
 
   it("runs the built-in sandbox game without a bundle", async () => {

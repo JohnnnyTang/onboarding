@@ -179,6 +179,8 @@ The project owner confirmed Q-018 (guest seats in session storage) on 2026-11-04
 
 ### T18 Replay viewer
 
+**Status:** Complete. Local validation and scope: [t18-validation.md](t18-validation.md).
+
 **Deliverables:** replay page that downloads the replay, rebuilds states in the game worker, and steps forward and back through events with the table, choosing the seat perspective or the all-seats view; shows the final hash check.
 
 **Done when:** INT-REPLAY and E2E-06 pass; stepping through a 300-event match stays responsive.

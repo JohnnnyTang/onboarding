@@ -568,6 +568,7 @@ describe("platform gestures and actions", () => {
       ["shuffle", "Shuffle deck", true],
       ["deal:hand", "Deal 1 to each hand", true],
       ["end-turn", "End turn", true],
+      ["end-game", "End game", true],
     ]);
     for (const button of buttons) {
       expect(ActionButtonSchema.safeParse(button).success).toBe(true);
@@ -615,6 +616,7 @@ describe("platform gestures and actions", () => {
         ["rotate", false],
         ["shuffle", false],
         ["end-turn", true],
+        ["end-game", true],
       ]);
       expect(JSON.stringify(buttons)).not.toContain(other.id);
     }
@@ -623,6 +625,45 @@ describe("platform gestures and actions", () => {
     const hand = actions(state, "1", [other.id]);
     expect(hand.find((button) => button.id === "shuffle")).toMatchObject({ enabled: false });
     expect(hand.some((button) => button.id.startsWith("deal:"))).toBe(false);
+  });
+
+  test("any seat may end the game; the state stays as it was and the match replays", async () => {
+    const start = accepted(createMatch(def, init), "0", {
+      move: "manual",
+      args: { op: "flip", item: item(createMatch(def, init), "market", 0).id },
+    });
+    const button = actions(start, "2", []).find((candidate) => candidate.id === "end-game");
+    expect(button).toMatchObject({
+      enabled: true,
+      intent: { move: "manual", args: { op: "endGame" } },
+      confirm: "End the game for everyone? This cannot be undone.",
+    });
+    const result = applyIntent(def, start, "2", button?.intent ?? { move: "none" });
+    if (!result.ok) throw new Error(result.code);
+    expect(result.event).toEqual({ seq: 2, seat: "2", intent: button?.intent });
+    expect(result.state.result).toEqual({ winners: [], reason: "Ended by Seat 3" });
+    expect(result.state.game).toEqual(start.game);
+    expect(result.state.rng).toEqual(start.rng);
+    expect(actions(result.state, "0", [])).toEqual([]);
+    expect(
+      applyIntent(def, result.state, "0", { move: "manual", args: { op: "endTurn" } }),
+    ).toMatchObject({ ok: false, code: "MATCH_FINISHED" });
+    const events = [
+      {
+        seq: 1,
+        seat: "0",
+        intent: {
+          move: "manual",
+          args: { op: "flip", item: item(createMatch(def, init), "market", 0).id },
+        },
+      },
+      result.event,
+    ];
+    expect(await hashState(replay(def, init, events))).toBe(await hashState(result.state));
+    // The operation takes no arguments.
+    expect(
+      applyIntent(def, start, "0", { move: "manual", args: { op: "endGame", winners: ["0"] } }),
+    ).toMatchObject({ ok: false, code: "INVALID_ARGS" });
   });
 
   test("dealing needs one item per seat", () => {

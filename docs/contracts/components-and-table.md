@@ -251,7 +251,8 @@ export type ManualOp =
   | { op: "shuffle"; zone: string } // re-keys item ids in the zone
   | { op: "deal"; from: string; to: string[]; count: number; face?: "up" | "down" } // to: zone ids, round-robin
   | { op: "roll"; item: string } // die gets a random value
-  | { op: "endTurn" }; // advances ctx.currentSeat for the HUD only
+  | { op: "endTurn" } // advances ctx.currentSeat for the HUD only
+  | { op: "endGame" }; // finishes the match with no winners
 ```
 
 **Sandbox visibility.** A seat may identify an item when:
@@ -287,6 +288,12 @@ Otherwise the view omits `def` (cards show their back). Moving an item between z
 - Only the owner may manipulate items in an owner-visible zone, including flip,
   rotate, roll, shuffle and deal from that zone. Giving to another owner is allowed.
   A public zone remains accessible regardless of its optional owner field.
+- End game (T18, Q-026) lets any participating seat finish the match, as players at a
+  real table agree to stop. It calls `ctx.events.endGame` with no winners and the reason
+  `"Ended by Seat N"` (the acting seat, counted from one); the state itself does not
+  change, so existing sandbox hashes and golden replays are unaffected. A finished match
+  is replayable like any other. The action bar offers it on every turn with a `confirm`
+  question, because it cannot be undone.
 - Hidden items omit both def and die value; hidden cards include back. Other seats
   and spectators see items in private zones face down even if stored face up.
   Spectators see public face-up items and cannot manipulate the table.

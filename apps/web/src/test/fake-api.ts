@@ -9,6 +9,7 @@ export function fakeApi(overrides: Partial<ApiClient> = {}): ApiClient {
     getGame: unused,
     listMatches: unused,
     getMatch: unused,
+    getReplay: unused,
     claimInvite: unused,
     getVersion: unused,
     getVersionFile: unused,

@@ -149,6 +149,17 @@ matches lists, and a guest claims an invite created by a designer2 fixture (a sa
 published over the HTTP API) and reaches the lobby. Playwright starts the API, against its own
 `bgp_e2e` database, and the Vite web app after the table fixture server.
 
+T18 adds `e2e/replay.spec.ts` for E2E-06. The recorded fixture is made fresh in each run:
+three scripted guests (`e2e/support/scripted-seat.ts`, the WebSocket protocol without the
+web app) play a 3-seat Harbor Market match to the end through the real room server, padded
+with swaps to about 300 events, so the rules host computes and stores the final hash
+(`finalHash` in the replay response). A fixed golden file cannot stand in: the server picks
+the seed. Each browser opens the replay page as one of the guests, rebuilds the match in the
+game worker and must show the same hash. The test then steps through every event and times
+each step until the table shows it (p95 under 150 ms, worst under 500 ms). A second test covers
+Q-026: a guest ends a 2-seat sandbox match with the End game button and its confirm step,
+then follows the match page's replay link and sees the rules host's hash.
+
 Physical Android/iPhone renderer profiling is a T20 gate, deferred from T13 by
 the project owner on 2026-10-27. Run both the three-engine spike and production
 `/dev/table/?stress=1` on identified hardware. Record 300-item frame cadence

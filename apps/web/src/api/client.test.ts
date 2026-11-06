@@ -92,6 +92,28 @@ describe("API client", () => {
     expect(headers(calls[0]).authorization).toBe("Bearer guest-token");
   });
 
+  test("replays are fetched with the match's token and checked against the contract", async () => {
+    const replay = {
+      buildHash: "a".repeat(64),
+      seats: ["0", "1"],
+      seed: 7,
+      options: {},
+      events: [{ seq: 1, seat: "0", intent: { move: "pass" } }],
+      finalHash: "b".repeat(64),
+    };
+    const { api, calls, scopes } = harness(
+      () => json(replay),
+      (scope) => (scope.matchId === "m/1" ? "guest-token" : "user-token"),
+    );
+    await expect(api.getReplay("m/1")).resolves.toEqual(replay);
+    expect(calls[0]?.url).toBe("http://api.test/api/matches/m%2F1/replay");
+    expect(scopes).toEqual([{ matchId: "m/1" }]);
+    expect(headers(calls[0]).authorization).toBe("Bearer guest-token");
+    const { finalHash: _, ...withoutHash } = replay;
+    const old = harness(() => json(withoutHash));
+    await expect(old.api.getReplay("m/1")).rejects.toBeInstanceOf(UnexpectedResponseError);
+  });
+
   test("error envelopes become ApiError with the documented code", async () => {
     const { api } = harness(() =>
       json({ error: { code: "CONFLICT", message: "This seat is already taken" } }, 409),

@@ -89,6 +89,31 @@ describe("sandbox games in the rules host", () => {
     }
   });
 
+  // Browser engines reach the same hash in e2e/replay.spec.ts (Q-026).
+  it("ends a sandbox match with its result and a repeatable hash", async () => {
+    const sandbox = await QuickJsSandbox.loadSandbox(COMPONENTS);
+    const again = await QuickJsSandbox.loadSandbox(COMPONENTS);
+    try {
+      await sandbox.create(INIT);
+      const pass = { move: "manual", args: { op: "endTurn" } };
+      const end = { move: "manual", args: { op: "endGame" } };
+      expect(await sandbox.apply("0", pass)).toMatchObject({ ok: true });
+      expect(await sandbox.apply("1", end)).toMatchObject({ ok: true, event: { seq: 2 } });
+      const state = await sandbox.exportState();
+      expect(state.result).toEqual({ winners: [], reason: "Ended by Seat 2" });
+      expect(await sandbox.apply("0", pass)).toMatchObject({ ok: false, code: "MATCH_FINISHED" });
+      // The same events in a fresh sandbox give the same state.
+      await again.create(INIT);
+      await again.apply("0", pass);
+      await again.apply("1", end);
+      expect(await again.hash()).toBe(await sandbox.hash());
+      expect(await again.exportState()).toEqual(state);
+    } finally {
+      sandbox.dispose();
+      again.dispose();
+    }
+  });
+
   it("hosts, recovers and replays a sandbox match through the client", async () => {
     const { build, hash } = sandboxBuild();
     const client = new RulesHostClient({ load: async () => build }, { warmSpareCount: 0 });

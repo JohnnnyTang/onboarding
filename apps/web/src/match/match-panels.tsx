@@ -72,6 +72,37 @@ export function Hud({
   );
 }
 
+/** The question an action asks before it is sent, with its confirm and cancel buttons. */
+export function ConfirmAction({
+  action,
+  disabled,
+  onConfirm,
+  onCancel,
+}: {
+  action: ActionButton;
+  disabled: boolean;
+  onConfirm(): void;
+  onCancel(): void;
+}) {
+  return (
+    <div className={styles.confirm} role="alertdialog" aria-label={action.label}>
+      <p>{action.confirm}</p>
+      <div className={styles.actions}>
+        <button type="button" className={ui.button} disabled={disabled} onClick={onConfirm}>
+          {action.label}
+        </button>
+        <button type="button" className={`${ui.button} ${ui.secondary}`} onClick={onCancel}>
+          Cancel
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * The game's buttons for this seat. A button with a `confirm` question asks it first; the
+ * question goes away if the button is no longer offered (another move changed the table).
+ */
 export function ActionBar({
   actions,
   disabled,
@@ -81,7 +112,24 @@ export function ActionBar({
   disabled: boolean;
   onAction(action: ActionButton): void;
 }) {
+  const [confirming, setConfirming] = useState<string | null>(null);
+  const pending = actions.find(
+    (action) => action.id === confirming && action.enabled && action.intent,
+  );
   if (actions.length === 0) return null;
+  if (pending) {
+    return (
+      <ConfirmAction
+        action={pending}
+        disabled={disabled}
+        onConfirm={() => {
+          setConfirming(null);
+          onAction(pending);
+        }}
+        onCancel={() => setConfirming(null)}
+      />
+    );
+  }
   return (
     <fieldset className={styles.actions}>
       <legend className={styles.visuallyHidden}>Actions</legend>
@@ -92,7 +140,7 @@ export function ActionBar({
           className={ui.button}
           disabled={disabled || !action.enabled || !action.intent}
           title={action.hint}
-          onClick={() => onAction(action)}
+          onClick={() => (action.confirm ? setConfirming(action.id) : onAction(action))}
         >
           {action.label}
         </button>
