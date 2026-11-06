@@ -1,4 +1,4 @@
-export { checkDeterminism } from "./determinism.js";
+export { checkDeterminism, checkReplayHashes } from "./determinism.js";
 export type { GoldenReplay } from "./golden.js";
 export { checkGoldenReplay, parseGoldenReplay } from "./golden.js";
 export type { LeakKnowledge, LeakOptions, LeakOracle } from "./leaks.js";
