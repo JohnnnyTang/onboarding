@@ -33,7 +33,7 @@ Non-2xx responses have the body `{ "error": { "code": "<code>", "message": "..."
 | `POST /api/matches/:matchId/start`       | owner                                              | Start when at least `players.min` seats are filled                                                                                                     |
 | `POST /api/matches/:matchId/abandon`     | owner                                              | End without a result                                                                                                                                   |
 | `POST /api/invites/:token/claim`         | none or user                                       | Claim a seat: `{ displayName }` → `{ matchId, seat, guestToken? }`. A signed-in user binds the seat to their account instead of getting a guest token. |
-| `GET /api/matches/:matchId/replay`       | owner or seat holder, finished matches only        | `{ buildHash, seats, seed, options, events: AcceptedEvent[] }`                                                                                         |
+| `GET /api/matches/:matchId/replay`       | owner or seat holder, finished matches only        | `{ buildHash, seats, seed, options, events: AcceptedEvent[], finalHash }`                                                                              |
 | `POST /api/matches/:matchId/feedback`    | owner or seat holder                               | Stretch goal: `{ seq, body }` comment on a moment                                                                                                      |
 
 ## Notes
@@ -201,5 +201,8 @@ removed and `seat_count` becomes the number of players, so the match's seats are
 exactly the players. **Abandon** works from `lobby` or `active`.
 
 **Replay** is available only for `finished` matches (409 otherwise, including
-abandoned ones). `seats` lists the match's seats in order. **Feedback** needs a seat in
+abandoned ones). `seats` lists the match's seats in order. `finalHash` is the
+`stateHash` of the snapshot stored with the last event (data-model.md), computed by
+the rules host, so a client that rebuilds the match can check its own result against
+it. A hash reveals nothing the seed and events do not. **Feedback** needs a seat in
 the match (an owner without one gets 403) and a `seq` the match has reached.

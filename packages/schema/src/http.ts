@@ -69,6 +69,8 @@ export const ReplayResponseSchema = z.strictObject({
   seed: Uint32Schema,
   options: JsonSchema,
   events: z.array(AcceptedEventSchema),
+  /** `hashState` of the state the server stored after the last event. */
+  finalHash: Sha256Schema,
 });
 export type ReplayResponse = z.infer<typeof ReplayResponseSchema>;
 export const ListQuerySchema = z.strictObject({

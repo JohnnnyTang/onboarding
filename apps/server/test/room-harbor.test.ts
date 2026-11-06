@@ -189,6 +189,7 @@ async function checkReplay(server: RoomServer, table: Table): Promise<void> {
     ).json(),
   );
   expect(replay.events).toHaveLength(lastSeq);
+  expect(replay.finalHash).toBe(snapshots.at(-1)?.hash);
   const host = env.mirror();
   const id = `replay-${table.match.matchId}`;
   await host.load(replay.buildHash);
@@ -202,7 +203,7 @@ async function checkReplay(server: RoomServer, table: Table): Promise<void> {
     const outcome = await host.apply(id, event.seat, event.intent);
     expect(outcome.ok && outcome.event.seq).toBe(event.seq);
   }
-  expect(await host.hash(id)).toBe(snapshots.at(-1)?.hash);
+  expect(await host.hash(id)).toBe(replay.finalHash);
   const final = await host.exportState(id);
   expect(row?.result).toEqual(final.result);
   host.close();

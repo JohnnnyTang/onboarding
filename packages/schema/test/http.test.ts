@@ -37,7 +37,7 @@ describe("HTTP contracts and JSON Schema export", () => {
       [HTTP_CONTRACTS["POST /api/invites/:token/claim"].response, { matchId: "m1", seat: "0" }],
       [
         HTTP_CONTRACTS["GET /api/matches/:matchId/replay"].response,
-        { buildHash: hash, seats: ["0"], seed: 1, options: {}, events: [] },
+        { buildHash: hash, seats: ["0"], seed: 1, options: {}, events: [], finalHash: hash },
       ],
       [
         HTTP_CONTRACTS["POST /api/matches/:matchId/feedback"].response,
@@ -128,8 +128,18 @@ describe("HTTP contracts and JSON Schema export", () => {
         seed: 123,
         options: {},
         events: [],
+        finalHash: hash,
       }),
     ).toBeDefined();
+    expect(
+      HTTP_CONTRACTS["GET /api/matches/:matchId/replay"].response.safeParse({
+        buildHash: hash,
+        seats: ["0", "1"],
+        seed: 123,
+        options: {},
+        events: [],
+      }).success,
+    ).toBe(false);
     expect(HTTP_CONTRACTS["GET /api/games"].query.safeParse({ limit: 201 }).success).toBe(false);
     expect(HTTP_CONTRACTS["GET /api/games"].query.safeParse({ limit: "50" }).success).toBe(false);
   });

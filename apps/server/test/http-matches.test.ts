@@ -3,13 +3,14 @@ import {
   CreateMatchResponseSchema,
   HttpErrorSchema,
   MatchListResponseSchema,
+  MatchStateSchema,
   MatchSummarySchema,
   ReplayResponseSchema,
   VersionResponseSchema,
 } from "@bgp/schema";
 import { eq } from "drizzle-orm";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { matchEvents, matches, matchSeats } from "../src/db/schema.js";
+import { matchEvents, matches, matchSeats, matchSnapshots } from "../src/db/schema.js";
 import {
   type Api,
   createDraft,
@@ -363,6 +364,30 @@ describe("match lifecycle", () => {
         .update(matches)
         .set({ status: "finished", lastSeq: 2, finishedAt: new Date() })
         .where(eq(matches.id, matchId));
+      const missing = await api.call("GET", `/api/matches/${matchId}/replay`, {
+        token: guest.guestToken,
+      });
+      expect(missing.statusCode).toBe(500);
+      expect(missing.body).not.toContain(String(await seed(api, matchId)));
+      const state = MatchStateSchema.parse({
+        v: 1,
+        game: {},
+        ctx: {
+          seats: ["0", "1"],
+          currentSeat: "0",
+          activeSeats: ["0"],
+          phase: "play",
+          turn: 1,
+          moveNumber: 2,
+          options: {},
+        },
+        rng: [1, 2, 3, 4],
+        result: null,
+      });
+      await api.db.insert(matchSnapshots).values([
+        { matchId, seq: 0, state, stateHash: "0".repeat(64) },
+        { matchId, seq: 2, state, stateHash: "f".repeat(64) },
+      ]);
       const replay = await api.call("GET", `/api/matches/${matchId}/replay`, {
         token: guest.guestToken,
       });
@@ -375,6 +400,7 @@ describe("match lifecycle", () => {
           { seq: 1, seat: "0", intent },
           { seq: 2, seat: "1", intent },
         ],
+        finalHash: "f".repeat(64),
       });
       const outsider = await api.call("GET", `/api/matches/${matchId}/replay`, {
         token: await api.designer("designer-2"),
