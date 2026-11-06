@@ -70,3 +70,47 @@ describe("privileged rules-host contract", () => {
     ).toBe(false);
   });
 });
+
+describe("sandbox builds and loadSandbox (T17)", () => {
+  const files = { "components.json": "a".repeat(64) };
+  const components = {
+    schemaVersion: 1,
+    defs: [],
+    zones: [],
+    setup: { instances: [] },
+  };
+
+  it("accepts a sandbox build naming its components file", () => {
+    expect(
+      HostBuildSchema.safeParse({
+        mode: "sandbox",
+        components: "components.json",
+        files,
+        source: "{}",
+      }).success,
+    ).toBe(true);
+    // A sandbox build has no entry, and an enforced build no components path.
+    expect(
+      HostBuildSchema.safeParse({ mode: "sandbox", entry: "components.json", files, source: "{}" })
+        .success,
+    ).toBe(false);
+    expect(
+      HostBuildSchema.safeParse({ mode: "enforced", entry: "game.js", files, source: "" }).success,
+    ).toBe(false);
+  });
+
+  it("validates the components carried by loadSandbox", () => {
+    const command = { op: "loadSandbox", components, timeoutMs: 1000, memoryLimitBytes: 1024 };
+    expect(HostRequestSchema.safeParse({ v: 1, id: 1, command }).success).toBe(true);
+    expect(
+      HostRequestSchema.safeParse({
+        v: 1,
+        id: 1,
+        command: { ...command, components: { ...components, schemaVersion: 2 } },
+      }).success,
+    ).toBe(false);
+    expect(
+      HostRequestSchema.safeParse({ v: 1, id: 1, command: { ...command, source: "x" } }).success,
+    ).toBe(false);
+  });
+});

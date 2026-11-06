@@ -154,6 +154,11 @@ export function MatchPage() {
               {table.snapshot.prompt}
             </p>
           ) : null}
+          {view ? (
+            <p className={ui.muted} data-testid="move-count">
+              {view.ctx.moveNumber} {view.ctx.moveNumber === 1 ? "move" : "moves"} so far
+            </p>
+          ) : null}
           <RejectedNotice
             rejection={rejection}
             onDismiss={() => setDismissed(rejection?.id ?? dismissed)}

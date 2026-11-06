@@ -6,6 +6,9 @@ import {
   ApplyResultSchema,
   type ClientView,
   ClientViewSchema,
+  type ComponentsFile,
+  ComponentsFileSchema,
+  MAX_HOST_SOURCE_BYTES,
   type MatchInit,
   MatchInitSchema,
   type MatchState,
@@ -75,8 +78,58 @@ export class QuickJsSandbox implements RulesSandbox {
     });
   }
 
+  /** Loads an enforced game: the bundle's default export is its `GameDefinition`. */
   static async load(gameSource: string, options: SandboxOptions = {}): Promise<QuickJsSandbox> {
-    if (Buffer.byteLength(gameSource) > 2 * 1024 * 1024) throw new GameError();
+    if (Buffer.byteLength(gameSource) > MAX_HOST_SOURCE_BYTES) throw new GameError();
+    return QuickJsSandbox.start(options, (sandbox, factory) => {
+      const exports = sandbox.eval(gameSource, "game.js", "module");
+      try {
+        const definition = sandbox.context.getProp(exports, "default");
+        try {
+          return sandbox.unwrap(
+            sandbox.context.callFunction(factory, sandbox.context.undefined, definition),
+          );
+        } finally {
+          definition.dispose();
+        }
+      } finally {
+        exports.dispose();
+      }
+    });
+  }
+
+  /**
+   * Loads a sandbox game (T17): the trusted runtime builds the built-in sandbox definition
+   * from the components file. No game code is evaluated; the same lockdown and per-call
+   * limits apply as for an enforced game.
+   */
+  static async loadSandbox(
+    components: ComponentsFile,
+    options: SandboxOptions = {},
+  ): Promise<QuickJsSandbox> {
+    const json = JSON.stringify(ComponentsFileSchema.parse(components));
+    if (Buffer.byteLength(json) > MAX_HOST_SOURCE_BYTES) throw new GameError();
+    return QuickJsSandbox.start(options, (sandbox, factory) => {
+      const input = sandbox.context.newString(json);
+      try {
+        return sandbox.unwrap(
+          sandbox.context.callFunction(
+            factory,
+            sandbox.context.undefined,
+            sandbox.context.undefined,
+            input,
+          ),
+        );
+      } finally {
+        input.dispose();
+      }
+    });
+  }
+
+  private static async start(
+    options: SandboxOptions,
+    define: (sandbox: QuickJsSandbox, factory: QuickJSHandle) => QuickJSHandle,
+  ): Promise<QuickJsSandbox> {
     if (
       options.timeoutMs !== undefined &&
       (!Number.isInteger(options.timeoutMs) || options.timeoutMs < 1)
@@ -103,19 +156,7 @@ export class QuickJsSandbox implements RulesSandbox {
       try {
         sandbox.eval(LOCKDOWN_SOURCE).dispose();
         sandbox.deadline = performance.now() + sandbox.timeoutMs;
-        const exports = sandbox.eval(gameSource, "game.js", "module");
-        try {
-          const definition = sandbox.context.getProp(exports, "default");
-          try {
-            sandbox.dispatch = sandbox.unwrap(
-              sandbox.context.callFunction(factory, sandbox.context.undefined, definition),
-            );
-          } finally {
-            definition.dispose();
-          }
-        } finally {
-          exports.dispose();
-        }
+        sandbox.dispatch = define(sandbox, factory);
       } finally {
         factory.dispose();
       }

@@ -2,12 +2,15 @@ import { createContext, type ReactNode, useContext, useSyncExternalStore } from 
 import type { ApiClient } from "../api/client";
 import type { AuthService, AuthUser } from "../auth/auth";
 import type { ClaimedSeats } from "../auth/claimed-seats";
+import type { InviteStore } from "../match/match-invites";
 import type { ProjectStore } from "../projects/project-store";
 
 export interface Services {
   api: ApiClient;
   auth: AuthService;
   seats: ClaimedSeats;
+  /** Invite links of matches created in this tab (Q-025). */
+  invites: InviteStore;
   /** Room server WebSocket endpoint (`VITE_WS_URL`). */
   roomUrl: string;
   /** The local project database, opened on first use (D-015). */

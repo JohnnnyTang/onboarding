@@ -16,7 +16,7 @@ import {
   SeatIdSchema,
   Sha256Schema,
 } from "@bgp/schema";
-import { type BuildStore, loadBuild } from "./build-store.js";
+import { type BuildStore, type HostGame, loadBuild } from "./build-store.js";
 import { GameError } from "./errors.js";
 import { HostPool } from "./host-pool.js";
 import type { HostProcess } from "./host-process.js";
@@ -24,7 +24,7 @@ import type { MoveOutcome, SandboxOptions } from "./sandbox.js";
 
 interface HostedMatch {
   id: string;
-  source: string;
+  game: HostGame;
   snapshot?: MatchState;
   events: AcceptedEvent[];
   host?: HostProcess;
@@ -74,7 +74,7 @@ export interface RulesHostClientOptions extends SandboxOptions {
 
 /** Server-only client. Checkpoints and journals contain privileged match data. */
 export class RulesHostClient {
-  private readonly builds = new Map<string, string>();
+  private readonly builds = new Map<string, HostGame>();
   private readonly matches = new Map<string, HostedMatch>();
   private readonly options: Required<SandboxOptions>;
   private readonly idleTimeoutMs: number;
@@ -123,9 +123,9 @@ export class RulesHostClient {
       if (this.closed) throw new GameError();
       Sha256Schema.parse(buildHash);
       if (this.builds.has(buildHash)) return;
-      const source = await loadBuild(this.store, buildHash);
+      const game = await loadBuild(this.store, buildHash);
       if (this.closed) throw new GameError();
-      this.builds.set(buildHash, source);
+      this.builds.set(buildHash, game);
     } catch {
       throw new GameError();
     }
@@ -135,11 +135,11 @@ export class RulesHostClient {
     try {
       HostMatchIdSchema.parse(matchId);
       const init = structuredClone(HostMatchInitSchema.parse(input));
-      const source = this.builds.get(init.buildHash);
-      if (this.closed || this.matches.has(matchId) || source === undefined) throw new GameError();
+      const game = this.builds.get(init.buildHash);
+      if (this.closed || this.matches.has(matchId) || game === undefined) throw new GameError();
       const record: HostedMatch = {
         id: matchId,
-        source,
+        game,
         events: [],
         queue: Promise.resolve(),
         disposed: false,
@@ -327,12 +327,11 @@ export class RulesHostClient {
     if (record.host?.alive) return record.host;
     deadline.restart(this.recoveryTimeoutMs);
     const host = await this.spawn(record);
-    await this.send(
-      host,
-      { op: "load", source: record.source, ...this.options },
-      deadline,
-      this.recoveryTimeoutMs,
-    );
+    const command: HostCommand =
+      record.game.kind === "bundle"
+        ? { op: "load", source: record.game.source, ...this.options }
+        : { op: "loadSandbox", components: record.game.components, ...this.options };
+    await this.send(host, command, deadline, this.recoveryTimeoutMs);
     return host;
   }
 

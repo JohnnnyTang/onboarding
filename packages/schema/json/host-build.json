@@ -1,31 +1,65 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "type": "object",
-  "properties": {
-    "entry": {
-      "$ref": "#/$defs/__schema0"
-    },
-    "files": {
+  "anyOf": [
+    {
       "type": "object",
-      "propertyNames": {
-        "$ref": "#/$defs/__schema0"
+      "properties": {
+        "entry": {
+          "$ref": "#/$defs/__schema0"
+        },
+        "files": {
+          "type": "object",
+          "propertyNames": {
+            "$ref": "#/$defs/__schema0"
+          },
+          "additionalProperties": {
+            "$ref": "#/$defs/__schema1"
+          }
+        },
+        "source": {
+          "type": "string",
+          "maxLength": 2097152
+        }
       },
-      "additionalProperties": {
-        "type": "string",
-        "pattern": "^[a-f0-9]{64}$"
-      }
+      "required": ["entry", "files", "source"],
+      "additionalProperties": false
     },
-    "source": {
-      "type": "string",
-      "maxLength": 2097152
+    {
+      "type": "object",
+      "properties": {
+        "mode": {
+          "type": "string",
+          "const": "sandbox"
+        },
+        "components": {
+          "$ref": "#/$defs/__schema0"
+        },
+        "files": {
+          "type": "object",
+          "propertyNames": {
+            "$ref": "#/$defs/__schema0"
+          },
+          "additionalProperties": {
+            "$ref": "#/$defs/__schema1"
+          }
+        },
+        "source": {
+          "type": "string",
+          "maxLength": 2097152
+        }
+      },
+      "required": ["mode", "components", "files", "source"],
+      "additionalProperties": false
     }
-  },
-  "required": ["entry", "files", "source"],
-  "additionalProperties": false,
+  ],
   "$defs": {
     "__schema0": {
       "type": "string",
       "pattern": "^[A-Za-z0-9._-]+(?:\\/[A-Za-z0-9._-]+)*$"
+    },
+    "__schema1": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
     }
   },
   "title": "HostBuild"

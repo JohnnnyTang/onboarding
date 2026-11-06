@@ -5,6 +5,7 @@ import {
   GamePackageSchema,
   type HostBuild,
   type Json,
+  MAX_HOST_SOURCE_BYTES,
   type Manifest,
   optionsForManifestSchema,
   type ValidationError,
@@ -109,8 +110,8 @@ function checkComponents(
   return errors;
 }
 
-async function readJson(bytes: Uint8Array): Promise<unknown> {
-  return JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
+function decodeUtf8(bytes: Uint8Array): string {
+  return new TextDecoder("utf-8", { fatal: true }).decode(bytes);
 }
 
 /** Every finalize check from manifest.md; failures are reported together. */
@@ -131,12 +132,22 @@ export async function validateVersion(input: FinalizeInput): Promise<FinalizeRes
     }
   }
 
-  if (!paths.has(manifest.components)) {
+  // A sandbox game runs from its components file in the rules host (T17), so the file is
+  // kept as text for the setup check below.
+  let componentsText: string | undefined;
+  const componentsFile = files.find((file) => file.path === manifest.components);
+  if (!componentsFile) {
     errors.push({ path: manifest.components, message: "Missing components file" });
+  } else if (manifest.mode === "sandbox" && componentsFile.bytes > MAX_HOST_SOURCE_BYTES) {
+    errors.push({
+      path: manifest.components,
+      message: "The components file of a sandbox game may be at most 2 MB",
+    });
   } else {
     let raw: unknown;
     try {
-      raw = await readJson(await input.read(manifest.components));
+      componentsText = decodeUtf8(await input.read(manifest.components));
+      raw = JSON.parse(componentsText);
     } catch {
       errors.push({
         path: manifest.components,
@@ -159,7 +170,7 @@ export async function validateVersion(input: FinalizeInput): Promise<FinalizeRes
       errors.push({ path: manifest.entry, message: "The game bundle may be at most 2 MB" });
     } else {
       try {
-        source = new TextDecoder("utf-8", { fatal: true }).decode(await input.read(entry.path));
+        source = decodeUtf8(await input.read(entry.path));
       } catch {
         errors.push({ path: manifest.entry, message: "The game bundle is not valid UTF-8" });
       }
@@ -176,17 +187,28 @@ export async function validateVersion(input: FinalizeInput): Promise<FinalizeRes
   if (errors.length > 0) return { ok: false, errors };
 
   const hash = buildHash(files);
-  if (manifest.mode === "enforced" && source !== undefined) {
-    const digests = Object.fromEntries(files.map((file) => [file.path, file.sha256]));
+  const digests = Object.fromEntries(files.map((file) => [file.path, file.sha256]));
+  const build: (HostBuild & { buildHash: string }) | undefined =
+    manifest.mode === "enforced"
+      ? source === undefined
+        ? undefined
+        : { buildHash: hash, entry: manifest.entry, files: digests, source }
+      : componentsText === undefined
+        ? undefined
+        : {
+            buildHash: hash,
+            mode: "sandbox",
+            components: manifest.components,
+            files: digests,
+            source: componentsText,
+          };
+  if (build) {
     const counts = [...new Set([manifest.players.min, manifest.players.max])];
-    const failed = await input.setup.check(
-      { buildHash: hash, entry: manifest.entry, files: digests, source },
-      counts,
-      options,
-    );
+    const failed = await input.setup.check(build, counts, options);
+    const path = manifest.mode === "enforced" ? manifest.entry : manifest.components;
     for (const count of failed) {
       errors.push({
-        path: manifest.entry,
+        path,
         message: `setup failed in the rules host for ${count} player${count === 1 ? "" : "s"}`,
       });
     }

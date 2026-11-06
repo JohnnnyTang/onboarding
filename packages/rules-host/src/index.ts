@@ -1,4 +1,4 @@
-export type { BuildStore } from "./build-store.js";
+export type { BuildStore, HostGame } from "./build-store.js";
 export { GameError } from "./errors.js";
 export type { RulesHostClientOptions } from "./host-client.js";
 export { RulesHostClient } from "./host-client.js";

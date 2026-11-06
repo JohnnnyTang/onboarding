@@ -185,3 +185,59 @@ describe("API client", () => {
     expect(error.code).toBe("FORBIDDEN");
   });
 });
+
+describe("API client publishing and match calls (T17)", () => {
+  test("uploads raw bytes with their digest and validates the file path", async () => {
+    const { api, calls } = harness(
+      () => new Response(null, { status: 204 }),
+      () => "user-token",
+    );
+    const body = new Blob(["{}"]);
+    await api.uploadVersionFile("version-1", "assets/cards/a-1.png", body, HASH);
+    expect(calls[0]?.url).toBe("http://api.test/api/versions/version-1/files/assets/cards/a-1.png");
+    expect(calls[0]?.init).toMatchObject({ method: "PUT", credentials: "omit", body });
+    expect(headers(calls[0])).toMatchObject({
+      "x-content-sha256": HASH,
+      authorization: "Bearer user-token",
+    });
+    await expect(api.uploadVersionFile("version-1", "game.wasm", body, HASH)).rejects.toThrow();
+    await expect(api.uploadVersionFile("version-1", "a.png", body, "nothex")).rejects.toThrow();
+    expect(calls).toHaveLength(1);
+  });
+
+  test("reports finalize validation errors with their paths", async () => {
+    const { api } = harness(() =>
+      json(
+        {
+          error: {
+            code: "VALIDATION_FAILED",
+            message: "Invalid package",
+            errors: [{ path: "defs.0.front", message: "Missing asset assets/a.png" }],
+          },
+        },
+        400,
+      ),
+    );
+    const failure = await api.finalizeVersion("version-1").catch((error: unknown) => error);
+    expect(failure).toBeInstanceOf(ApiError);
+    expect(failure).toMatchObject({
+      code: "VALIDATION_FAILED",
+      errors: [{ path: "defs.0.front", message: "Missing asset assets/a.png" }],
+    });
+  });
+
+  test("creates a match and starts it with empty bodies", async () => {
+    const { api, calls } = harness((url) =>
+      url.pathname.endsWith("/start")
+        ? json({ ...SUMMARY, status: "active" })
+        : json({ match: SUMMARY, invites: [{ seat: "0", url: "http://web.test/join/abc" }] }, 201),
+    );
+    const created = await api.createMatch({ versionId: "version-1", seatCount: 2, options: {} });
+    expect(created.invites).toEqual([{ seat: "0", url: "http://web.test/join/abc" }]);
+    expect((await api.startMatch("match-1")).status).toBe("active");
+    expect(calls[1]).toMatchObject({
+      url: "http://api.test/api/matches/match-1/start",
+      init: { method: "POST", body: "{}" },
+    });
+  });
+});

@@ -5,6 +5,7 @@ import { Link, useNavigate, useParams } from "react-router";
 import { seatLabel } from "../app/messages";
 import { useAuthUser, useServices } from "../app/services";
 import { EmptyState, ErrorNotice, Loading, PageHeader, SignInButton, ui } from "../components/ui";
+import { HostPanel, useHostInfo } from "./host-panel";
 import { matchPath, STATUS_LABELS } from "./matches";
 
 /** The lobby refreshes over HTTP while it waits; the table connects to the room server. */
@@ -66,6 +67,8 @@ export function LobbyPage() {
     enabled: identity !== undefined,
     refetchInterval: (query) => (query.state.data?.status === "lobby" ? LOBBY_REFRESH_MS : false),
   });
+  const hostInfo = useHostInfo(user ? match.data : undefined);
+  const host = hostInfo.data?.host === true ? hostInfo.data : null;
   const navigate = useNavigate();
   const started = match.data?.status === "active";
   const seated = claimed !== undefined;
@@ -98,8 +101,9 @@ export function LobbyPage() {
           <p>
             <span className={ui.badge}>{STATUS_LABELS[match.data.status]}</span>
           </p>
-          <LobbyStatus match={match.data} />
+          {host && match.data.status === "lobby" ? null : <LobbyStatus match={match.data} />}
           <SeatList seats={match.data.seats} mySeat={claimed?.seat} />
+          {host ? <HostPanel match={match.data} manifest={host.manifest} /> : null}
         </>
       ) : null}
     </>

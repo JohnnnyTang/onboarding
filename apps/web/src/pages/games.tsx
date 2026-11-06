@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Link, useParams } from "react-router";
 import { useAuthUser, useServices } from "../app/services";
 import { EmptyState, ErrorNotice, Loading, PageHeader, RequireUser, ui } from "../components/ui";
+import { versionPath } from "./version";
 
 export function GameList({ games }: { games: readonly GameResponse[] }) {
   if (games.length === 0) {
@@ -49,7 +50,13 @@ export function GamesPage() {
   );
 }
 
-export function VersionList({ versions }: { versions: GameDetailResponse["versions"] }) {
+export function VersionList({
+  gameId,
+  versions,
+}: {
+  gameId: string;
+  versions: GameDetailResponse["versions"];
+}) {
   if (versions.length === 0) {
     return (
       <EmptyState title="No versions yet">
@@ -62,8 +69,14 @@ export function VersionList({ versions }: { versions: GameDetailResponse["versio
       {versions.map((version) => (
         <li key={version.id}>
           <span>
-            {version.manifest.version} <span className={ui.muted}>({version.manifest.mode})</span>
+            <Link to={versionPath(gameId, version.id)}>{version.manifest.version}</Link>{" "}
+            <span className={ui.muted}>({version.manifest.mode})</span>
           </span>
+          {version.buildHash ? (
+            <code className={ui.muted} title={version.buildHash}>
+              {version.buildHash.slice(0, 12)}
+            </code>
+          ) : null}
           <span className={ui.badge}>{version.status}</span>
         </li>
       ))}
@@ -86,7 +99,8 @@ function Game({ gameId }: { gameId: string }) {
         <code>{game.data.slug}</code> · {game.data.visibility}
       </PageHeader>
       <h2>Versions</h2>
-      <VersionList versions={game.data.versions} />
+      <p className={ui.muted}>Open a ready version to create a match.</p>
+      <VersionList gameId={game.data.id} versions={game.data.versions} />
     </>
   );
 }

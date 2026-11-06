@@ -171,6 +171,8 @@ The project owner confirmed Q-018 (guest seats in session storage) on 2026-11-04
 
 ### T17 Publish, create match, invite
 
+**Status:** Complete. Local validation and scope: [t17-validation.md](t17-validation.md).
+
 **Deliverables:** publish from a project (build `bgp.json` and `components.json`, upload files, finalize, show validation errors); game and version pages; create match (seat count, options); invite links with copy buttons; lobby with seat status and start button.
 
 **Done when:** E2E-02 and E2E-03 pass.

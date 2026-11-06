@@ -67,8 +67,8 @@ How the room server in `apps/server` applies the rules above. Message shapes are
   match (`MATCH_NOT_FOUND`), a claimed seat held by the caller (`FORBIDDEN`), then status `active`
   (`MATCH_NOT_ACTIVE`, also for finished matches, whose replay is served over HTTP). Every error before
   `welcome` is fatal, as is a missing `hello` after 10 seconds (`BAD_MESSAGE`). Tokens are checked at
-  `hello` only. Owners without a seat are not admitted yet (Q-016); sandbox matches are not hosted yet
-  (Q-017).
+  `hello` only. Owners without a seat are not admitted yet (Q-016). Sandbox matches are hosted like
+  enforced ones (T17).
 - **`welcome`** always carries the full current view, so no `snapshot` follows it; `lastSeq` is
   accepted but not needed.
 - **After `welcome`:** an invalid message or a second `hello` gets a non-fatal `BAD_MESSAGE` and is

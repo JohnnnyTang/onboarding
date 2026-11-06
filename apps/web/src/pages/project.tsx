@@ -3,6 +3,7 @@ import { CardsSection } from "../cards/cards-section";
 import { EmptyState, Loading, PageHeader, ui } from "../components/ui";
 import { missingImages } from "../projects/project-model";
 import styles from "../projects/projects.module.css";
+import { PublishSection } from "../projects/publish-section";
 import {
   ComponentsSection,
   DetailsSection,
@@ -21,6 +22,7 @@ const SECTIONS = [
   { path: "cards", label: "Cards" },
   { path: "table", label: "Table" },
   { path: "setup", label: "Setup" },
+  { path: "publish", label: "Publish" },
 ] as const;
 
 function Section({ section, ...props }: SectionProps & { section: string }) {
@@ -35,6 +37,8 @@ function Section({ section, ...props }: SectionProps & { section: string }) {
       return <ZoneEditor project={props.project} editor={props.editor} />;
     case "setup":
       return <SetupEditor project={props.project} editor={props.editor} />;
+    case "publish":
+      return <PublishSection {...props} />;
     default:
       return <DetailsSection key={props.project.id} {...props} />;
   }

@@ -7,25 +7,19 @@ import { describe, expect, test } from "vitest";
 import type { ApiClient } from "../api/client";
 import type { AuthService, AuthUser } from "../auth/auth";
 import { createClaimedSeats } from "../auth/claimed-seats";
+import { createInviteStore } from "../match/match-invites";
 import { GameList, VersionList } from "../pages/games";
 import { LobbyStatus, SeatList } from "../pages/lobby";
 import { MatchList, matchPath } from "../pages/matches";
 import { ProjectListView } from "../pages/projects";
 import { createProject } from "../projects/project-model";
+import { fakeApi } from "../test/fake-api";
 import { AppRoutes } from "./app";
 import { ServicesProvider } from "./services";
 
 const HASH = "b".repeat(64);
 const unused = () => Promise.reject(new Error("not expected in a static render"));
-const api: ApiClient = {
-  listGames: unused,
-  getGame: unused,
-  listMatches: unused,
-  getMatch: unused,
-  claimInvite: unused,
-  getVersion: unused,
-  getVersionFile: unused,
-};
+const api: ApiClient = fakeApi();
 
 function fakeAuth(user: AuthUser | null): AuthService {
   return {
@@ -45,6 +39,7 @@ function render(node: ReactNode, path = "/", user: AuthUser | null = null): stri
         api,
         auth: fakeAuth(user),
         seats: createClaimedSeats(),
+        invites: createInviteStore(),
         roomUrl: "ws://test/ws",
         projects: unused,
       }}
@@ -140,7 +135,7 @@ describe("empty states and lists", () => {
     );
     expect(html).toContain('href="/games/g%2F1"');
     expect(html).toContain("Fish Market");
-    expect(render(<VersionList versions={[]} />)).toContain("No versions yet");
+    expect(render(<VersionList gameId="g1" versions={[]} />)).toContain("No versions yet");
   });
 
   test("matches link to the page for their status", () => {

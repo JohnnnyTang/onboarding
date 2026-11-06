@@ -2,18 +2,28 @@ import {
   type ClaimInviteBody,
   type ClaimInviteResponse,
   ClaimInviteResponseSchema,
+  type CreateGameBody,
+  type CreateMatchBody,
+  type CreateMatchResponse,
+  CreateMatchResponseSchema,
   type ErrorCode,
+  type FinalizeResponse,
+  FinalizeResponseSchema,
   type GameDetailResponse,
   GameDetailResponseSchema,
   type GameListResponse,
   GameListResponseSchema,
+  type GameResponse,
+  GameResponseSchema,
   HTTP_CONTRACTS,
   HttpErrorSchema,
   type ListQuery,
+  type Manifest,
   type MatchListResponse,
   MatchListResponseSchema,
   type MatchSummary,
   MatchSummarySchema,
+  type UpdateGameBody,
   type ValidationError,
   type VersionResponse,
   VersionResponseSchema,
@@ -86,6 +96,16 @@ export interface ApiClient {
   getVersion(versionId: string, scope?: TokenScope): Promise<VersionResponse>;
   /** One raw file of a version (bundle, components file, image). */
   getVersionFile(versionId: string, path: string, scope?: TokenScope): Promise<Blob>;
+  createGame(body: CreateGameBody): Promise<GameResponse>;
+  updateGame(gameId: string, body: UpdateGameBody): Promise<GameResponse>;
+  /** A draft version from a manifest (contracts/manifest.md#upload-flow). */
+  createVersion(gameId: string, manifest: Manifest): Promise<VersionResponse>;
+  /** Uploads one file of a draft; `sha256` is the lowercase hex digest of `body`. */
+  uploadVersionFile(versionId: string, path: string, body: Blob, sha256: string): Promise<void>;
+  finalizeVersion(versionId: string): Promise<FinalizeResponse>;
+  createMatch(body: CreateMatchBody): Promise<CreateMatchResponse>;
+  startMatch(matchId: string): Promise<MatchSummary>;
+  abandonMatch(matchId: string): Promise<MatchSummary>;
 }
 
 const segment = (value: string) => encodeURIComponent(value);
@@ -109,6 +129,16 @@ export function createApiClient(options: ApiClientOptions): ApiClient {
     if (!parsed.success) return new UnexpectedResponseError(response.status, endpoint);
     const { code, message, errors } = parsed.data.error;
     return new ApiError(response.status, code, message, errors ?? []);
+  }
+
+  function filePath(
+    endpoint: "GET /api/versions/:versionId/files/*" | "PUT /api/versions/:versionId/files/*",
+    versionId: string,
+    path: string,
+  ): URL {
+    const params = HTTP_CONTRACTS[endpoint].params.parse({ versionId, path });
+    const encoded = params.path.split("/").map(segment).join("/");
+    return new URL(`${base}/api/versions/${segment(params.versionId)}/files/${encoded}`);
   }
 
   function authorization(scope: TokenScope): Record<string, string> {
@@ -196,14 +226,77 @@ export function createApiClient(options: ApiClientOptions): ApiClient {
       }),
     async getVersionFile(versionId, path, scope = {}) {
       const endpoint = "GET /api/versions/:versionId/files/*";
-      const params = HTTP_CONTRACTS[endpoint].params.parse({ versionId, path });
-      const filePath = params.path.split("/").map(segment).join("/");
-      const response = await fetchImpl(
-        new URL(`${base}/api/versions/${segment(params.versionId)}/files/${filePath}`),
-        { method: "GET", headers: authorization(scope), credentials: "omit" },
-      );
+      const response = await fetchImpl(filePath(endpoint, versionId, path), {
+        method: "GET",
+        headers: authorization(scope),
+        credentials: "omit",
+      });
       if (!response.ok) throw await failure(response, endpoint);
       return response.blob();
     },
+    createGame: (body) =>
+      request({
+        endpoint: "POST /api/games",
+        path: "/api/games",
+        response: GameResponseSchema,
+        body,
+      }),
+    updateGame: (gameId, body) =>
+      request({
+        endpoint: "PATCH /api/games/:gameId",
+        path: `/api/games/${segment(gameId)}`,
+        response: GameResponseSchema,
+        body,
+      }),
+    createVersion: (gameId, manifest) =>
+      request({
+        endpoint: "POST /api/games/:gameId/versions",
+        path: `/api/games/${segment(gameId)}/versions`,
+        response: VersionResponseSchema,
+        body: manifest,
+      }),
+    async uploadVersionFile(versionId, path, body, sha256) {
+      const endpoint = "PUT /api/versions/:versionId/files/*";
+      const headers = HTTP_CONTRACTS[endpoint].headers.parse({ "x-content-sha256": sha256 });
+      const response = await fetchImpl(filePath(endpoint, versionId, path), {
+        method: "PUT",
+        headers: {
+          ...headers,
+          "content-type": "application/octet-stream",
+          ...authorization({}),
+        },
+        credentials: "omit",
+        body,
+      });
+      if (!response.ok) throw await failure(response, endpoint);
+    },
+    finalizeVersion: (versionId) =>
+      request({
+        endpoint: "POST /api/versions/:versionId/finalize",
+        path: `/api/versions/${segment(versionId)}/finalize`,
+        response: FinalizeResponseSchema,
+        body: {},
+      }),
+    createMatch: (body) =>
+      request({
+        endpoint: "POST /api/matches",
+        path: "/api/matches",
+        response: CreateMatchResponseSchema,
+        body,
+      }),
+    startMatch: (matchId) =>
+      request({
+        endpoint: "POST /api/matches/:matchId/start",
+        path: `/api/matches/${segment(matchId)}/start`,
+        response: MatchSummarySchema,
+        body: {},
+      }),
+    abandonMatch: (matchId) =>
+      request({
+        endpoint: "POST /api/matches/:matchId/abandon",
+        path: `/api/matches/${segment(matchId)}/abandon`,
+        response: MatchSummarySchema,
+        body: {},
+      }),
   };
 }

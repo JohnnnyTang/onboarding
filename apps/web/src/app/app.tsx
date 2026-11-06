@@ -11,6 +11,7 @@ import { MatchesPage } from "../pages/matches";
 import { NotFoundPage, ReplayPage } from "../pages/placeholders";
 import { ProjectPage } from "../pages/project";
 import { ProjectsPage } from "../pages/projects";
+import { VersionPage } from "../pages/version";
 import { Layout } from "./layout";
 
 export function AppRoutes() {
@@ -24,6 +25,7 @@ export function AppRoutes() {
         <Route path="projects/:projectId/:section" element={<ProjectPage />} />
         <Route path="games" element={<GamesPage />} />
         <Route path="games/:gameId" element={<GamePage />} />
+        <Route path="games/:gameId/versions/:versionId" element={<VersionPage />} />
         <Route path="matches" element={<MatchesPage />} />
         <Route path="matches/:matchId" element={<MatchPage />} />
         <Route path="matches/:matchId/lobby" element={<LobbyPage />} />

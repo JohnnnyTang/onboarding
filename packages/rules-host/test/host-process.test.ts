@@ -36,7 +36,10 @@ describe("restricted host process", () => {
       files: { "game.js": digest(GAME_SOURCE) },
     };
     const hash = digest(`game.js\t${build.files["game.js"]}\n`);
-    expect(await loadBuild({ load: async () => build }, hash)).toBe(GAME_SOURCE);
+    expect(await loadBuild({ load: async () => build }, hash)).toEqual({
+      kind: "bundle",
+      source: GAME_SOURCE,
+    });
     await expect(
       loadBuild({ load: async () => ({ ...build, source: "tampered" }) }, hash),
     ).rejects.toThrow("Game execution failed");

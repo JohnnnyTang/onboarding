@@ -133,18 +133,33 @@ describe("hello handshake errors", () => {
   });
 });
 
-describe("sandbox matches (Q-017)", () => {
-  it("cannot be hosted yet: hello fails with INTERNAL and no state", async () => {
+describe("sandbox matches (T17, Q-017)", () => {
+  /** Fish cards a seat may identify; the rest of its view shows backs only. */
+  const known = (view: unknown) => JSON.stringify(view).match(/"def":"fish"/g)?.length ?? 0;
+
+  it("hosts manual play: each seat sees its own dealt card and every change", async () => {
     const pkg = sandboxPackage(uniqueSlug("sandbox"));
     const match = await startMatch(env, server, pkg, 2);
-    const [owner] = match.seats;
-    if (!owner) throw new Error("Expected a seat");
-    expect(await refusedHello(hello(match.matchId, owner))).toEqual({
-      t: "error",
-      code: "INTERNAL",
-      message: "Internal server error",
-      fatal: true,
-    });
+    const { a, b } = await seated(match);
+    expect(known(a.welcome.view)).toBe(0);
+    const trackers = [new ViewTracker(a.welcome), new ViewTracker(b.welcome)] as const;
+    const manual = (args: Record<string, unknown>) => ({ move: "manual", args });
+    const step = async (client: TestClient, clientSeq: number, args: Record<string, unknown>) => {
+      client.send({ t: "move", clientSeq, intent: manual(args) });
+      trackers[0].apply(await nextUpdate(a.client, clientSeq + 1));
+      trackers[1].apply(await nextUpdate(b.client, clientSeq + 1));
+    };
+    await step(a.client, 0, { op: "deal", from: "deck", to: ["hand:0", "hand:1"], count: 1 });
+    expect(trackers.map((tracker) => known(tracker.view))).toEqual([1, 1]);
+    // Seat 1 flips the top card of the deck: now both seats know it as well.
+    const items = (trackers[1].view.game as { items: { id: string; zone: string }[] }).items;
+    const top = items.filter((item) => item.zone === "deck").at(-1);
+    if (!top) throw new Error("Empty deck");
+    await step(b.client, 1, { op: "flip", item: top.id });
+    expect(trackers.map((tracker) => known(tracker.view))).toEqual([2, 2]);
+    await step(a.client, 2, { op: "shuffle", zone: "deck" });
+    expect(a.client.peek("rejected")).toEqual([]);
+    expect(b.client.peek("rejected")).toEqual([]);
   });
 });
 
