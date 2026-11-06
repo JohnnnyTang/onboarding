@@ -1,4 +1,5 @@
 export * from "./auth.js";
+export * from "./bundle-scan.js";
 export * from "./cards.js";
 export * from "./common.js";
 export * from "./http.js";
@@ -9,3 +10,4 @@ export * from "./protocol.js";
 export * from "./rules.js";
 export * from "./rules-host.js";
 export * from "./table.js";
+export * from "./version-files.js";
