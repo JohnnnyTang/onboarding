@@ -54,6 +54,7 @@ Stretch, only if everything else is done: per-moment playtest feedback comments 
 ## Acceptance criteria
 
 Each criterion is checked by the test named in brackets ([testing.md](testing.md)).
+The [T20 handoff](t20-validation.md#acceptance-criteria) records the status and evidence.
 
 | ID    | Criterion                                                                                                                                                                                                                                      |
 | ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

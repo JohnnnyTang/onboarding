@@ -160,6 +160,13 @@ each step until the table shows it (p95 under 150 ms, worst under 500 ms). A sec
 Q-026: a guest ends a 2-seat sandbox match with the End game button and its confirm step,
 then follows the match page's replay link and sees the rules host's hash.
 
+T20 adds `e2e/harbor-determinism.spec.ts` for AC-08. It records the same seeded
+Harbor Market cases as PROP-DET in Node and replays each from its seed and
+accepted events in Chromium. Setup and every subsequent state hash must match
+the Node trace. It runs 20 games by default and 1,000 when the nightly job sets
+`BGP_PROPERTY_RUNS=1000`. E2E-06 separately checks the production game worker
+against the rules host in all three browser engines.
+
 T19 adds `e2e/cli.spec.ts` for E2E-07, running the built CLI (`packages/cli/dist/bin.js`, so
 run `pnpm build` first) in a temporary directory. In Chromium: `bgp init`, `bgp validate`,
 `bgp build` and `bgp publish` against the local server; the test signs in as designer2 on
@@ -192,7 +199,9 @@ key list. `keyboardDropTargets` has unit tests in `packages/table-2d/test/layout
 
 Physical Android/iPhone renderer profiling is a T20 gate, deferred from T13 by
 the project owner on 2026-10-27. Run both the three-engine spike and production
-`/dev/table/?stress=1` on identified hardware. Record 300-item frame cadence
+`/dev/table/?stress=1&fps=1` (on-screen frame intervals, T20) on identified hardware
+using the [T20 device run steps](t20-validation.md#physical-device-table-qualification-ac-12-deferred-from-t13).
+Record 300-item frame cadence
 against the 60 fps target, DPR/backend, readable text after zooming and actual
 touch drag/drop, pinch/pan, seat rotation and viewport resizing. Desktop WebKit
 and synthetic touch events do not establish AC-12 on iOS or Android.
