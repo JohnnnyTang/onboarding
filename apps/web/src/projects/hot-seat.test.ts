@@ -59,7 +59,7 @@ afterEach(() => {
   for (const stop of cleanup.splice(0)) stop();
 });
 
-async function setUp(stored: HotSeatMatchRecord | null = null) {
+async function setUp(stored: HotSeatMatchRecord | null = null, options?: { shortGame: boolean }) {
   const worker: GameWorker = await startGameWorker({
     game: { kind: "sandbox" },
     components: COMPONENTS,
@@ -75,6 +75,7 @@ async function setUp(stored: HotSeatMatchRecord | null = null) {
     newId: () => `0192f3a4-5b6c-7d8e-9f01-${String(++ids).padStart(12, "0")}`,
     newSeed: () => 42,
     now: () => "2026-11-04T10:00:00.000Z",
+    ...(options ? { options } : {}),
   });
   cleanup.push(() => {
     hotSeat.destroy();
@@ -205,5 +206,11 @@ describe("hot-seat play", () => {
     await until(hotSeat, () => hotSeat.getState().snapshot?.hud?.length === 3);
     expect(saved.at(-1)?.init.seats).toEqual(["0", "1", "2"]);
     expect(hotSeat.getState().viewing).toBe("1");
+  });
+
+  it("starts new games with the given options (bgp dev passes the manifest defaults)", async () => {
+    const { hotSeat, saved } = await setUp(null, { shortGame: true });
+    await until(hotSeat, () => hotSeat.getState().snapshot !== null);
+    expect(saved[0]?.init.options).toEqual({ shortGame: true });
   });
 });

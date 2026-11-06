@@ -2,6 +2,7 @@ import { z } from "zod";
 import * as auth from "./auth.js";
 import * as cards from "./cards.js";
 import * as common from "./common.js";
+import * as devServer from "./dev-server.js";
 import * as http from "./http.js";
 import * as manifest from "./manifest.js";
 import * as project from "./project.js";
@@ -44,6 +45,7 @@ export function contractJsonSchemas() {
     ...auth,
     ...cards,
     ...common,
+    ...devServer,
     ...http,
     ...manifest,
     ...project,

@@ -160,6 +160,16 @@ each step until the table shows it (p95 under 150 ms, worst under 500 ms). A sec
 Q-026: a guest ends a 2-seat sandbox match with the End game button and its confirm step,
 then follows the match page's replay link and sees the rules host's hash.
 
+T19 adds `e2e/cli.spec.ts` for E2E-07, running the built CLI (`packages/cli/dist/bin.js`, so
+run `pnpm build` first) in a temporary directory. In Chromium: `bgp init`, `bgp validate`,
+`bgp build` and `bgp publish` against the local server; the test signs in as designer2 on
+Keycloak's device page, grants access, checks that the version is ready with the printed build
+hash, and re-publishes identical files with `BGP_TOKEN` (no new version). In every browser:
+`bgp dev` serves the package to the web app's `/dev` page; the test plays a card, edits a
+source file and checks that the rebuild keeps the move, then breaks the build and checks that
+the table keeps running and lists the error. `bgp validate`'s own checks (planted leaks,
+`Math.random`, `Date`, an endless move, nondeterminism) are unit tests in `packages/cli/test/`.
+
 Physical Android/iPhone renderer profiling is a T20 gate, deferred from T13 by
 the project owner on 2026-10-27. Run both the three-engine spike and production
 `/dev/table/?stress=1` on identified hardware. Record 300-item frame cadence

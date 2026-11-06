@@ -1,8 +1,8 @@
 import {
-  type ComponentDef,
-  type ComponentsFile,
   ComponentsFileSchema,
-  GamePackageSchema,
+  checkPackageComponents,
+  defaultOptions,
+  findModuleImports,
   type HostBuild,
   type Json,
   MAX_HOST_SOURCE_BYTES,
@@ -11,7 +11,6 @@ import {
   type ValidationError,
 } from "@bgp/schema";
 import { issuesToErrors } from "../http/errors.js";
-import { findModuleImports } from "./bundle-scan.js";
 import {
   buildHash,
   MAX_BUNDLE_BYTES,
@@ -37,78 +36,11 @@ export interface FinalizeInput {
   setup: SetupChecker;
 }
 
+export { defaultOptions };
+
 export type FinalizeResult =
   | { ok: true; buildHash: string }
   | { ok: false; errors: ValidationError[] };
-
-export function defaultOptions(manifest: Manifest): Record<string, Json> {
-  return Object.fromEntries((manifest.options ?? []).map((option) => [option.id, option.default]));
-}
-
-function assetFields(def: ComponentDef): [string, string][] {
-  switch (def.kind) {
-    case "card":
-      return [["front", def.front]];
-    case "cardBack":
-    case "board":
-      return [["image", def.image]];
-    case "token":
-      return def.back
-        ? [
-            ["front", def.front],
-            ["back", def.back],
-          ]
-        : [["front", def.front]];
-    case "piece":
-      return def.model
-        ? [
-            ["image", def.image],
-            ["model", def.model],
-          ]
-        : [["image", def.image]];
-    case "die":
-      return (def.faces ?? []).flatMap((face, index): [string, string][] =>
-        /\.(png|jpe?g|webp|avif)$/i.test(face) ? [[`faces.${index}`, face]] : [],
-      );
-  }
-}
-
-function checkComponents(
-  manifest: Manifest,
-  components: ComponentsFile,
-  paths: ReadonlySet<string>,
-): ValidationError[] {
-  const errors: ValidationError[] = [];
-  const pkg = GamePackageSchema.safeParse({ manifest, components });
-  if (!pkg.success) {
-    for (const issue of pkg.error.issues) {
-      errors.push({ path: manifest.components, message: issue.message });
-    }
-  }
-  for (const [index, def] of components.defs.entries()) {
-    for (const [field, ref] of assetFields(def)) {
-      if (!paths.has(ref)) {
-        errors.push({ path: `defs.${index}.${field}`, message: `Missing asset ${ref}` });
-      }
-    }
-  }
-  if (manifest.mode === "sandbox") {
-    // The sandbox definition rejects zones owned by seats that do not exist at setup.
-    for (const [index, zone] of (components.zones ?? []).entries()) {
-      if (
-        zone.owner !== undefined &&
-        zone.owner !== "each" &&
-        Number(zone.owner) >= manifest.players.min
-      ) {
-        errors.push({
-          path: `zones.${index}.owner`,
-          message: `Seat ${zone.owner} does not exist with ${manifest.players.min} players`,
-        });
-      }
-    }
-  }
-  return errors;
-}
 
 function decodeUtf8(bytes: Uint8Array): string {
   return new TextDecoder("utf-8", { fatal: true }).decode(bytes);
@@ -156,7 +88,7 @@ export async function validateVersion(input: FinalizeInput): Promise<FinalizeRes
     }
     if (raw !== undefined) {
       const parsed = ComponentsFileSchema.safeParse(raw);
-      if (parsed.success) errors.push(...checkComponents(manifest, parsed.data, paths));
+      if (parsed.success) errors.push(...checkPackageComponents(manifest, parsed.data, paths));
       else errors.push(...issuesToErrors(parsed.error.issues));
     }
   }

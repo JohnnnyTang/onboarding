@@ -65,8 +65,12 @@ const POLICIES: Record<string, Policy> = {
 // Vite, Vitest and the React plugin are build tooling, admitted only in the web app's configs.
 const WEB_TOOL_CONFIGS = new Set(["apps/web/vite.config.ts", "apps/web/vitest.config.ts"]);
 const WEB_BUILD_TOOLS = new Set(["vite", "vitest", "@vitejs/plugin-react"]);
-// The game worker evaluates a bundle from a blob URL; no other file may import a computed URL.
-const GAME_MODULE_LOADER = "apps/web/src/workers/game-module.ts";
+// The game worker evaluates a bundle from a blob URL, and the CLI's validation worker from a
+// data URL, each after its lockdown; no other file may import a computed URL.
+const GAME_MODULE_LOADERS = new Set([
+  "apps/web/src/workers/game-module.ts",
+  "packages/cli/src/check-worker.ts",
+]);
 const GAME_POLICY: Policy = { imports: ["@bgp/rules", "@bgp/schema"], pure: true };
 const NODE_MODULES = new Set(builtinModules.map((name) => name.replace(/^node:/, "")));
 const FORBIDDEN_GLOBALS = new Set([
@@ -195,7 +199,7 @@ export function checkSource(root: string, file: string, source: string): string[
     ) {
       const argument = node.arguments[0];
       if (argument && ts.isStringLiteralLike(argument)) checkImport(node, argument.text);
-      else if (path === GAME_MODULE_LOADER) {
+      else if (GAME_MODULE_LOADERS.has(path)) {
         // Allowed: the game bundle, evaluated after the worker lockdown (D-007).
       } else report(node, "Computed module imports cannot be checked against package boundaries.");
     }

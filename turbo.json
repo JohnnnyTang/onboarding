@@ -1,6 +1,6 @@
 {
   "$schema": "https://turbo.build/schema.json",
-  "globalDependencies": ["scripts/build-rules-host.ts"],
+  "globalDependencies": ["scripts/build-rules-host.ts", "scripts/build-cli-worker.ts"],
   "globalPassThroughEnv": [
     "npm_execpath",
     "BGP_PROPERTY_RUNS",

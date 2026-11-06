@@ -179,6 +179,9 @@ importers:
         specifier: workspace:*
         version: link:../../packages/schema
     devDependencies:
+      '@bgp/cli':
+        specifier: workspace:*
+        version: link:../../packages/cli
       '@bgp/testing':
         specifier: workspace:*
         version: link:../../packages/testing
@@ -203,6 +206,9 @@ importers:
       '@bgp/testing':
         specifier: workspace:*
         version: link:../testing
+      esbuild:
+        specifier: 0.28.2
+        version: 0.28.2
 
   packages/rules:
     dependencies:

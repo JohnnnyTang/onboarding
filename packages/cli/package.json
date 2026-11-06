@@ -10,13 +10,17 @@
     }
   },
   "scripts": {
-    "build": "tsc --project tsconfig.build.json",
+    "build": "tsc --project tsconfig.build.json && pnpm -w exec tsx scripts/build-cli-worker.ts",
     "typecheck": "tsc --noEmit --project tsconfig.build.json && tsc --noEmit",
-    "test": "vitest run --config ../../vitest.package.config.ts"
+    "test": "pnpm -w exec tsx scripts/build-cli-worker.ts && vitest run --config ../../vitest.package.config.ts"
   },
   "dependencies": {
-    "@bgp/schema": "workspace:*",
     "@bgp/rules": "workspace:*",
-    "@bgp/testing": "workspace:*"
+    "@bgp/schema": "workspace:*",
+    "@bgp/testing": "workspace:*",
+    "esbuild": "0.28.2"
+  },
+  "bin": {
+    "bgp": "./dist/bin.js"
   }
 }

@@ -187,6 +187,8 @@ The project owner confirmed Q-018 (guest seats in session storage) on 2026-11-04
 
 ### T19 CLI
 
+**Status:** Complete. Local validation and scope: [t19-validation.md](t19-validation.md).
+
 **Deliverables:** `@bgp/cli` with `bgp init` (scaffold a game package from a template), `bgp dev` (esbuild watch, serves a hot-seat table using the web app's hot-seat page, reloads on change while keeping events and replaying them), `bgp validate` (schemas, bundle shape, no imports, determinism and leak checks with the random bot), `bgp build`, `bgp publish` (device-code or browser sign-in, then the upload flow).
 
 **Done when:** E2E-07 passes; `bgp validate` catches a planted leak and a planted `Math.random`.

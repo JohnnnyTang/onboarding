@@ -1,6 +1,6 @@
 import { spawnSync } from "node:child_process";
 import { readFile, realpath, stat } from "node:fs/promises";
-import { matchesGlob, relative, resolve } from "node:path";
+import { join, matchesGlob, relative, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { filesUnder, slash } from "./files.js";
 
@@ -37,34 +37,76 @@ function moduleEntry(value: unknown): value is WasmModule {
   );
 }
 
-function dependencyPaths(tree: unknown): string[] {
+interface DependencyPath {
+  path: string;
+  /** Package name and installed path of a parent that lists it, for optional checks. */
+  via: { name: string; parent: string | null; optionalKey: boolean }[];
+}
+
+/** Installed paths of production dependencies, with where each was listed. */
+function dependencyPaths(tree: unknown): DependencyPath[] {
   if (
     !Array.isArray(tree) ||
     tree.some((item: unknown) => !record(item) || typeof item.path !== "string")
   ) {
     throw new Error("pnpm production dependency listing must be an array of workspace records.");
   }
-  const paths = new Set<string>();
-  function collect(node: unknown): void {
+  const paths = new Map<string, DependencyPath>();
+  function children(node: Record<string, unknown>, parent: string | null): void {
+    for (const key of ["dependencies", "optionalDependencies"]) {
+      const listed = node[key];
+      if (listed !== undefined && !record(listed)) throw new Error(`Malformed ${key} listing.`);
+      if (!record(listed)) continue;
+      for (const [name, child] of Object.entries(listed)) {
+        collect(child, { name, parent, optionalKey: key === "optionalDependencies" });
+      }
+    }
+  }
+  function collect(node: unknown, via: DependencyPath["via"][number]): void {
     if (!record(node)) throw new Error("Malformed production dependency record.");
     if (typeof node.path !== "string")
       throw new Error("Production dependency has no installed path.");
-    paths.add(node.path);
-    for (const key of ["dependencies", "optionalDependencies"]) {
-      const children = node[key];
-      if (children !== undefined && !record(children)) throw new Error(`Malformed ${key} listing.`);
-      if (record(children)) for (const child of Object.values(children)) collect(child);
+    const known = paths.get(node.path);
+    if (known) {
+      known.via.push(via);
+      return;
     }
+    paths.set(node.path, { path: node.path, via: [via] });
+    children(node, node.path);
   }
   for (const workspace of tree) {
-    if (!record(workspace)) continue;
-    for (const key of ["dependencies", "optionalDependencies"]) {
-      const children = workspace[key];
-      if (children !== undefined && !record(children)) throw new Error(`Malformed ${key} listing.`);
-      if (record(children)) for (const child of Object.values(children)) collect(child);
+    if (record(workspace)) children(workspace, null);
+  }
+  return [...paths.values()];
+}
+
+/**
+ * Whether every listing of a dependency is optional: pnpm lists each platform package of a
+ * native tool such as esbuild (sometimes under plain `dependencies`), but installs only the
+ * one for this machine. The parent's own manifest says which ones are optional.
+ */
+async function onlyOptional(dependency: DependencyPath): Promise<boolean> {
+  for (const { name, parent, optionalKey } of dependency.via) {
+    if (optionalKey) continue;
+    if (parent === null) return false;
+    try {
+      const manifest: unknown = JSON.parse(await readFile(join(parent, "package.json"), "utf8"));
+      const optional = record(manifest) ? manifest.optionalDependencies : undefined;
+      if (!record(optional) || !Object.hasOwn(optional, name)) return false;
+    } catch {
+      return false;
     }
   }
-  return [...paths];
+  return true;
+}
+
+async function exists(path: string): Promise<boolean> {
+  try {
+    await stat(path);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 export async function checkWasmInventory(
@@ -112,7 +154,10 @@ export async function checkWasmInventory(
   const candidates = (await filesUnder(root, skip)).filter((file) =>
     file.toLowerCase().endsWith(".wasm"),
   );
-  for (const path of dependencyPaths(productionTree)) {
+  for (const dependency of dependencyPaths(productionTree)) {
+    const { path } = dependency;
+    // An optional package for another platform is listed but not installed.
+    if (!(await exists(path)) && (await onlyOptional(dependency))) continue;
     candidates.push(
       ...(await filesUnder(path, new Set(["node_modules"]))).filter((file) =>
         file.toLowerCase().endsWith(".wasm"),

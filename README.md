@@ -46,7 +46,7 @@ The intended full system is described in [architecture.md](docs/architecture.md)
 | `apps/web`                | Browser application                                               | App shell and product flows are pending; table fixture harness exists |
 | `games/harbor-market`     | Enforced reference game                                           | Planned; currently a scaffold                                         |
 | `packages/card-generator` | Card faces from templates and CSV rows                            | Implemented (T16)                                                     |
-| `packages/cli`            | Developer commands                                                | Planned; currently a scaffold                                         |
+| `packages/cli`            | `bgp init`, `dev`, `validate`, `build`, `publish`                 | Implemented (T19)                                                     |
 
 The [Phase 1 specification](docs/phase-1-spec.md) defines the complete designer sandbox, remote match, replay, and SDK acceptance criteria. Later 3D and balance-analysis phases are direction, not current features.
 
@@ -73,9 +73,20 @@ pnpm dev:table
 
 For browser tests, install Playwright browsers first with `pnpm exec playwright install --with-deps`, then run `pnpm test:e2e`. PostgreSQL-backed tests require the Compose services. See [development environment](docs/dev-environment.md) for configuration, test users, ports, and database notes; see [table-2d](packages/table-2d/README.md) for the renderer harness.
 
-## Build a game (planned workflow)
+## Build a game
 
-The target developer path is `bgp init → bgp dev → bgp validate → bgp build → bgp publish`. A game bundle will contain a deterministic rules definition, component declarations, and assets. Published versions will be immutable and addressed by their content hash, so matches and replays remain tied to the exact rules they used. The CLI and publishing flow are tracked in [T19](docs/tasks.md#t19-cli) and [T17](docs/tasks.md#t17-publish-create-match-invite); these commands are not available yet.
+The developer path is `bgp init → bgp dev → bgp validate → bgp publish` ([T19](docs/tasks.md#t19-cli)). The SDK packages are not on a registry yet, so run the CLI from this workspace after `pnpm install` and `pnpm build`:
+
+```sh
+BGP="node $PWD/packages/cli/dist/bin.js"   # from the repository root
+$BGP init ../my-game --name "My Game"      # a small, complete card game
+cd ../my-game
+$BGP dev        # prints a link to the hot-seat page in the web app; reloads on every save
+$BGP validate   # schemas, bundle, determinism and leaked cards, with random games
+$BGP publish    # device sign-in in any browser, then upload a version
+```
+
+A package inside the workspace, such as `games/harbor-market`, can depend on `"@bgp/cli": "workspace:*"` and run `pnpm exec bgp …`. `bgp dev` needs the web app (`pnpm dev`, or `--web` for another origin); `bgp publish` needs the API and Keycloak. `bgp build` writes the bundle alone; publish builds it too. A version holds the bundle (a deterministic rules definition), the component declarations and the assets. Published versions are immutable and addressed by their content hash, so matches and replays remain tied to the exact rules they used. The starter package's README explains its files and the rules for game code.
 
 For the rules surface and data format, start with [rules API](docs/contracts/rules-api.md), [components and table](docs/contracts/components-and-table.md), and [manifest](docs/contracts/manifest.md).
 
