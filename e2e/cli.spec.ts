@@ -59,6 +59,13 @@ function start(args: string[]) {
 
 const table = (page: Page) => page.getByTestId("table").locator("canvas");
 
+/** A temporary directory and a fresh game id. */
+async function workspace() {
+  const root = await mkdtemp(join(tmpdir(), "bgp-e2e-cli-"));
+  const slug = `e2e-cli-${randomBytes(4).toString("hex")}`;
+  return { root, slug, dir: join(root, slug) };
+}
+
 /** Selects the first card in a hand zone with the keyboard, then plays it. */
 async function playFromHand(page: Page, handLabel: string) {
   await expect(async () => {
@@ -77,15 +84,13 @@ async function playFromHand(page: Page, handLabel: string) {
   await page.getByRole("button", { name: "Play selected" }).click();
 }
 
-test("E2E-07: bgp init, validate, build, dev and publish a new game package", async ({
+test("E2E-07: bgp init, validate, build and publish a new game package", async ({
   browser,
   browserName,
 }) => {
-  test.skip(browserName !== "chromium", "The CLI flow does not depend on the browser engine");
+  test.skip(browserName !== "chromium", "The CLI and sign-in do not depend on the browser engine");
   test.setTimeout(300_000);
-  const root = await mkdtemp(join(tmpdir(), "bgp-e2e-cli-"));
-  const slug = `e2e-cli-${randomBytes(4).toString("hex")}`;
-  const dir = join(root, slug);
+  const { root, slug, dir } = await workspace();
   const running: ReturnType<typeof start>[] = [];
   try {
     // bgp init: a starter package that validates as it is.
@@ -99,40 +104,6 @@ test("E2E-07: bgp init, validate, build, dev and publish a new game package", as
     const built = await bgp(["build", dir]);
     expect(built.stdout).toMatch(/^Built dist\/game\.js/);
     expect((await stat(join(dir, "dist", "game.js"))).size).toBeGreaterThan(0);
-
-    // bgp dev: the web app's hot-seat page loads the game; a change reloads it and the
-    // current game replays.
-    const dev = start(["dev", dir, "--port", "0"]);
-    running.push(dev);
-    const pageUrl = await dev.waitFor(/Open the hot-seat table: (\S+)/);
-    const context = await browser.newContext({ viewport: { width: 1280, height: 900 } });
-    const page = await context.newPage();
-    await page.goto(pageUrl);
-    await expect(page.getByRole("heading", { name: "CLI Duel: bgp dev" })).toBeVisible();
-    await expect(page.getByText(`Build 0 of ${slug} 0.1.0`)).toBeVisible();
-    await expect(page.getByText("Your turn: play a card on the pile")).toBeVisible();
-    await playFromHand(page, "Seat 1");
-    await expect(page.getByText("1 move so far")).toBeVisible();
-
-    const tableSource = join(dir, "src", "table.ts");
-    const source = await readFile(tableSource, "utf8");
-    await writeFile(
-      tableSource,
-      source.replace('"Your turn: play a card on the pile"', '"Your turn: beat the pile"'),
-    );
-    await expect(page.getByText(/^Build [1-9]\d* of /)).toBeVisible({ timeout: 30_000 });
-    await expect(page.getByText("1 move so far")).toBeVisible();
-    await page.getByRole("button", { name: "Seat 2", exact: true }).click();
-    await expect(page.getByText("Your turn: beat the pile")).toBeVisible();
-
-    // A broken build keeps the table and lists the error.
-    await writeFile(tableSource, `${source}\nconst broken = ;\n`);
-    await expect(page.getByRole("alert")).toContainText(/failed; the table still runs build/);
-    await expect(page.getByText("1 move so far")).toBeVisible();
-    await writeFile(tableSource, source);
-    await expect(page.getByRole("alert")).toHaveCount(0, { timeout: 30_000 });
-    await context.close();
-    dev.child.kill();
 
     // bgp publish: device sign-in in a browser, then the upload flow.
     const publish = start(["publish", dir, "--visibility", "unlisted"]);
@@ -170,6 +141,52 @@ test("E2E-07: bgp init, validate, build, dev and publish a new game package", as
     const again = await bgp(["publish", dir, "--api", API_URL], { BGP_TOKEN: token });
     expect(again.stdout).toContain("Version 0.1.0 is already published with these files.");
     expect(again.stdout).toContain(`Build hash: ${buildHash}`);
+  } finally {
+    for (const process of running) process.child.kill();
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("E2E-07: bgp dev serves a hot-seat table that reloads and replays on every change", async ({
+  browser,
+}) => {
+  test.setTimeout(180_000);
+  const { root, slug, dir } = await workspace();
+  const running: ReturnType<typeof start>[] = [];
+  try {
+    await bgp(["init", dir, "--name", "CLI Duel"]);
+    // bgp dev: the web app's hot-seat page loads the game; a change reloads it and the
+    // current game replays.
+    const dev = start(["dev", dir, "--port", "0"]);
+    running.push(dev);
+    const pageUrl = await dev.waitFor(/Open the hot-seat table: (\S+)/);
+    const context = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+    const page = await context.newPage();
+    await page.goto(pageUrl);
+    await expect(page.getByRole("heading", { name: "CLI Duel: bgp dev" })).toBeVisible();
+    await expect(page.getByText(`Build 0 of ${slug} 0.1.0`)).toBeVisible();
+    await expect(page.getByText("Your turn: play a card on the pile")).toBeVisible();
+    await playFromHand(page, "Seat 1");
+    await expect(page.getByText("1 move so far")).toBeVisible();
+
+    const tableSource = join(dir, "src", "table.ts");
+    const source = await readFile(tableSource, "utf8");
+    await writeFile(
+      tableSource,
+      source.replace('"Your turn: play a card on the pile"', '"Your turn: beat the pile"'),
+    );
+    await expect(page.getByText(/^Build [1-9]\d* of /)).toBeVisible({ timeout: 30_000 });
+    await expect(page.getByText("1 move so far")).toBeVisible();
+    await page.getByRole("button", { name: "Seat 2", exact: true }).click();
+    await expect(page.getByText("Your turn: beat the pile")).toBeVisible();
+
+    // A broken build keeps the table and lists the error.
+    await writeFile(tableSource, `${source}\nconst broken = ;\n`);
+    await expect(page.getByRole("alert")).toContainText(/failed; the table still runs build/);
+    await expect(page.getByText("1 move so far")).toBeVisible();
+    await writeFile(tableSource, source);
+    await expect(page.getByRole("alert")).toHaveCount(0, { timeout: 30_000 });
+    await context.close();
   } finally {
     for (const process of running) process.child.kill();
     await rm(root, { recursive: true, force: true });
