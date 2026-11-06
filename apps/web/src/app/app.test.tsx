@@ -12,20 +12,13 @@ import { LobbyStatus, SeatList } from "../pages/lobby";
 import { MatchList, matchPath } from "../pages/matches";
 import { ProjectListView } from "../pages/projects";
 import { createProject } from "../projects/project-model";
+import { fakeApi } from "../test/fake-api";
 import { AppRoutes } from "./app";
 import { ServicesProvider } from "./services";
 
 const HASH = "b".repeat(64);
 const unused = () => Promise.reject(new Error("not expected in a static render"));
-const api: ApiClient = {
-  listGames: unused,
-  getGame: unused,
-  listMatches: unused,
-  getMatch: unused,
-  claimInvite: unused,
-  getVersion: unused,
-  getVersionFile: unused,
-};
+const api: ApiClient = fakeApi();
 
 function fakeAuth(user: AuthUser | null): AuthService {
   return {

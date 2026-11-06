@@ -5,27 +5,27 @@ import {
   type Manifest,
 } from "@bgp/schema";
 import type { ApiClient } from "../api/client";
+import type { GameSource } from "../workers/protocol";
 
 /** Same limit the server enforces on the bundle at finalize. */
 export const MAX_BUNDLE_BYTES = 2 * 1024 * 1024;
 
 export class GamePackageError extends Error {
   override readonly name = "GamePackageError";
-  constructor(readonly reason: "sandbox" | "invalid") {
-    super(
-      reason === "sandbox"
-        ? "Sandbox games cannot be played at the table yet."
-        : "This game version could not be read.",
-    );
+  constructor(readonly reason: "invalid") {
+    super("This game version could not be read.");
   }
 }
 
 /** Everything a seat needs to run and draw one game version. */
 export interface GamePackage {
-  manifest: Extract<Manifest, { mode: "enforced" }>;
+  manifest: Manifest;
   components: ComponentsFile;
-  /** The `game.js` bundle source, for the game worker only. */
-  source: string;
+  /**
+   * What the game worker runs: the `game.js` bundle of an enforced version, or the built-in
+   * sandbox definition for a sandbox version (T17), which has no bundle.
+   */
+  game: GameSource;
   /** A same-document URL for an image; empty when it could not be loaded (placeholder art). */
   assetUrl(ref: string): string;
   /** Releases the image object URLs. */
@@ -59,15 +59,21 @@ export async function loadGamePackage(
   const scope = { matchId };
   const version = await api.getVersion(versionId, scope);
   const manifest = version.manifest;
-  if (manifest.mode !== "enforced") throw new GamePackageError("sandbox");
   const [componentsBlob, bundle] = await Promise.all([
     api.getVersionFile(versionId, manifest.components, scope),
-    api.getVersionFile(versionId, manifest.entry, scope),
+    manifest.mode === "enforced" ? api.getVersionFile(versionId, manifest.entry, scope) : null,
   ]);
   const parsed = ComponentsFileSchema.safeParse(await readJson(componentsBlob));
-  if (!parsed.success || bundle.size > MAX_BUNDLE_BYTES) throw new GamePackageError("invalid");
+  if (!parsed.success) throw new GamePackageError("invalid");
   const components = parsed.data;
-  const source = await bundle.text();
+  let game: GameSource;
+  if (bundle) {
+    if (bundle.size > MAX_BUNDLE_BYTES) throw new GamePackageError("invalid");
+    game = { kind: "bundle", source: await bundle.text() };
+  } else {
+    if (!components.zones || !components.setup) throw new GamePackageError("invalid");
+    game = { kind: "sandbox" };
+  }
 
   const assets = new Map<string, string>();
   const refs = [...new Set(componentAssetRefs(components))].filter(
@@ -87,7 +93,7 @@ export async function loadGamePackage(
   return {
     manifest,
     components,
-    source,
+    game,
     assetUrl: (ref) => (disposed ? "" : (assets.get(ref) ?? "")),
     dispose() {
       if (disposed) return;

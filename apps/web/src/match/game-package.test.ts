@@ -1,6 +1,7 @@
 import type { VersionResponse } from "@bgp/schema";
 import { describe, expect, test } from "vitest";
 import type { ApiClient, TokenScope } from "../api/client";
+import { fakeApi as fakeApiClient } from "../test/fake-api";
 import { GamePackageError, loadGamePackage, MAX_BUNDLE_BYTES } from "./game-package";
 
 const HASH = "c".repeat(64);
@@ -26,13 +27,7 @@ const manifest = {
 
 function fakeApi(files: Record<string, Blob>, version: Partial<VersionResponse> = {}) {
   const requests: { path: string; scope: TokenScope | undefined }[] = [];
-  const unused = () => Promise.reject(new Error("unused"));
-  const api: ApiClient = {
-    listGames: unused,
-    getGame: unused,
-    listMatches: unused,
-    getMatch: unused,
-    claimInvite: unused,
+  const api: ApiClient = fakeApiClient({
     getVersion: async (id, scope) => {
       requests.push({ path: "version", scope });
       return {
@@ -51,7 +46,7 @@ function fakeApi(files: Record<string, Blob>, version: Partial<VersionResponse> 
       if (!file) throw new Error("missing");
       return file;
     },
-  };
+  });
   return { api, requests };
 }
 
@@ -82,7 +77,7 @@ describe("game package", () => {
     const { api, requests } = fakeApi(files());
     const urls = fakeUrls();
     const pkg = await loadGamePackage(api, "v1", "m1", urls);
-    expect(pkg.source).toBe("export default {};");
+    expect(pkg.game).toEqual({ kind: "bundle", source: "export default {};" });
     expect(pkg.components.defs).toHaveLength(3);
     expect(pkg.assetUrl("assets/back.png")).toMatch(/^blob:test\//);
     // A missing image becomes placeholder art; models are not fetched in 2D.
@@ -94,13 +89,26 @@ describe("game package", () => {
     expect(pkg.assetUrl("assets/back.png")).toBe("");
   });
 
-  test("refuses sandbox versions, which the room server does not host yet", async () => {
-    const { api } = fakeApi(files(), {
-      manifest: { ...manifest, mode: "sandbox", entry: undefined } as never,
-    });
-    await expect(loadGamePackage(api, "v1", "m1", fakeUrls())).rejects.toMatchObject({
-      reason: "sandbox",
-    });
+  test("runs sandbox versions with the built-in definition and downloads no bundle", async () => {
+    const { entry: _entry, ...rest } = manifest;
+    const sandbox = {
+      ...COMPONENTS,
+      defs: COMPONENTS.defs.slice(0, 2),
+      zones: [],
+      setup: { instances: [] },
+    };
+    const { api, requests } = fakeApi(
+      files({ "components.json": new Blob([JSON.stringify(sandbox)]) }),
+      { manifest: { ...rest, mode: "sandbox" } as never },
+    );
+    const pkg = await loadGamePackage(api, "v1", "m1", fakeUrls());
+    expect(pkg.game).toEqual({ kind: "sandbox" });
+    expect(requests.map((request) => request.path)).not.toContain("dist/game.js");
+    // A sandbox components file must declare zones and setup.
+    const { api: bare } = fakeApi(files(), { manifest: { ...rest, mode: "sandbox" } as never });
+    await expect(loadGamePackage(bare, "v1", "m1", fakeUrls())).rejects.toBeInstanceOf(
+      GamePackageError,
+    );
   });
 
   test("refuses invalid components and oversized bundles", async () => {
