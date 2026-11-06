@@ -142,3 +142,36 @@ press(["fixture", "stress"], params.has("stress") ? "stress" : "fixture");
 press(["seat-0", "seat-1"], `seat-${seat}`);
 window.addEventListener("pagehide", () => renderer.destroy());
 void mount();
+
+/**
+ * `?fps=1`: frame intervals on screen, for phones without developer tools (T20 device
+ * qualification). Every animation frame is timed; the overlay shows p50 and p95 of the last
+ * 180 intervals, the device pixel ratio and the WebGL renderer string where exposed. Drag a
+ * card while reading it: an idle table stops drawing, so idle intervals mean little.
+ */
+function frameMeter(): void {
+  const output = document.createElement("output");
+  output.className = "frame-meter";
+  output.setAttribute("aria-live", "off");
+  document.body.append(output);
+  const probe = document.createElement("canvas").getContext("webgl");
+  const debug = probe?.getExtension("WEBGL_debug_renderer_info");
+  const backend = debug ? String(probe?.getParameter(debug.UNMASKED_RENDERER_WEBGL)) : "hidden";
+  const intervals: number[] = [];
+  let previous: number | undefined;
+  let frame = 0;
+  const tick = (time: number) => {
+    if (previous !== undefined) intervals.push(time - previous);
+    if (intervals.length > 180) intervals.shift();
+    previous = time;
+    frame += 1;
+    if (frame % 30 === 0 && intervals.length > 0) {
+      const sorted = [...intervals].sort((a, b) => a - b);
+      const at = (p: number) => sorted[Math.min(sorted.length - 1, Math.floor(sorted.length * p))];
+      output.textContent = `p50 ${at(0.5)?.toFixed(1)} ms · p95 ${at(0.95)?.toFixed(1)} ms · DPR ${devicePixelRatio} · ${backend}`;
+    }
+    requestAnimationFrame(tick);
+  };
+  requestAnimationFrame(tick);
+}
+if (params.has("fps")) frameMeter();
