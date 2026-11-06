@@ -181,19 +181,90 @@ export function focusOrder(
   placements: readonly PlacedItem[],
   view: Viewport,
 ): string[] {
-  const zones = snapshot.zones
-    .map((zone) => ({ zone, at: tableToScreen(zone.rect_mm.x, zone.rect_mm.y, view) }))
-    .sort((a, b) => Math.round(a.at[1]) - Math.round(b.at[1]) || a.at[0] - b.at[0]);
-  return zones.flatMap(({ zone }) =>
-    placements
-      .filter((placement) => placement.item.zone === zone.id)
-      .map((placement) => ({
-        id: placement.item.id,
-        at: tableToScreen(placement.x, placement.y, view),
-      }))
-      .sort((a, b) => a.at[0] - b.at[0] || a.at[1] - b.at[1])
-      .map(({ id }) => id),
+  return zonesInOrder(snapshot, view).flatMap((zone) =>
+    itemsInOrder(zone, placements, view).map((placement) => placement.item.id),
   );
+}
+
+function zonesInOrder(snapshot: TableSnapshot, view: Viewport): ZonePlacement[] {
+  return snapshot.zones
+    .map((zone) => ({ zone, at: tableToScreen(zone.rect_mm.x, zone.rect_mm.y, view) }))
+    .sort((a, b) => Math.round(a.at[1]) - Math.round(b.at[1]) || a.at[0] - b.at[0])
+    .map(({ zone }) => zone);
+}
+
+function itemsInOrder(
+  zone: ZonePlacement,
+  placements: readonly PlacedItem[],
+  view: Viewport,
+): PlacedItem[] {
+  return placements
+    .filter((placement) => placement.item.zone === zone.id)
+    .map((placement) => ({ placement, at: tableToScreen(placement.x, placement.y, view) }))
+    .sort((a, b) => a.at[0] - b.at[0] || a.at[1] - b.at[1])
+    .map(({ placement }) => placement);
+}
+
+type DropGesture = Extract<Gesture, { kind: "drop" }>;
+
+/** Where a keyboard drop can put a carried piece: a gesture, and the piece it points at. */
+export interface DropTarget {
+  gesture: DropGesture;
+  /** The piece the drop lands on, as a pointer drop there would; absent for a whole zone. */
+  at?: string;
+}
+
+/**
+ * Keyboard drag and drop: every distinct drop the carried piece can make, in focus order.
+ * In row, fan and grid zones each other piece is a target, giving the same gesture as a pointer
+ * dropped on it; every droppable zone is also a target itself, at its end (top of a stack,
+ * after the last piece) or, in a free zone, at its centre.
+ */
+export function keyboardDropTargets(
+  snapshot: TableSnapshot,
+  placements: readonly PlacedItem[],
+  carried: ItemPlacement,
+  view: Viewport,
+): DropTarget[] {
+  const targets: DropTarget[] = [];
+  const seen = new Set<string>();
+  const add = (gesture: DropGesture, at?: string) => {
+    const key = JSON.stringify(gesture);
+    if (seen.has(key)) return;
+    seen.add(key);
+    targets.push(at === undefined ? { gesture } : { gesture, at });
+  };
+  for (const zone of zonesInOrder(snapshot, view)) {
+    if (!zone.droppable) continue;
+    if (zone.layout !== "free" && zone.layout !== "stack") {
+      for (const placement of itemsInOrder(zone, placements, view)) {
+        if (placement.item.id === carried.id) continue;
+        const gesture = dropGesture(snapshot, placements, carried, placement.x, placement.y);
+        if (gesture?.kind === "drop" && gesture.to === zone.id) add(gesture, placement.item.id);
+      }
+    }
+    const gesture: DropGesture = {
+      kind: "drop",
+      item: carried.id,
+      from: carried.zone,
+      to: zone.id,
+    };
+    if (zone.layout === "free")
+      gesture.pos_mm = freePosition(snapshot, zone.rect_mm.x, zone.rect_mm.y);
+    else
+      gesture.index = snapshot.items.filter(
+        (p) => p.zone === zone.id && p.id !== carried.id,
+      ).length;
+    add(gesture);
+  }
+  return targets;
+}
+
+/** A whole-millimetre position on the table, clamped to its edges. */
+function freePosition(snapshot: TableSnapshot, x: number, y: number): [number, number] {
+  const w = Math.floor(snapshot.table.size_mm[0] / 2);
+  const h = Math.floor(snapshot.table.size_mm[1] / 2);
+  return [Math.max(-w, Math.min(w, Math.round(x))), Math.max(-h, Math.min(h, Math.round(y)))];
 }
 
 export function dropGesture(
@@ -213,12 +284,7 @@ export function dropGesture(
     to: zone.id,
   };
   if (zone.layout === "free") {
-    const w = Math.floor(snapshot.table.size_mm[0] / 2);
-    const h = Math.floor(snapshot.table.size_mm[1] / 2);
-    gesture.pos_mm = [
-      Math.max(-w, Math.min(w, Math.round(x))),
-      Math.max(-h, Math.min(h, Math.round(y))),
-    ];
+    gesture.pos_mm = freePosition(snapshot, x, y);
   } else if (zone.layout === "grid") {
     const [cols, rows] = gridSize(
       zone,

@@ -1,4 +1,4 @@
-import { mkdtempSync, rmSync } from "node:fs";
+import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import {
@@ -11,6 +11,7 @@ import {
 } from "@playwright/test";
 import { WEB_URL } from "./support/app.js";
 import { solidPng } from "./support/png.js";
+import { removeProfile } from "./support/profile.js";
 
 // E2E-01 (T15, T16): with the network disabled from the first edit on, a designer imports
 // images, generates ten cards from a template and a CSV file, declares zones and setup, and
@@ -402,7 +403,7 @@ test("E2E-01: an offline project with generated cards, played hot-seat, survives
   expect(await storedFace(page, "assets/cards/tea-2.png")).toMatchObject({ size: [744, 1039] });
   expect(failed.filter((url) => url.startsWith(WEB_URL))).toEqual([]);
   await context.close();
-  rmSync(profile, { recursive: true, force: true });
+  removeProfile(profile);
 });
 
 test("T16: 100 cards are generated at 300 dpi in under 10 seconds", async ({
@@ -438,5 +439,5 @@ test("T16: 100 cards are generated at 300 dpi in under 10 seconds", async ({
     pixel: "#3a7d44",
   });
   await context.close();
-  rmSync(profile, { recursive: true, force: true });
+  removeProfile(profile);
 });

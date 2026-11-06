@@ -1,3 +1,5 @@
+// First: Zod must not probe for `new Function` under the content security policy (T20).
+import "@bgp/schema/jitless";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { UserManager } from "oidc-client-ts";
 import { StrictMode } from "react";

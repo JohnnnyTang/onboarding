@@ -32,10 +32,23 @@ export function Loading({ label = "Loading…" }: { label?: string }) {
   );
 }
 
-export function ErrorNotice({ error }: { error: unknown }) {
+/** A failed request in plain words; with `onRetry`, a button to ask again. */
+export function ErrorNotice({ error, onRetry }: { error: unknown; onRetry?: () => void }) {
   return (
     <p className={styles.notice} role="alert">
       {errorMessage(error)}
+      {onRetry ? (
+        <>
+          {" "}
+          <button
+            type="button"
+            className={`${styles.button} ${styles.secondary}`}
+            onClick={onRetry}
+          >
+            Try again
+          </button>
+        </>
+      ) : null}
     </p>
   );
 }

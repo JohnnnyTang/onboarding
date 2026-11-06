@@ -10,13 +10,18 @@ import type {
 } from "@bgp/schema";
 import { ComponentsFileSchema, TableSnapshotSchema } from "@bgp/schema";
 import { Application, Color, Container, Graphics, Sprite, Text, Texture } from "pixi.js";
+// Replaces PixiJS's generated shader code (`new Function`) so the web app's content
+// security policy needs no 'unsafe-eval' (T20).
+import "pixi.js/unsafe-eval";
 import type { PlacedItem, Viewport } from "./layout.js";
 import {
+  type DropTarget,
   dropGesture,
   fitViewport,
   focusOrder,
   hitItem,
   hitZone,
+  keyboardDropTargets,
   layoutSnapshot,
   screenToTable,
 } from "./layout.js";
@@ -162,6 +167,8 @@ export class PixiTableRenderer implements TableRenderer<HTMLElement> {
   private hover: string | undefined;
   private focus: string | undefined;
   private keyboard = false;
+  /** Keyboard drag and drop: the carried piece and the drop targets it can cycle through. */
+  private carry: { item: string; targets: DropTarget[]; at: number } | undefined;
   private observer: ResizeObserver | undefined;
   private abort: AbortController | undefined;
   private textures = new Map<string, Promise<Texture | null>>();
@@ -209,6 +216,7 @@ export class PixiTableRenderer implements TableRenderer<HTMLElement> {
     app.canvas.setAttribute("role", "application");
     app.canvas.setAttribute("aria-roledescription", "game table");
     app.canvas.setAttribute("aria-label", "Game table");
+    app.canvas.setAttribute("aria-keyshortcuts", "ArrowLeft ArrowRight Enter Space M Escape + - 0");
     container.append(app.canvas);
     this.abort = new AbortController();
     const options = { signal: this.abort.signal };
@@ -235,6 +243,7 @@ export class PixiTableRenderer implements TableRenderer<HTMLElement> {
     this.snapshot = parsed;
     if (!this.app || !this.init) return;
     this.cancelPress();
+    this.carry = undefined;
     this.placements = layoutSnapshot(this.snapshot, this.init.components);
     const ids = new Set(this.placements.map((p) => p.item.id));
     for (const [id, visual] of this.visuals)
@@ -335,6 +344,7 @@ export class PixiTableRenderer implements TableRenderer<HTMLElement> {
     this.hover = undefined;
     this.focus = undefined;
     this.keyboard = false;
+    this.carry = undefined;
     this.selection = [];
     this.snapshot = EMPTY;
     this.placements = [];
@@ -356,7 +366,7 @@ export class PixiTableRenderer implements TableRenderer<HTMLElement> {
   private drawZones(): void {
     for (const child of this.zones.removeChildren()) child.destroy({ children: true });
     const [width, height] = this.snapshot.table.size_mm;
-    const dragging = Boolean(this.dragged());
+    const dragging = Boolean(this.dragged()) || this.carry !== undefined;
     this.zones.addChild(
       new Graphics()
         .roundRect(-width / 2, -height / 2, width, height, 18)
@@ -584,7 +594,7 @@ export class PixiTableRenderer implements TableRenderer<HTMLElement> {
     const { item, width, height } = visual.target;
     const selected = this.selection.includes(item.id);
     const focused = this.keyboard && this.focus === item.id;
-    const hovered = this.hover === item.id && !this.dragged();
+    const hovered = (this.hover === item.id && !this.dragged()) || this.carryTarget() === item.id;
     const signature = `${selected}${focused}${hovered}`;
     if (signature === visual.ringSignature || visual.ring.destroyed) return;
     visual.ringSignature = signature;
@@ -730,6 +740,10 @@ export class PixiTableRenderer implements TableRenderer<HTMLElement> {
   /** Keeps the canvas name in step with the focused piece for screen readers. */
   private describeFocus(): void {
     if (!this.app) return;
+    if (this.carry) {
+      this.app.canvas.setAttribute("aria-label", `Game table: ${this.describeCarry(this.carry)}`);
+      return;
+    }
     const placement = this.placements.find((p) => p.item.id === this.focus);
     if (!placement) {
       this.app.canvas.setAttribute("aria-label", "Game table");
@@ -740,6 +754,60 @@ export class PixiTableRenderer implements TableRenderer<HTMLElement> {
     if (placement.count > 1) parts.push(`${placement.count} in stack`);
     if (this.selection.includes(placement.item.id)) parts.push("selected");
     this.app.canvas.setAttribute("aria-label", `Game table: ${parts.join(", ")}`);
+  }
+  private describeCarry(carry: NonNullable<typeof this.carry>): string {
+    const carried = this.snapshot.items.find((item) => item.id === carry.item);
+    const target = carry.targets[carry.at];
+    if (!carried || !target) return "Game table";
+    const zone = this.snapshot.zones.find((z) => z.id === target.gesture.to);
+    const label = zone?.label ?? target.gesture.to;
+    const onto =
+      target.at === undefined ? undefined : this.snapshot.items.find((i) => i.id === target.at);
+    const others = this.snapshot.items.filter(
+      (i) => i.zone === target.gesture.to && i.id !== carry.item,
+    );
+    let where = label;
+    if (onto) where = `${this.caption(onto)}, in ${label}`;
+    else if (zone?.layout === "stack" && others.length > 0) where = `top of ${label}`;
+    else if (zone?.layout !== "free" && others.length > 0) where = `end of ${label}`;
+    return `moving ${this.caption(carried)} to ${where} (${carry.at + 1} of ${carry.targets.length}); Enter drops, Escape cancels`;
+  }
+  private carryTarget(): string | undefined {
+    return this.carry?.targets[this.carry.at]?.at;
+  }
+  /** Picks up the focused piece (M): arrow keys then choose where it goes. */
+  private startCarry(): void {
+    const placement = this.placements.find((p) => p.item.id === this.focus);
+    if (!placement?.item.draggable) return;
+    const targets = keyboardDropTargets(this.snapshot, this.placements, placement.item, this.view);
+    if (targets.length === 0) return;
+    // Start with the first place elsewhere: moving within its own zone is the rarer case.
+    const elsewhere = targets.findIndex((target) => target.gesture.to !== placement.item.zone);
+    this.carry = { item: placement.item.id, targets, at: Math.max(0, elsewhere) };
+    this.showCarry(undefined);
+  }
+  private moveCarry(step: 1 | -1): void {
+    if (!this.carry) return;
+    const previous = this.carryTarget();
+    const count = this.carry.targets.length;
+    this.carry.at = (this.carry.at + step + count) % count;
+    this.showCarry(previous);
+  }
+  private showCarry(previousTarget: string | undefined): void {
+    this.dropZone = this.carry?.targets[this.carry.at]?.gesture.to;
+    this.drawZones();
+    this.refreshRing(previousTarget);
+    this.refreshRing(this.carryTarget());
+    this.describeFocus();
+  }
+  /** Ends a carry; with `drop`, emits the chosen drop like a pointer drop there would. */
+  private endCarry(drop: boolean): void {
+    const carry = this.carry;
+    if (!carry) return;
+    const target = carry.targets[carry.at];
+    this.carry = undefined;
+    this.showCarry(target?.at);
+    if (drop && target) this.emit(target.gesture);
   }
   private activate(item: ItemPlacement): void {
     this.emit({ kind: "click", item: item.id });
@@ -769,6 +837,7 @@ export class PixiTableRenderer implements TableRenderer<HTMLElement> {
   }
   private pointerDown = (event: PointerEvent): void => {
     if (event.button !== 0) return;
+    this.endCarry(false);
     if (this.keyboard) {
       this.keyboard = false;
       this.refreshRing(this.focus);
@@ -866,6 +935,7 @@ export class PixiTableRenderer implements TableRenderer<HTMLElement> {
     if (!this.pointers.has(event.pointerId)) this.setHover(undefined);
   };
   private blur = (): void => {
+    this.endCarry(false);
     if (!this.keyboard) return;
     this.keyboard = false;
     this.refreshRing(this.focus);
@@ -882,6 +952,10 @@ export class PixiTableRenderer implements TableRenderer<HTMLElement> {
   }
   private keyDown = (event: KeyboardEvent): void => {
     if (event.altKey || event.ctrlKey || event.metaKey) return;
+    if (this.carry && this.carryKey(event.key)) {
+      event.preventDefault();
+      return;
+    }
     const center = { x: this.view.width / 2, y: this.view.height / 2 };
     switch (event.key) {
       case "ArrowRight":
@@ -905,6 +979,16 @@ export class PixiTableRenderer implements TableRenderer<HTMLElement> {
         }
         break;
       }
+      case "m":
+      case "M":
+        if (!this.focus) return;
+        if (!this.keyboard) {
+          this.keyboard = true;
+          this.refreshRing(this.focus);
+          this.restack();
+        }
+        this.startCarry();
+        break;
       case "Escape":
         if (this.selection.length === 0) return;
         this.setSelection([]);
@@ -924,6 +1008,30 @@ export class PixiTableRenderer implements TableRenderer<HTMLElement> {
     }
     event.preventDefault();
   };
+  /** Keys while carrying a piece; others (zoom) fall through. Returns whether it was handled. */
+  private carryKey(key: string): boolean {
+    switch (key) {
+      case "ArrowRight":
+      case "ArrowDown":
+        this.moveCarry(1);
+        return true;
+      case "ArrowLeft":
+      case "ArrowUp":
+        this.moveCarry(-1);
+        return true;
+      case "Enter":
+      case " ":
+        this.endCarry(true);
+        return true;
+      case "Escape":
+      case "m":
+      case "M":
+        this.endCarry(false);
+        return true;
+      default:
+        return false;
+    }
+  }
   private zoomAt(factor: number, before: Pointer, after = before): void {
     const previous = this.view.scale;
     this.view.scale = Math.max(0.05, Math.min(8, previous * factor));

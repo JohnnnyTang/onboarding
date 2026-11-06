@@ -306,3 +306,55 @@ test("hidden backs, selection pruning, unsubscribing and teardown obey the rende
     remounted: 1,
   });
 });
+
+test("keyboard drag and drop picks up with M, walks drop targets and drops with Enter", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await ready(page);
+  const canvas = page.locator("canvas");
+  const gesture = async () =>
+    GestureSchema.parse(JSON.parse((await page.locator("#gesture").textContent()) ?? ""));
+  await canvas.focus();
+  for (let step = 0; step < 6; step++) await page.keyboard.press("ArrowRight");
+  await expect(canvas).toHaveAttribute("aria-label", "Game table: FISH, in Market (row)");
+
+  // Picked up, it starts at the first place outside its own zone: the deck, read for this seat.
+  await page.keyboard.press("m");
+  await expect(canvas).toHaveAttribute(
+    "aria-label",
+    /^Game table: moving FISH to top of Draw deck \(stack\) \(1 of \d+\); Enter drops, Escape cancels$/,
+  );
+  // Escape puts it back without a gesture.
+  await page.keyboard.press("Escape");
+  await expect(canvas).toHaveAttribute("aria-label", "Game table: FISH, in Market (row)");
+  await expect(page.locator("#gesture")).toHaveText("Ready to play.");
+
+  // Walk forward to a grid cell: the same drop a pointer would make on that piece.
+  await page.keyboard.press("M");
+  for (let step = 0; step < 12; step++) {
+    const label = (await canvas.getAttribute("aria-label")) ?? "";
+    if (label.includes(", in Supply (grid) (")) break;
+    await page.keyboard.press("ArrowRight");
+  }
+  await expect(canvas).toHaveAttribute("aria-label", /, in Supply \(grid\) \(\d+ of \d+\)/);
+  await page.keyboard.press("Enter");
+  expect(await gesture()).toEqual({
+    kind: "drop",
+    item: "market-0",
+    from: "market",
+    to: "grid",
+    index: 0,
+  });
+  await expect(canvas).toHaveAttribute("aria-label", "Game table: FISH, in Market (row)");
+
+  // A free zone takes the piece at its centre.
+  await page.keyboard.press("m");
+  for (let step = 0; step < 20; step++) {
+    const label = (await canvas.getAttribute("aria-label")) ?? "";
+    if (label.includes("to Open table (free placement) (")) break;
+    await page.keyboard.press("ArrowLeft");
+  }
+  await page.keyboard.press(" ");
+  expect(await gesture()).toMatchObject({ kind: "drop", item: "market-0", to: "free" });
+});

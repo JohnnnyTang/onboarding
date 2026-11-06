@@ -3,11 +3,17 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "sideEffects": false,
+  "sideEffects": [
+    "./dist/jitless.js"
+  ],
   "exports": {
     ".": {
       "import": "./dist/index.js",
       "types": "./dist/index.d.ts"
+    },
+    "./jitless": {
+      "import": "./dist/jitless.js",
+      "types": "./dist/jitless.d.ts"
     }
   },
   "scripts": {

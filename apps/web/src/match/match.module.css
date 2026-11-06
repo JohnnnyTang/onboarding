@@ -20,6 +20,12 @@
   background: #17392e;
 }
 
+.keys {
+  margin: var(--space-1) 0 0;
+  font-size: 0.85rem;
+  color: var(--color-muted);
+}
+
 .side {
   display: flex;
   flex-direction: column;

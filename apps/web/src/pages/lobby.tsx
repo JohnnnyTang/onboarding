@@ -95,7 +95,9 @@ export function LobbyPage() {
         {claimed ? `You are in ${seatLabel(claimed.seat)} as ${claimed.displayName}.` : null}
       </PageHeader>
       {match.isPending ? <Loading /> : null}
-      {match.isError ? <ErrorNotice error={match.error} /> : null}
+      {match.isError ? (
+        <ErrorNotice error={match.error} onRetry={() => void match.refetch()} />
+      ) : null}
       {match.data ? (
         <>
           <p>

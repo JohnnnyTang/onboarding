@@ -25,9 +25,23 @@ export function roomErrorMessage(error: RoomError): string {
       return "You are not seated in this match.";
     case "PROTOCOL_VERSION":
       return "This page is out of date. Reload it to continue.";
+    case "RATE_LIMITED":
+      return "Too many actions at once, so the last one was not sent. Try it again.";
+    case "BAD_MESSAGE":
+      return "The server could not read the last action. Reload the page if this keeps happening.";
+    case "INTERNAL":
+      return "Something went wrong on the server. Reconnecting…";
     default:
       return error.message;
   }
+}
+
+/** A rejected move's text: the game's or the server's message, which are client-safe. */
+export function rejectionMessage(rejection: Rejection): string {
+  if (rejection.code === "INTERNAL") {
+    return "Something went wrong on the server, so the move was not made. Try it again.";
+  }
+  return rejection.message;
 }
 
 export function ConnectionBanner({ status }: { status: RoomStatus }) {
@@ -159,7 +173,7 @@ export function RejectedNotice({
   if (!rejection) return null;
   return (
     <div className={styles.rejected} role="alert">
-      <span>{rejection.message}</span>
+      <span>{rejectionMessage(rejection)}</span>
       <button type="button" className={styles.dismiss} onClick={onDismiss} aria-label="Dismiss">
         ×
       </button>

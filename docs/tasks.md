@@ -195,6 +195,10 @@ The project owner confirmed Q-018 (guest seats in session storage) on 2026-11-04
 
 ### T20 Hardening and handoff check
 
+**Status:** Open. The 1,000-game Node and Chromium determinism runs passed (AC-08).
+Physical-phone qualification (AC-12) and the clean-machine run (AC-15) remain open
+at the project owner's direction. See [t20-validation.md](t20-validation.md) for evidence.
+
 **Deliverables:** PERF-01 script and results; physical-device table qualification
 (deferred from T13 by the project owner on 2026-10-27), including the three-engine
 comparison and production renderer with 300 draggable items targeting 60 fps on

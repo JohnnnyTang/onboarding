@@ -6,21 +6,13 @@ import { expect, test } from "vitest";
 import game, { type HarborState } from "../src/index.js";
 import { required } from "../src/model.js";
 import { components, oracle } from "./fixtures.js";
+import { HARBOR_PROPERTY_SEED, harborCases, harborInit } from "./property-cases.js";
 
 declare const console: { info(message: string): void };
 declare const process: { env: Record<string, string | undefined> };
 const numRuns = Number(process.env.BGP_PROPERTY_RUNS ?? 20);
-const seed = fc.integer({ min: 0, max: 0xffff_ffff });
 let deterministicGames = 0;
 let privateGames = 0;
-const match = fc.tuple(seed, seed, fc.integer({ min: 2, max: 4 }), fc.boolean());
-function init(seed: number, count: number, shortGame: boolean) {
-  return {
-    seats: Array.from({ length: count }, (_, i) => String(i)),
-    seed,
-    options: { shortGame },
-  };
-}
 function conservation(state: MatchState<HarborState>): void {
   const ids = [
     ...state.game.deck,
@@ -37,8 +29,8 @@ function conservation(state: MatchState<HarborState>): void {
 
 test("PROP-DET: complete Harbor Market games replay every state hash", async () => {
   await fc.assert(
-    fc.asyncProperty(match, async ([seed, botSeed, count, shortGame]) => {
-      const run = await runMatch(game, init(seed, count, shortGame), {
+    fc.asyncProperty(harborCases, async ([seed, botSeed, count, shortGame]) => {
+      const run = await runMatch(game, harborInit(seed, count, shortGame), {
         botSeed,
         maxMoves: 2000,
         onStep: ({ state }) => conservation(state),
@@ -49,14 +41,14 @@ test("PROP-DET: complete Harbor Market games replay every state hash", async () 
       if (deterministicGames % 100 === 0)
         console.info(`Verified ${deterministicGames} deterministic games`);
     }),
-    { numRuns, seed: 606 },
+    { numRuns, seed: HARBOR_PROPERTY_SEED },
   );
 }, 1800000);
 
 test("UNIT-LEAK: every seat and spectator stays private at every step", async () => {
   await fc.assert(
-    fc.asyncProperty(match, async ([seed, botSeed, count, shortGame]) => {
-      const run = await runMatch(game, init(seed, count, shortGame), {
+    fc.asyncProperty(harborCases, async ([seed, botSeed, count, shortGame]) => {
+      const run = await runMatch(game, harborInit(seed, count, shortGame), {
         botSeed,
         maxMoves: 2000,
         onStep({ state }) {

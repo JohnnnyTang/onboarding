@@ -22,18 +22,20 @@ The root `.env.example` includes server and web settings. The launcher and migra
 command read root `.env`; server integration tests also read it. Existing process environment
 values take precedence. Generate `GUEST_TOKEN_SECRET` using the command in the example.
 
-### Full development environment (from T07 onward)
+### Full development environment
 
 ```bash
-pnpm install
-cp .env.example .env                    # defaults work for local development
+pnpm install --frozen-lockfile
+cp .env.example .env                    # then set GUEST_TOKEN_SECRET (command in the file)
 docker compose -f infra/docker-compose.yml up -d --wait
 pnpm db:migrate
-pnpm dev                                # API :3000 from T10, web app :5173 from T12
+pnpm dev                                # builds the packages, then API :3000 and web :5173
 ```
 
-From T12, open http://localhost:5173 for the web app. In T07, verify sign-in directly at
-http://localhost:8080/realms/bgp/account/ using a test user listed below.
+Open http://localhost:5173 and sign in with a test user listed below. Keycloak's own account
+page is at http://localhost:8080/realms/bgp/account/. `pnpm dev` runs the web app in Vite's
+development mode, without the content security policy and the offline service worker; the
+production build (`pnpm --filter @bgp/web exec vite build`, then `vite preview`) has both.
 
 ## Services
 
@@ -69,7 +71,9 @@ worktree and test startup cannot race. No migrations run merely by importing dat
 ```bash
 docker compose -f infra/docker-compose.yml up -d --wait
 pnpm test
-pnpm test:e2e --project=chromium
+pnpm build                              # the rules host bundle and the CLI, for e2e and perf
+pnpm test:e2e --project=chromium        # or all of Chromium, Firefox and WebKit
+pnpm perf                               # PERF-01 (AC-11)
 ```
 
 The server's Vitest global setup automatically migrates `TEST_DATABASE_URL` before tests;
@@ -142,6 +146,23 @@ Web app (`apps/web/.env`):
 | `VITE_WS_URL`         | `ws://localhost:3000/ws`           |
 | `VITE_OIDC_ISSUER`    | `http://localhost:8080/realms/bgp` |
 | `VITE_OIDC_CLIENT_ID` | `bgp-web`                          |
+
+## Troubleshooting
+
+- **Port 5432 is taken** (a PostgreSQL installed on the machine): Compose cannot bind the
+  database. Keep the native server and publish the container elsewhere with an override file
+  kept outside the repository, for example `ports: !override ["127.0.0.1:15432:5432"]` under
+  `services.postgres`, passed as a second `-f` to `docker compose`. Then set
+  `DATABASE_URL=postgres://bgp:bgp@localhost:15432/bgp` and
+  `TEST_DATABASE_URL=postgres://bgp:bgp@localhost:15432/bgp_test` in `.env`; the e2e and
+  perf databases follow `DATABASE_URL`.
+- **Windows refuses a port** that looks free: Windows reserves port ranges (see
+  `netsh interface ipv4 show excludedportrange protocol=tcp`); pick a port outside them.
+- **Sign-in fails after pulling** a newer realm: realm imports only create missing realms; see
+  the Keycloak notes above, or reset the services.
+- **`pnpm test:e2e` reuses a running `pnpm dev`**: outside CI Playwright uses servers already
+  on 3000 and 5173. Stop `pnpm dev` first so the tests get their own database and the
+  production build.
 
 ## Useful commands
 

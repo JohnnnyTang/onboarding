@@ -1,5 +1,5 @@
 import type { ComponentsFile, Gesture, SeatId, TableRenderer, TableSnapshot } from "@bgp/schema";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import styles from "./match.module.css";
 
 export interface TableViewProps {
@@ -27,6 +27,7 @@ export function TableView(props: TableViewProps) {
   const latest = useRef(props);
   latest.current = props;
   const [failed, setFailed] = useState(false);
+  const keysId = useId();
   const { components, assetUrl, seat, snapshot, selection } = props;
 
   useEffect(() => {
@@ -41,6 +42,8 @@ export function TableView(props: TableViewProps) {
         instance = new PixiTableRenderer();
         await instance.mount(container, { components, assetUrl, seat });
         if (cancelled) return;
+        // Screen readers announce the keys with the table (T20).
+        container.querySelector("canvas")?.setAttribute("aria-describedby", keysId);
         unsubscribe.push(
           instance.onGesture((gesture) => latest.current.onGesture(gesture)),
           instance.onSelectionChange((ids) => latest.current.onSelectionChange(ids)),
@@ -59,7 +62,7 @@ export function TableView(props: TableViewProps) {
       renderer.current = null;
       instance?.destroy();
     };
-  }, [components, assetUrl, seat]);
+  }, [components, assetUrl, seat, keysId]);
 
   useEffect(() => {
     if (snapshot) renderer.current?.setSnapshot(snapshot);
@@ -70,12 +73,18 @@ export function TableView(props: TableViewProps) {
   }, [selection]);
 
   return (
-    <div ref={host} className={styles.table} data-testid="table">
-      {failed ? (
-        <p className={styles.banner} role="alert">
-          The table could not be drawn in this browser.
-        </p>
-      ) : null}
-    </div>
+    <>
+      <div ref={host} className={styles.table} data-testid="table">
+        {failed ? (
+          <p className={styles.banner} role="alert">
+            The table could not be drawn in this browser.
+          </p>
+        ) : null}
+      </div>
+      <p id={keysId} className={styles.keys}>
+        Keyboard: arrow keys move between pieces, Space or Enter selects, M picks a piece up and
+        Enter puts it down, Escape cancels, + and − zoom.
+      </p>
+    </>
   );
 }

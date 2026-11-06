@@ -121,7 +121,7 @@ T01 implements the pipeline in `.github/workflows/ci.yml`. It builds before the 
 so emitted binaries are included. Contract export and Docker integration services are enabled.
 CI checks Drizzle migration metadata and schema drift before starting the services. Server
 tests migrate the test database automatically and fail if PostgreSQL is unavailable;
-browser tests verify local Keycloak login. PERF-01 remains conditional until T20.
+browser tests verify local Keycloak login. The nightly job also runs PERF-01.
 Packages without implementations still have scaffold tests.
 
 T03 adds `e2e/rules.spec.ts`, which loads the compiled runtime and the installed
@@ -160,6 +160,13 @@ each step until the table shows it (p95 under 150 ms, worst under 500 ms). A sec
 Q-026: a guest ends a 2-seat sandbox match with the End game button and its confirm step,
 then follows the match page's replay link and sees the rules host's hash.
 
+T20 adds `e2e/harbor-determinism.spec.ts` for AC-08. It records the same seeded
+Harbor Market cases as PROP-DET in Node and replays each from its seed and
+accepted events in Chromium. Setup and every subsequent state hash must match
+the Node trace. It runs 20 games by default and 1,000 when the nightly job sets
+`BGP_PROPERTY_RUNS=1000`. E2E-06 separately checks the production game worker
+against the rules host in all three browser engines.
+
 T19 adds `e2e/cli.spec.ts` for E2E-07, running the built CLI (`packages/cli/dist/bin.js`, so
 run `pnpm build` first) in a temporary directory. In Chromium: `bgp init`, `bgp validate`,
 `bgp build` and `bgp publish` against the local server; the test signs in as designer2 on
@@ -170,9 +177,31 @@ source file and checks that the rebuild keeps the move, then breaks the build an
 the table keeps running and lists the error. `bgp validate`'s own checks (planted leaks,
 `Math.random`, `Date`, an endless move, nondeterminism) are unit tests in `packages/cli/test/`.
 
+T20 adds PERF-01 (`pnpm perf`, [scripts/perf/README.md](../scripts/perf/README.md)). It
+starts the API and room server as its own process on loopback against a `bgp_perf` database,
+with a local token issuer instead of Keycloak, publishes Harbor Market and plays 20 4-seat
+matches at once with scripted clients that apply patches with the web app's code. The round
+trip is `move` sent to the mover's own `patch` received; 250 ms of think time between moves
+gives about 60 moves per second across the server. Run `pnpm build` first.
+
+T20 also adds `e2e/csp.spec.ts`. Every app test already runs the production build under the
+content security policy (Q-031), so a blocked resource breaks its flow; this spec checks the
+header and the meta tag, and plays a move in a 2-seat Harbor Market match while recording
+`securitypolicyviolation` events (`e2e/support/csp.ts`): there must be none, and the game
+worker's script must arrive with its own stricter policy.
+
+Keyboard operation (T20): `e2e/table-2d.spec.ts` picks up a market card with M in the
+renderer harness, cancels with Escape, and drops it on a grid piece and in the free zone with
+Enter and Space, checking the `drop` gestures. `e2e/match.spec.ts` plays the start of a
+2-seat Harbor Market match with the keyboard alone: Tab from the table to Restock and Enter,
+then a swap with M, the arrow keys and Enter, and checks that the canvas points at the visible
+key list. `keyboardDropTargets` has unit tests in `packages/table-2d/test/layout.test.ts`.
+
 Physical Android/iPhone renderer profiling is a T20 gate, deferred from T13 by
 the project owner on 2026-10-27. Run both the three-engine spike and production
-`/dev/table/?stress=1` on identified hardware. Record 300-item frame cadence
+`/dev/table/?stress=1&fps=1` (on-screen frame intervals, T20) on identified hardware
+using the [T20 device run steps](t20-validation.md#physical-device-table-qualification-ac-12-deferred-from-t13).
+Record 300-item frame cadence
 against the 60 fps target, DPR/backend, readable text after zooming and actual
 touch drag/drop, pinch/pan, seat rotation and viewport resizing. Desktop WebKit
 and synthetic touch events do not establish AC-12 on iOS or Android.

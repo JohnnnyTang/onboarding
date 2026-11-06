@@ -123,11 +123,28 @@ describe("match panels", () => {
     expect(renderToStaticMarkup(<ConnectionBanner status="reconnecting" />)).toContain(
       "Reconnecting",
     );
-    expect(roomErrorMessage({ code: "SEAT_TAKEN_OVER", message: "x", fatal: true })).toContain(
-      "another tab",
+    expect(
+      roomErrorMessage({ id: 1, code: "SEAT_TAKEN_OVER", message: "x", fatal: true }),
+    ).toContain("another tab");
+    expect(
+      roomErrorMessage({ id: 2, code: "RATE_LIMITED", message: "Slow down", fatal: false }),
+    ).toContain("the last one was not sent");
+    expect(
+      roomErrorMessage({ id: 3, code: "MATCH_FINISHED", message: "Match is over", fatal: false }),
+    ).toBe("Match is over");
+  });
+
+  test("a rejected move shows the game's message, and a server failure in plain words", () => {
+    const notice = (code: "INVALID_MOVE" | "INTERNAL", message: string) =>
+      renderToStaticMarkup(
+        <RejectedNotice rejection={{ id: 1, code, message }} onDismiss={() => {}} />,
+      );
+    expect(notice("INVALID_MOVE", "Ship two cards of one good")).toContain(
+      "Ship two cards of one good",
     );
-    expect(roomErrorMessage({ code: "RATE_LIMITED", message: "Slow down", fatal: false })).toBe(
-      "Slow down",
-    );
+    const internal = notice("INTERNAL", "Internal server error");
+    expect(internal).toContain("the move was not made");
+    expect(internal).not.toContain("Internal server error");
+    expect(renderToStaticMarkup(<RejectedNotice rejection={null} onDismiss={() => {}} />)).toBe("");
   });
 });

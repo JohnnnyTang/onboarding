@@ -1,6 +1,12 @@
 import { createHash } from "node:crypto";
 import react from "@vitejs/plugin-react";
 import { defineConfig, type Plugin } from "vite";
+import { loadWebConfig, type WebConfig } from "./src/config";
+import {
+  contentSecurityPolicy,
+  GAME_WORKER_POLICY,
+  GAME_WORKER_SCRIPT,
+} from "./src/security/content-security-policy";
 
 const SERVICE_WORKER = "sw.js";
 
@@ -41,9 +47,54 @@ function precacheManifest(): Plugin {
   };
 }
 
+/**
+ * The content security policy (src/security/content-security-policy.ts) for production
+ * builds: a `<meta>` tag first in `index.html`, so any static host enforces it, and the full
+ * header from `vite preview`, which also gives the game worker its own stricter policy.
+ * Development (`vite dev`) has none: React Refresh needs an inline script.
+ */
+function contentSecurityPolicyPlugin(): Plugin {
+  let config: WebConfig | undefined;
+  const resolved = () => {
+    if (!config) throw new Error("Vite config not resolved");
+    return config;
+  };
+  return {
+    name: "bgp-content-security-policy",
+    configResolved(resolvedConfig) {
+      config = loadWebConfig(resolvedConfig.env);
+    },
+    transformIndexHtml: {
+      order: "post",
+      handler(html, context) {
+        if (context.server) return html;
+        // Right after the charset, before any script or stylesheet it governs.
+        const charset = '<meta charset="utf-8" />';
+        if (!html.includes(charset)) throw new Error("index.html must declare its charset");
+        const policy = contentSecurityPolicy(resolved(), "meta").replaceAll("'", "&#39;");
+        return html.replace(
+          charset,
+          `${charset}\n    <meta http-equiv="Content-Security-Policy" content="${policy}" />`,
+        );
+      },
+    },
+    configurePreviewServer(server) {
+      const page = contentSecurityPolicy(resolved(), "header");
+      server.middlewares.use((request, response, next) => {
+        const path = new URL(request.url ?? "/", "http://preview").pathname;
+        response.setHeader(
+          "Content-Security-Policy",
+          GAME_WORKER_SCRIPT.test(path) ? GAME_WORKER_POLICY : page,
+        );
+        next();
+      });
+    },
+  };
+}
+
 // The Keycloak client allows redirects to http://localhost:5173 only (infra/keycloak).
 export default defineConfig({
-  plugins: [react(), precacheManifest()],
+  plugins: [react(), precacheManifest(), contentSecurityPolicyPlugin()],
   server: { host: "localhost", port: 5173, strictPort: true },
   preview: { host: "localhost", port: 5173, strictPort: true },
   build: {

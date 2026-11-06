@@ -7,6 +7,7 @@ import { describe, expect, test } from "vitest";
 import type { ApiClient } from "../api/client";
 import type { AuthService, AuthUser } from "../auth/auth";
 import { createClaimedSeats } from "../auth/claimed-seats";
+import { ErrorNotice } from "../components/ui";
 import { createInviteStore } from "../match/match-invites";
 import { GameList, VersionList } from "../pages/games";
 import { LobbyStatus, SeatList } from "../pages/lobby";
@@ -157,6 +158,14 @@ describe("empty states and lists", () => {
     expect(html).toContain("Guest");
     expect(render(<LobbyStatus match={summary("lobby")} />)).toContain("Waiting for the host");
     expect(render(<LobbyStatus match={summary("active")} />)).toContain("Go to the table");
+  });
+
+  test("a failed request offers to try again only when it can", () => {
+    const offline = new TypeError("Failed to fetch");
+    const retry = render(<ErrorNotice error={offline} onRetry={() => {}} />);
+    expect(retry).toContain("Could not reach the server");
+    expect(retry).toContain("Try again");
+    expect(render(<ErrorNotice error={offline} />)).not.toContain("Try again");
   });
 });
 

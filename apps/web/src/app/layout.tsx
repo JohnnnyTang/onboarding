@@ -1,5 +1,6 @@
-import { Link, NavLink, Outlet } from "react-router";
+import { Link, NavLink, Outlet, useLocation } from "react-router";
 import { SignInButton, ui } from "../components/ui";
+import { PageErrorBoundary } from "./error-boundary";
 import styles from "./layout.module.css";
 import { useAuthUser, useServices } from "./services";
 
@@ -22,6 +23,7 @@ function Account() {
 }
 
 export function Layout() {
+  const { pathname } = useLocation();
   return (
     <div className={styles.shell}>
       <header className={styles.header}>
@@ -38,7 +40,9 @@ export function Layout() {
         </div>
       </header>
       <main className={styles.main}>
-        <Outlet />
+        <PageErrorBoundary key={pathname}>
+          <Outlet />
+        </PageErrorBoundary>
       </main>
     </div>
   );

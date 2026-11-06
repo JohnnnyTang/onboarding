@@ -1,0 +1,39 @@
+{
+  "test": "PERF-01",
+  "date": "2026-11-06T11:30:47.285Z",
+  "commit": "8324d0d",
+  "settings": {
+    "matches": 20,
+    "seats": 4,
+    "moves": 150,
+    "thinkMs": 250
+  },
+  "environment": {
+    "platform": "win32 10.0.26300 x64",
+    "cpu": "Intel(R) Core(TM) Ultra 7 258V",
+    "cores": 8,
+    "memoryGb": 31,
+    "node": "v24.12.0",
+    "sandbox": "quickjs",
+    "network": "loopback"
+  },
+  "durationS": 53.3,
+  "movesPerSecond": 63.1,
+  "roundTripMs": {
+    "count": 3360,
+    "min": 20.1,
+    "p50": 56,
+    "p90": 67.4,
+    "p95": 71.7,
+    "p99": 84.1,
+    "max": 123.4,
+    "mean": 55.1
+  },
+  "perMatchP95Ms": {
+    "min": 68.5,
+    "max": 75.7
+  },
+  "resyncs": 0,
+  "limitP95Ms": 200,
+  "pass": true
+}

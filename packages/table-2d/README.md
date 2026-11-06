@@ -52,7 +52,19 @@ order the seat sees them (`focusOrder`: zones top to bottom, then left to right)
 Enter or Space does exactly what a click does, including the `click` gesture.
 Escape clears the selection, `+` and `-` zoom, and `0` fits the table. The
 canvas `aria-label` names the focused piece using only what the snapshot shows;
-face-down cards are read as "Card back". Keyboard drag and drop is left to T20.
+face-down cards are read as "Card back".
+
+Keyboard drag and drop (T20): M picks up the focused draggable piece. The arrow
+keys then walk its drop targets (`keyboardDropTargets`, in focus order): in row,
+fan and grid zones every other piece, giving the same `drop` gesture as a pointer
+released on it, and every droppable zone itself, at its end (top of a stack, after
+the last piece) or at the centre of a free zone. It starts at the first target
+outside the piece's own zone. The target zone and piece are outlined and the
+canvas label reads "moving Fish 1 to Tea 2, in Market (1 of 5); Enter drops,
+Escape cancels". Enter or Space drops, Escape or M cancels; a new snapshot,
+blur or pointer press cancels too. The canvas lists its keys in
+`aria-keyshortcuts`, and the web app shows them under the table
+(`aria-describedby`).
 
 Item IDs retain display nodes across snapshots. Position and rotation animate;
 appearance changes replace the node's children. Missing or failed images keep

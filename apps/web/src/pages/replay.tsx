@@ -227,7 +227,13 @@ export function ReplayPage() {
     return (
       <>
         <PageHeader title="Replay" />
-        <ErrorNotice error={match.error ?? replay.error} />
+        <ErrorNotice
+          error={match.error ?? replay.error}
+          onRetry={() => {
+            void match.refetch();
+            void replay.refetch();
+          }}
+        />
         <p>
           <Link to="/matches">Back to matches</Link>
         </p>

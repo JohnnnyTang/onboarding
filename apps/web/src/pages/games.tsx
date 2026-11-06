@@ -35,7 +35,8 @@ function Games() {
     queryFn: () => api.listGames(),
   });
   if (games.isPending) return <Loading />;
-  if (games.isError) return <ErrorNotice error={games.error} />;
+  if (games.isError)
+    return <ErrorNotice error={games.error} onRetry={() => void games.refetch()} />;
   return <GameList games={games.data.items} />;
 }
 
@@ -92,7 +93,7 @@ function Game({ gameId }: { gameId: string }) {
     queryFn: () => api.getGame(gameId),
   });
   if (game.isPending) return <Loading />;
-  if (game.isError) return <ErrorNotice error={game.error} />;
+  if (game.isError) return <ErrorNotice error={game.error} onRetry={() => void game.refetch()} />;
   return (
     <>
       <PageHeader title={game.data.name}>

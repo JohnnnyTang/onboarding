@@ -53,7 +53,8 @@ function Matches() {
     queryFn: () => api.listMatches(),
   });
   if (matches.isPending) return <Loading />;
-  if (matches.isError) return <ErrorNotice error={matches.error} />;
+  if (matches.isError)
+    return <ErrorNotice error={matches.error} onRetry={() => void matches.refetch()} />;
   return <MatchList matches={matches.data.items} />;
 }
 
