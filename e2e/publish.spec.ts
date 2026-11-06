@@ -1,5 +1,5 @@
 import { createHash, randomBytes, randomUUID } from "node:crypto";
-import { mkdtempSync, rmSync } from "node:fs";
+import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { type Browser, type BrowserContext, expect, type Page, test } from "@playwright/test";
@@ -7,6 +7,7 @@ import type { TableSnapshot } from "../packages/schema/src/index.js";
 import { fitViewport, tableToScreen } from "../packages/table-2d/src/layout.js";
 import { keycloakLogin, WEB_URL } from "./support/app.js";
 import { solidPng } from "./support/png.js";
+import { removeProfile } from "./support/profile.js";
 
 // T17 done-when: E2E-02 (sign in, publish a local project, see the version ready; an identical
 // re-publish keeps the build hash) and E2E-03 (the designer hosts a 3-seat match from it; two
@@ -368,6 +369,6 @@ test("E2E-02 and E2E-03: publish a project, host a 3-seat match with two guests,
     }
   } finally {
     for (const context of contexts) await context.close();
-    rmSync(profile, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 });
+    removeProfile(profile);
   }
 });
