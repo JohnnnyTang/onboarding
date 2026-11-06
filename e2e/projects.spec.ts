@@ -402,7 +402,8 @@ test("E2E-01: an offline project with generated cards, played hot-seat, survives
   expect(await storedFace(page, "assets/cards/tea-2.png")).toMatchObject({ size: [744, 1039] });
   expect(failed.filter((url) => url.startsWith(WEB_URL))).toEqual([]);
   await context.close();
-  rmSync(profile, { recursive: true, force: true });
+  // Windows can hold the closed browser's files for a moment (EPERM); rmSync retries.
+  rmSync(profile, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 });
 });
 
 test("T16: 100 cards are generated at 300 dpi in under 10 seconds", async ({
@@ -438,5 +439,6 @@ test("T16: 100 cards are generated at 300 dpi in under 10 seconds", async ({
     pixel: "#3a7d44",
   });
   await context.close();
-  rmSync(profile, { recursive: true, force: true });
+  // Windows can hold the closed browser's files for a moment (EPERM); rmSync retries.
+  rmSync(profile, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 });
 });

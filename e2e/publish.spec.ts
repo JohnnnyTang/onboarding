@@ -368,6 +368,6 @@ test("E2E-02 and E2E-03: publish a project, host a 3-seat match with two guests,
     }
   } finally {
     for (const context of contexts) await context.close();
-    rmSync(profile, { recursive: true, force: true });
+    rmSync(profile, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 });
   }
 });
