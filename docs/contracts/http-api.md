@@ -173,8 +173,9 @@ pass does it run `setup` in the rules host with seed 1 and the default options, 
 `players.min` and `players.max`. Errors are stored on the version (`failed`,
 `validationErrors`) before the 400 is returned. Finalizing a ready version returns its
 build hash again. Versions with the same build hash must declare the same `mode` and
-`entry`. Sandbox versions have no bundle and are checked structurally; the room server
-runs their setup (T11).
+`entry`. Sandbox versions have no bundle: their components file (at most 2 MB) is the
+game, and finalize runs the built-in sandbox definition's `setup` from it in the rules
+host the same way (T17, [rules-host.md](rules-host.md#builds-and-matches)).
 
 **Downloads** send `etag` (the file's SHA-256), `x-content-type-options: nosniff`,
 `content-security-policy: default-src 'none'; sandbox` and `cache-control: private,

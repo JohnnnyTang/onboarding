@@ -12,7 +12,7 @@ export interface VersionBuildStore extends BuildStore {
 }
 
 /**
- * Resolves build hashes for the rules host: ready enforced versions from the database
+ * Resolves build hashes for the rules host: ready versions (enforced or sandbox) from the database
  * and blob store, plus builds staged while finalize runs their setup check.
  * The host client re-verifies the file index and entry digest of everything returned.
  */
@@ -38,17 +38,22 @@ export function createVersionBuildStore(db: Database, blobs: BlobStore): Version
         .from(gameVersions)
         .where(and(eq(gameVersions.buildHash, buildHash), eq(gameVersions.status, "ready")))
         .limit(1);
-      if (version?.manifest.mode !== "enforced") throw new Error("Unknown build");
+      if (!version) throw new Error("Unknown build");
+      const { manifest } = version;
       const rows = await db
         .select({ path: versionFiles.path, sha256: versionFiles.sha256 })
         .from(versionFiles)
         .where(eq(versionFiles.versionId, version.id));
       const files = Object.fromEntries(rows.map((row) => [row.path, row.sha256]));
-      const digest = files[version.manifest.entry];
+      // Enforced games run their bundle; sandbox games (T17) run from their components file.
+      const path = manifest.mode === "enforced" ? manifest.entry : manifest.components;
+      const digest = files[path];
       const bytes = digest === undefined ? null : await blobs.get(blobKey(digest));
-      if (bytes === null) throw new Error("Missing bundle");
+      if (bytes === null) throw new Error("Missing game source");
       const source = new TextDecoder("utf-8", { fatal: true }).decode(bytes);
-      return { entry: version.manifest.entry, files, source };
+      return manifest.mode === "enforced"
+        ? { entry: manifest.entry, files, source }
+        : { mode: "sandbox", components: manifest.components, files, source };
     },
   };
 }

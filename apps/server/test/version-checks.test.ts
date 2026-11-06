@@ -2,7 +2,8 @@ import type { Manifest } from "@bgp/schema";
 import { describe, expect, it } from "vitest";
 import { findModuleImports } from "../src/versions/bundle-scan.js";
 import { buildHash, checkUploadedFile, contentTypeFor } from "../src/versions/files.js";
-import { PNG, sha256 } from "./api-fixture.js";
+import { validateVersion } from "../src/versions/finalize.js";
+import { PNG, sandboxPackage, sha256 } from "./api-fixture.js";
 
 describe("findModuleImports", () => {
   it.each([
@@ -92,5 +93,47 @@ describe("version files", () => {
     expect(contentTypeFor("components.json")).toBe("application/json; charset=utf-8");
     expect(contentTypeFor("model.glb")).toBe("application/octet-stream");
     expect(contentTypeFor(".hidden")).toBe("application/octet-stream");
+  });
+});
+
+describe("sandbox finalize (T17)", () => {
+  it("runs the sandbox setup in the rules host from the components file", async () => {
+    const pkg = sandboxPackage("sandbox-setup");
+    const files = Object.entries(pkg.files).map(([path, bytes]) => ({
+      path,
+      sha256: sha256(bytes),
+      bytes: bytes.length,
+    }));
+    const calls: unknown[] = [];
+    const run = (failed: number[]) =>
+      validateVersion({
+        manifest: pkg.manifest,
+        files,
+        read: async (path) => pkg.files[path] ?? new Uint8Array(),
+        setup: {
+          check: async (build, counts) => {
+            calls.push({ build, counts });
+            return failed;
+          },
+        },
+      });
+    expect(await run([])).toEqual({ ok: true, buildHash: buildHash(files) });
+    const components = pkg.files["components.json"]?.toString("utf8");
+    expect(calls[0]).toEqual({
+      build: {
+        buildHash: buildHash(files),
+        mode: "sandbox",
+        components: "components.json",
+        files: Object.fromEntries(files.map((file) => [file.path, file.sha256])),
+        source: components,
+      },
+      counts: [1, 4],
+    });
+    expect(await run([4])).toEqual({
+      ok: false,
+      errors: [
+        { path: "components.json", message: "setup failed in the rules host for 4 players" },
+      ],
+    });
   });
 });

@@ -29,6 +29,9 @@ process.on("message", async (raw: unknown) => {
     } else if (command.op === "load") {
       if (sandbox) throw Error();
       sandbox = await QuickJsSandbox.load(command.source, command);
+    } else if (command.op === "loadSandbox") {
+      if (sandbox) throw Error();
+      sandbox = await QuickJsSandbox.loadSandbox(command.components, command);
     } else {
       if (!sandbox) throw Error();
       switch (command.op) {

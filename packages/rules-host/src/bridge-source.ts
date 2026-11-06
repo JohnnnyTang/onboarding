@@ -1,12 +1,15 @@
 // Trusted code evaluated before the game. The returned factory and dispatcher are held
 // by private interpreter handles, never on globalThis where the game could invoke them.
+// The factory takes an enforced game's definition, or (T17) undefined plus a sandbox
+// components file as JSON, for which it builds the runtime's own sandbox definition.
 export const BRIDGE_SOURCE = `
 (() => {
   const R = BGP_RUNTIME;
   delete globalThis.BGP_RUNTIME;
   const parse = JSON.parse;
   const stringify = JSON.stringify;
-  return (def) => {
+  return (def, sandboxJson) => {
+    if (sandboxJson !== undefined) def = R.createSandboxDefinition(parse(sandboxJson));
     let state;
     return (raw) => {
       const request = parse(raw);

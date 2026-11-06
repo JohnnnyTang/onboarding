@@ -13,6 +13,17 @@ build hash over the sorted file index and the entry digest before caching the so
 T10 supplies the finalized immutable version store. The entry has a 2 MiB UTF-8 cap.
 The child receives source through IPC and cannot read the version store.
 
+**Sandbox builds (T17).** A sandbox version has no bundle; its components file is the
+game. The store returns `{ mode: "sandbox", components, files, source }`, where
+`components` names the components file and `source` is its UTF-8 text (2 MiB cap). The
+client verifies the build hash and the components file's digest the same way, then parses
+it with `ComponentsFileSchema` and requires `zones` and `setup`. Its process receives
+`loadSandbox` instead of `load`: the trusted runtime builds `createSandboxDefinition` from
+the components inside QuickJS, after the same lockdown, and no game module is evaluated.
+Every later call, limit, recovery step and view rule is the same as for an enforced game,
+so sandbox matches keep hidden cards out of other seats' views exactly as playerView does.
+Finalize runs the same setup check for sandbox versions (Q-014).
+
 The server client API is:
 
 | Method                               | Meaning                                                                   |
@@ -35,6 +46,8 @@ Requests (`HostRequestSchema`) are `{ v: 1, id, command }`. `id` is a positive
 integer increasing per process. Commands are strict objects:
 
 - `{ op: "load", source, timeoutMs, memoryLimitBytes }`
+- `{ op: "loadSandbox", components, timeoutMs, memoryLimitBytes }` (T17; a validated
+  `ComponentsFile` with zones and setup)
 - `{ op: "prepare" }` (load the trusted interpreter module in an unassigned spare)
 - `{ op: "create", init }` (ordinary `MatchInit`, without build hash)
 - `{ op: "apply", seat, intent }`
@@ -43,7 +56,7 @@ integer increasing per process. Commands are strict objects:
 - `{ op: "dispose" }`
 
 Successful replies (`HostResponseSchema`) are `{ v: 1, id, ok: true, value }`.
-Prepare/create/load/restore/dispose return `null`; apply returns `HostMoveOutcomeSchema`;
+Prepare/create/load/loadSandbox/restore/dispose return `null`; apply returns `HostMoveOutcomeSchema`;
 views returns `HostViewsSchema`; hash returns a lowercase SHA-256 string; export
 returns `MatchStateSchema`. Every call validates its operation-specific result.
 Failures are exactly `{ v: 1, id, ok: false, code: "GAME_ERROR", message:
