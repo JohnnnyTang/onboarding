@@ -169,13 +169,14 @@ test("Q-018: a designer who reloads mid-match signs in again and is back at the 
   const invite = match.invites.find((entry) => entry.seat === "0");
   if (!invite) throw new Error("Missing invite for seat 0");
 
-  // designer1 signs in on the invite page and takes seat 1 with their account.
+  // The host, designer2, signs in on the invite page and takes seat 1 with their account
+  // (designer1 must stay unseated: the T12 test expects an empty matches list).
   const context = await browser.newContext({ viewport: { width: 1024, height: 768 } });
   const page = await context.newPage();
   await page.goto(invite.url);
   await page.getByRole("banner").getByRole("button", { name: "Sign in" }).click();
-  await keycloakLogin(page, "designer1");
-  await expect(page.getByText("You will join as Designer One's account.")).toBeVisible();
+  await keycloakLogin(page, "designer2");
+  await expect(page.getByText("You will join as Designer Two's account.")).toBeVisible();
   await page.getByRole("button", { name: "Join" }).click();
   await expect(page).toHaveURL(`${WEB_URL}/matches/${match.matchId}/lobby`);
   const bo = await joinAsGuest(browser, match, "1", "Bo");
