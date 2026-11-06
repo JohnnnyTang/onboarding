@@ -1,5 +1,11 @@
 import { INIT_REPLY_ID, type WorkerCall, type WorkerInit, type WorkerReply } from "./protocol";
-import { asGameDefinition, createWorkerHost, sandboxDefinition } from "./worker-host";
+import {
+  asGameDefinition,
+  createWorkerHost,
+  type Digest,
+  sandboxDefinition,
+  type WorkerHost,
+} from "./worker-host";
 
 /** The parts of a MessagePort the worker uses. */
 export interface WorkerPort {
@@ -11,6 +17,8 @@ export interface WorkerDeps {
   /** Locks the worker's globals; returns the names that could not be locked. */
   lockDown(): string[];
   importGame(source: string): Promise<unknown>;
+  /** SHA-256 for replay hash checks, captured before the lockdown. */
+  digest?: Digest;
 }
 
 /**
@@ -27,7 +35,7 @@ export async function startWorker(init: WorkerInit, port: WorkerPort, deps: Work
       port.postMessage({ id: message.id, ok: false });
     }
   };
-  let handle: ((request: WorkerCall) => unknown) | undefined;
+  let handle: WorkerHost | undefined;
   try {
     // Sandbox games run trusted platform code, but the worker is locked the same way, so
     // both kinds behave alike.
@@ -37,7 +45,7 @@ export async function startWorker(init: WorkerInit, port: WorkerPort, deps: Work
         ? sandboxDefinition(init.components)
         : asGameDefinition(await deps.importGame(init.game.source));
     if (!definition) throw new Error("Not a game definition");
-    handle = createWorkerHost(definition, init.components);
+    handle = createWorkerHost(definition, init.components, deps.digest);
   } catch {
     reply({ id: INIT_REPLY_ID, ok: false });
     return;
@@ -45,9 +53,17 @@ export async function startWorker(init: WorkerInit, port: WorkerPort, deps: Work
   const host = handle;
   port.onmessage = (event) => {
     const call = event.data as WorkerCall;
+    if (call.op === "replayHash") {
+      // Trusted platform code only: hashing never awaits anything game code returned.
+      host.hash(call.seq).then(
+        (value) => reply({ id: call.id, ok: true, value }),
+        () => reply({ id: call.id, ok: false }),
+      );
+      return;
+    }
     let value: unknown;
     try {
-      value = host(call);
+      value = host.handle(call);
     } catch {
       reply({ id: call.id, ok: false });
       return;

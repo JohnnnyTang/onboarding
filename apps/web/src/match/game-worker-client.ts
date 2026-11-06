@@ -11,7 +11,9 @@ import {
   type MatchInit,
   type MoveIntent,
   MoveIntentSchema,
+  NonnegativeIntegerSchema,
   type SeatId,
+  Sha256Schema,
   type TableSnapshot,
   TableSnapshotSchema,
 } from "@bgp/schema";
@@ -69,6 +71,20 @@ export interface GameWorker {
     create(init: MatchInit, events?: readonly AcceptedEvent[]): Promise<void>;
     apply(seat: SeatId, intent: MoveIntent): Promise<HotSeatOutcome>;
     view(seat: SeatId | null): Promise<ClientView>;
+  };
+  /**
+   * Rebuilds a finished match step by step. Append events in chunks (each call has its own
+   * deadline); every step stays available to `view` and `hash`.
+   */
+  replay: {
+    /** Starts from setup; resolves with the last step, 0. */
+    start(init: MatchInit): Promise<number>;
+    /** Applies the next events; resolves with the last step reached. */
+    append(events: readonly AcceptedEvent[]): Promise<number>;
+    /** A seat's view after event `seq` (0 is the setup). */
+    view(seq: number, seat: SeatId | null): Promise<ClientView>;
+    /** `hashState` after event `seq`, computed in the worker. */
+    hash(seq: number): Promise<string>;
   };
   /** True once the worker was stopped after a timeout, a crash or `destroy`. */
   readonly stopped: boolean;
@@ -251,6 +267,17 @@ export async function bootGameWorker(options: GameWorkerOptions = {}): Promise<B
         call({ op: "hotSeatCreate", init, events: [...events] }, () => undefined),
       apply: (seat, intent) => call({ op: "hotSeatApply", seat, intent }, parseOutcome),
       view: (seat) => call({ op: "hotSeatView", seat }, (value) => ClientViewSchema.parse(value)),
+    },
+    replay: {
+      start: (init) =>
+        call({ op: "replayStart", init }, (value) => NonnegativeIntegerSchema.parse(value)),
+      append: (events) =>
+        call({ op: "replayAppend", events: [...events] }, (value) =>
+          NonnegativeIntegerSchema.parse(value),
+        ),
+      view: (seq, seat) =>
+        call({ op: "replayView", seq, seat }, (value) => ClientViewSchema.parse(value)),
+      hash: (seq) => call({ op: "replayHash", seq }, (value) => Sha256Schema.parse(value)),
     },
     get stopped() {
       return stopped;

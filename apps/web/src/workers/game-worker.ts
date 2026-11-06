@@ -17,6 +17,11 @@ interface WorkerScope {
 const scope = globalThis as unknown as WorkerScope;
 // Captured before the lockdown removes the global names.
 const stopAt = [EventTarget.prototype, Object.prototype];
+// Web Crypto exists only in a secure context; without it replays skip the hash check.
+const subtle = globalThis.crypto?.subtle;
+const digest = subtle
+  ? (bytes: Uint8Array<ArrayBuffer>) => subtle.digest("SHA-256", bytes)
+  : undefined;
 
 scope.addEventListener(
   "message",
@@ -26,6 +31,7 @@ scope.addEventListener(
     void startWorker(event.data, port, {
       lockDown: () => lockDownGlobals(globalThis, stopAt),
       importGame: importGameModule,
+      ...(digest ? { digest } : {}),
     });
   },
   { once: true },
