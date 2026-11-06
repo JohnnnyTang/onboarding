@@ -10,6 +10,7 @@ import { ServicesProvider } from "./app/services";
 import { createAuthService, oidcSettings } from "./auth/auth";
 import { createClaimedSeats, createTokenSource } from "./auth/claimed-seats";
 import { loadWebConfig } from "./config";
+import { createInviteStore } from "./match/match-invites";
 import { openProjectStore, type ProjectStore } from "./projects/project-store";
 import "./styles/global.css";
 
@@ -20,6 +21,8 @@ void manager.clearStaleState();
 const auth = createAuthService(manager);
 // Guest seats survive a reload in this tab (Q-018); designer tokens stay in memory (D-007).
 const seats = createClaimedSeats(sessionStorage);
+// Invite links come back once, at match creation; the host's tab keeps them (Q-025).
+const invites = createInviteStore(sessionStorage);
 const api = createApiClient({ baseUrl: config.apiUrl, tokens: createTokenSource(auth, seats) });
 // Opened on first use, so pages without projects never touch IndexedDB.
 let projectStore: Promise<ProjectStore> | undefined;
@@ -47,7 +50,7 @@ const root = document.getElementById("root");
 if (!root) throw new Error("Missing #root element");
 createRoot(root).render(
   <StrictMode>
-    <ServicesProvider value={{ api, auth, seats, roomUrl: config.wsUrl, projects }}>
+    <ServicesProvider value={{ api, auth, seats, invites, roomUrl: config.wsUrl, projects }}>
       <QueryClientProvider client={queryClient}>
         <BrowserRouter>
           <AppRoutes />
