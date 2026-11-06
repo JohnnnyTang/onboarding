@@ -1,0 +1,122 @@
+{
+  "schemaVersion": 1,
+  "defs": [
+    {
+      "id": "card-back",
+      "kind": "cardBack",
+      "name": "Card back",
+      "image": "assets/card-back.png"
+    },
+    {
+      "id": "card-1",
+      "kind": "card",
+      "name": "Card 1",
+      "size_mm": [63, 88],
+      "front": "assets/card-1.png",
+      "back": "card-back"
+    },
+    {
+      "id": "card-2",
+      "kind": "card",
+      "name": "Card 2",
+      "size_mm": [63, 88],
+      "front": "assets/card-2.png",
+      "back": "card-back"
+    },
+    {
+      "id": "card-3",
+      "kind": "card",
+      "name": "Card 3",
+      "size_mm": [63, 88],
+      "front": "assets/card-3.png",
+      "back": "card-back"
+    },
+    {
+      "id": "card-4",
+      "kind": "card",
+      "name": "Card 4",
+      "size_mm": [63, 88],
+      "front": "assets/card-4.png",
+      "back": "card-back"
+    },
+    {
+      "id": "card-5",
+      "kind": "card",
+      "name": "Card 5",
+      "size_mm": [63, 88],
+      "front": "assets/card-5.png",
+      "back": "card-back"
+    },
+    {
+      "id": "card-6",
+      "kind": "card",
+      "name": "Card 6",
+      "size_mm": [63, 88],
+      "front": "assets/card-6.png",
+      "back": "card-back"
+    },
+    {
+      "id": "card-7",
+      "kind": "card",
+      "name": "Card 7",
+      "size_mm": [63, 88],
+      "front": "assets/card-7.png",
+      "back": "card-back"
+    },
+    {
+      "id": "card-8",
+      "kind": "card",
+      "name": "Card 8",
+      "size_mm": [63, 88],
+      "front": "assets/card-8.png",
+      "back": "card-back"
+    },
+    {
+      "id": "card-9",
+      "kind": "card",
+      "name": "Card 9",
+      "size_mm": [63, 88],
+      "front": "assets/card-9.png",
+      "back": "card-back"
+    }
+  ],
+  "zones": [
+    {
+      "id": "deck",
+      "label": "Deck",
+      "layout": "stack",
+      "rect_mm": {
+        "x": -80,
+        "y": 0,
+        "w": 80,
+        "h": 110
+      },
+      "visibility": "public"
+    },
+    {
+      "id": "pile",
+      "label": "Pile",
+      "layout": "stack",
+      "rect_mm": {
+        "x": 80,
+        "y": 0,
+        "w": 80,
+        "h": 110
+      },
+      "visibility": "public"
+    },
+    {
+      "id": "hand",
+      "label": "Hand",
+      "layout": "fan",
+      "rect_mm": {
+        "x": 0,
+        "y": 230,
+        "w": 300,
+        "h": 110
+      },
+      "owner": "each",
+      "visibility": "owner"
+    }
+  ]
+}

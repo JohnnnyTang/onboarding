@@ -1,0 +1,12 @@
+{
+  "name": "%GAME_ID%",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "bgp dev",
+    "validate": "bgp validate",
+    "build": "bgp build",
+    "publish-game": "bgp publish"
+  }
+}
