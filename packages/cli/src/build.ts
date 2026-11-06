@@ -16,6 +16,8 @@ const TYPES_PACKAGE = "@bgp/schema";
  * workspace needs no installed copy.
  */
 const CLI_DIR = resolve(dirname(fileURLToPath(import.meta.url)), "..");
+/** Marks the plugin's own resolution of the SDK. */
+const SDK_LOOKUP = Symbol("bgp-sdk-lookup");
 
 function isInside(path: string, dir: string): boolean {
   const rel = relative(dir, path);
@@ -36,7 +38,12 @@ export function importPolicy(gameDir: string): Plugin {
     name: "bgp-import-policy",
     setup(builder) {
       builder.onResolve({ filter: /.*/ }, async (args) => {
-        if (args.kind === "entry-point" || !isGameFile(args.importer, gameDir)) return undefined;
+        // Our own lookup below re-enters this callback with no importer; an empty importer would
+        // otherwise resolve to the working directory, which may be the package itself.
+        if (args.kind === "entry-point" || args.pluginData === SDK_LOOKUP || args.importer === "") {
+          return undefined;
+        }
+        if (!isGameFile(args.importer, gameDir)) return undefined;
         if (args.path.startsWith(".") || isAbsolute(args.path)) {
           if (isInside(resolve(args.resolveDir, args.path), gameDir)) return undefined;
           return { errors: [{ text: `Game code may not import files outside the package` }] };
@@ -45,6 +52,7 @@ export function importPolicy(gameDir: string): Plugin {
           const found = await builder.resolve(SDK_PACKAGE, {
             kind: args.kind,
             resolveDir: CLI_DIR,
+            pluginData: SDK_LOOKUP,
           });
           return found.errors.length > 0 ? { errors: found.errors } : { path: found.path };
         }

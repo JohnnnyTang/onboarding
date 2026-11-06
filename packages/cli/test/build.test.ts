@@ -1,5 +1,9 @@
+import { execFile } from "node:child_process";
 import { readFile } from "node:fs/promises";
+import { createRequire } from "node:module";
 import { join } from "node:path";
+import { fileURLToPath, pathToFileURL } from "node:url";
+import { promisify } from "node:util";
 import { afterEach, describe, expect, it } from "vitest";
 import { buildGame, bundleGame } from "../src/build.js";
 import { PackageError } from "../src/game-package.js";
@@ -37,6 +41,23 @@ describe("bgp build", () => {
     expect(source).toMatch(/export \{\s*\w+ as default\s*\};?\s*$/);
     expect(source).not.toMatch(/^import /m);
   });
+
+  it("builds from inside the package directory", async () => {
+    // Regression: the SDK lookup re-entered the import policy and looped forever when the
+    // working directory was the package itself.
+    const pkg = await game();
+    const tsx = pathToFileURL(createRequire(import.meta.url).resolve("tsx")).href;
+    const bin = fileURLToPath(new URL("../src/bin.ts", import.meta.url));
+    const { stdout } = await promisify(execFile)(
+      process.execPath,
+      ["--import", tsx, bin, "build"],
+      {
+        cwd: pkg.dir,
+        timeout: 20_000,
+      },
+    );
+    expect(stdout).toMatch(/^Built dist\/game\.js/);
+  }, 30_000);
 
   it("gives identical bytes for identical sources", async () => {
     const pkg = await game();
