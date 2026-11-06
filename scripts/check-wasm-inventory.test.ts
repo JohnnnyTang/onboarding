@@ -80,6 +80,34 @@ describe("WASM inventory", () => {
     expect(result.errors.join("\n")).not.toContain("ignored.wasm");
   });
 
+  test("skips optional platform packages that are not installed, but not required ones", async () => {
+    const root = await fixture();
+    await binary(root, "node_modules/tool-win/bin.wasm");
+    const tool = (required: boolean) => ({
+      path: root,
+      dependencies: {
+        tool: {
+          path: join(root, "node_modules/tool"),
+          [required ? "dependencies" : "optionalDependencies"]: {
+            "tool-linux": { path: join(root, "node_modules/tool-linux") },
+            "tool-win": { path: join(root, "node_modules/tool-win") },
+          },
+        },
+      },
+    });
+    await mkdir(join(root, "node_modules/tool"), { recursive: true });
+    const result = await checkWasmInventory(root, [tool(false)]);
+    expect(result.errors.join("\n")).toContain("tool-win/bin.wasm");
+    // pnpm may list them as plain dependencies; the parent's manifest decides.
+    await expect(checkWasmInventory(root, [tool(true)])).rejects.toThrow(/ENOENT/);
+    await writeFile(
+      join(root, "node_modules/tool/package.json"),
+      JSON.stringify({ optionalDependencies: { "tool-linux": "1.0.0", "tool-win": "1.0.0" } }),
+    );
+    const listed = await checkWasmInventory(root, [tool(true)]);
+    expect(listed.errors.join("\n")).toContain("tool-win/bin.wasm");
+  });
+
   test("accepts an inventoried module with a D-002 entry", async () => {
     const root = await fixture([approved]);
     await binary(root, "packages/rules-host/dist/quickjs.wasm");
