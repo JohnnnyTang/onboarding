@@ -1,5 +1,4 @@
 import { createHash } from "node:crypto";
-import { createSandboxDefinition, hashState, replay } from "@bgp/rules";
 import type { ClientView, ComponentsFile, HostBuild } from "@bgp/schema";
 import { describe, expect, it } from "vitest";
 import { loadBuild } from "../src/build-store.js";
@@ -90,8 +89,10 @@ describe("sandbox games in the rules host", () => {
     }
   });
 
-  it("ends a sandbox match with the same result and hash as the runtime in Node", async () => {
+  // Browser engines reach the same hash in e2e/replay.spec.ts (Q-026).
+  it("ends a sandbox match with its result and a repeatable hash", async () => {
     const sandbox = await QuickJsSandbox.loadSandbox(COMPONENTS);
+    const again = await QuickJsSandbox.loadSandbox(COMPONENTS);
     try {
       await sandbox.create(INIT);
       const pass = { move: "manual", args: { op: "endTurn" } };
@@ -100,15 +101,16 @@ describe("sandbox games in the rules host", () => {
       expect(await sandbox.apply("1", end)).toMatchObject({ ok: true, event: { seq: 2 } });
       const state = await sandbox.exportState();
       expect(state.result).toEqual({ winners: [], reason: "Ended by Seat 2" });
-      const events = [
-        { seq: 1, seat: "0", intent: pass },
-        { seq: 2, seat: "1", intent: end },
-      ];
-      const local = replay(createSandboxDefinition(COMPONENTS), INIT, events);
-      expect(await sandbox.hash()).toBe(await hashState(local));
       expect(await sandbox.apply("0", pass)).toMatchObject({ ok: false, code: "MATCH_FINISHED" });
+      // The same events in a fresh sandbox give the same state.
+      await again.create(INIT);
+      await again.apply("0", pass);
+      await again.apply("1", end);
+      expect(await again.hash()).toBe(await sandbox.hash());
+      expect(await again.exportState()).toEqual(state);
     } finally {
       sandbox.dispose();
+      again.dispose();
     }
   });
 
