@@ -30,7 +30,7 @@ describe("local project records", () => {
     ["a manifest with another name", { ...project, name: "Other" }],
     ["an enforced manifest", { ...project, manifest: manifest }],
     ["components without zones", { ...project, components: { schemaVersion: 1, defs: [] } }],
-    ["a float in card templates", { ...project, cardTemplates: [{ x: 1.5 }] }],
+    ["an unknown card template shape", { ...project, cardTemplates: [{ x: 1 }] }],
     ["a non-UUID id", { ...project, id: "project-1" }],
   ])("reject %s", (_name, value) => {
     expect(LocalProjectSchema.safeParse(value).success).toBe(false);

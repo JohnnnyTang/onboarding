@@ -35,17 +35,18 @@ The intended full system is described in [architecture.md](docs/architecture.md)
 
 ## What is in this repository
 
-| Area                                      | Role                                                              | Current state                                                         |
-| ----------------------------------------- | ----------------------------------------------------------------- | --------------------------------------------------------------------- |
-| `packages/schema`                         | Zod contracts and generated JSON Schemas                          | Implemented                                                           |
-| `packages/rules`                          | Seeded RNG, rules runtime, sandbox operations, replay and hashing | Implemented                                                           |
-| `packages/testing`                        | Headless runner, random bot, leak and determinism checks          | Implemented                                                           |
-| `packages/rules-host`                     | Isolated server-side game execution and recovery client           | Implemented; T08 closure has remaining gates                          |
-| `packages/table-2d`                       | PixiJS table renderer and gesture handling                        | Implemented; physical-phone qualification remains                     |
-| `apps/server`                             | Database schema, migrations, and auth foundation                  | HTTP game and match API / room server are pending                     |
-| `apps/web`                                | Browser application                                               | App shell and product flows are pending; table fixture harness exists |
-| `games/harbor-market`                     | Enforced reference game                                           | Planned; currently a scaffold                                         |
-| `packages/card-generator`, `packages/cli` | Card-face generation and developer commands                       | Planned; currently scaffolds                                          |
+| Area                      | Role                                                              | Current state                                                         |
+| ------------------------- | ----------------------------------------------------------------- | --------------------------------------------------------------------- |
+| `packages/schema`         | Zod contracts and generated JSON Schemas                          | Implemented                                                           |
+| `packages/rules`          | Seeded RNG, rules runtime, sandbox operations, replay and hashing | Implemented                                                           |
+| `packages/testing`        | Headless runner, random bot, leak and determinism checks          | Implemented                                                           |
+| `packages/rules-host`     | Isolated server-side game execution and recovery client           | Implemented; T08 closure has remaining gates                          |
+| `packages/table-2d`       | PixiJS table renderer and gesture handling                        | Implemented; physical-phone qualification remains                     |
+| `apps/server`             | Database schema, migrations, and auth foundation                  | HTTP game and match API / room server are pending                     |
+| `apps/web`                | Browser application                                               | App shell and product flows are pending; table fixture harness exists |
+| `games/harbor-market`     | Enforced reference game                                           | Planned; currently a scaffold                                         |
+| `packages/card-generator` | Card faces from templates and CSV rows                            | Implemented (T16)                                                     |
+| `packages/cli`            | Developer commands                                                | Planned; currently a scaffold                                         |
 
 The [Phase 1 specification](docs/phase-1-spec.md) defines the complete designer sandbox, remote match, replay, and SDK acceptance criteria. Later 3D and balance-analysis phases are direction, not current features.
 

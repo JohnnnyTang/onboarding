@@ -1,5 +1,6 @@
 import { z } from "zod";
 import * as auth from "./auth.js";
+import * as cards from "./cards.js";
 import * as common from "./common.js";
 import * as http from "./http.js";
 import * as manifest from "./manifest.js";
@@ -41,6 +42,7 @@ export function contractJsonSchemas() {
   const documents: Record<string, z.core.JSONSchema.JSONSchema> = {};
   for (const [name, schema] of Object.entries({
     ...auth,
+    ...cards,
     ...common,
     ...http,
     ...manifest,

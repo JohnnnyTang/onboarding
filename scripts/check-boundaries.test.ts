@@ -33,6 +33,10 @@ describe("package boundaries", () => {
     );
     expect(check("apps/web/src/main.tsx", 'import "fake-indexeddb/auto";')).not.toEqual([]);
     expect(check("apps/web/src/main.tsx", 'import { openDB } from "idb";')).toEqual([]);
+    expect(check("apps/web/src/cards/csv.ts", 'import Papa from "papaparse";')).toEqual([]);
+    expect(check("packages/card-generator/src/x.ts", 'import Papa from "papaparse";')).not.toEqual(
+      [],
+    );
   });
 
   test("the web app admits its UI libraries but no game package", () => {

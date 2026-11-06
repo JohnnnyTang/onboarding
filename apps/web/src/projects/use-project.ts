@@ -20,9 +20,22 @@ export interface ProjectEditor {
    * result. Returns the problems that kept it from being saved.
    */
   save(change: (current: LocalProject) => LocalProject): Promise<string[]>;
+  /**
+   * Like `save`, for a change that also adds or replaces images and deletes others; all of
+   * it is stored in one transaction. The change may return problems instead.
+   */
+  saveWithImages(change: (current: LocalProject) => ImageChange | string[]): Promise<string[]>;
+  /** The newest saved project and images, after every change queued before. */
+  current(): Promise<{ project: LocalProject; assets: readonly ProjectAsset[] } | null>;
   /** Imports chosen files; returns a message per file that could not be used. */
   importImages(files: readonly (Blob & { name: string })[]): Promise<string[]>;
   removeImage(path: string): Promise<void>;
+}
+
+export interface ImageChange {
+  project: LocalProject;
+  put: readonly ProjectAsset[];
+  remove: readonly string[];
 }
 
 export function now(): string {
@@ -100,6 +113,39 @@ export function useProject(projectId: string): ProjectEditor {
     [projects],
   );
 
+  const saveWithImages = useCallback(
+    (change: (current: LocalProject) => ImageChange | string[]) =>
+      inOrder(async () => {
+        const current = latest.current;
+        if (current.status !== "ready") return ["The project is not loaded."];
+        const result = change(current.project);
+        if (Array.isArray(result)) return result;
+        const errors = projectErrors(result.project);
+        if (errors.length > 0) return errors;
+        const stamped = { ...result.project, updatedAt: now() };
+        await (await projects()).putProjectWithAssets(stamped, result.put, result.remove);
+        const replaced = new Set([...result.remove, ...result.put.map((asset) => asset.path)]);
+        const next: ProjectData = {
+          status: "ready",
+          project: stamped,
+          assets: [...current.assets.filter((asset) => !replaced.has(asset.path)), ...result.put],
+        };
+        setData(next);
+        latest.current = next;
+        return [];
+      }),
+    [projects],
+  );
+
+  const current = useCallback(
+    () =>
+      inOrder(async () => {
+        const data = latest.current;
+        return data.status === "ready" ? { project: data.project, assets: data.assets } : null;
+      }),
+    [],
+  );
+
   const importImages = useCallback(
     (files: readonly (Blob & { name: string })[]) =>
       inOrder(async () => {
@@ -146,7 +192,7 @@ export function useProject(projectId: string): ProjectEditor {
     [projects, projectId],
   );
 
-  return { data, urls, save, importImages, removeImage };
+  return { data, urls, save, saveWithImages, current, importImages, removeImage };
 }
 
 const EMPTY: readonly ProjectAsset[] = [];

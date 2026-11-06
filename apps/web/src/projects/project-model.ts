@@ -90,11 +90,11 @@ function zonesOf(project: LocalProject): ZoneDef[] {
   return project.components.zones ?? [];
 }
 
-function instancesOf(project: LocalProject): SetupInstance[] {
+export function instancesOf(project: LocalProject): SetupInstance[] {
   return project.components.setup?.instances ?? [];
 }
 
-function withComponents(
+export function withComponents(
   project: LocalProject,
   change: { defs?: ComponentDef[]; zones?: ZoneDef[]; instances?: SetupInstance[] },
 ): LocalProject {

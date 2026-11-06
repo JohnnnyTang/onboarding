@@ -1,0 +1,183 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "oneOf": [
+    {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/__schema0"
+        },
+        "label": {
+          "$ref": "#/$defs/__schema1"
+        },
+        "rect_mm": {
+          "$ref": "#/$defs/__schema2"
+        },
+        "kind": {
+          "type": "string",
+          "const": "text"
+        },
+        "text": {
+          "type": "string",
+          "maxLength": 2000
+        },
+        "size_mm": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 200
+        },
+        "color": {
+          "$ref": "#/$defs/__schema5"
+        },
+        "font": {
+          "type": "string",
+          "enum": [
+            "inter",
+            "atkinson-hyperlegible",
+            "source-serif-4",
+            "cinzel",
+            "oswald",
+            "jetbrains-mono",
+            "sans-serif",
+            "serif",
+            "monospace"
+          ]
+        },
+        "bold": {
+          "type": "boolean"
+        },
+        "align": {
+          "type": "string",
+          "enum": ["left", "center", "right"]
+        },
+        "valign": {
+          "type": "string",
+          "enum": ["top", "middle", "bottom"]
+        }
+      },
+      "required": [
+        "id",
+        "label",
+        "rect_mm",
+        "kind",
+        "text",
+        "size_mm",
+        "color",
+        "font",
+        "bold",
+        "align",
+        "valign"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/__schema0"
+        },
+        "label": {
+          "$ref": "#/$defs/__schema1"
+        },
+        "rect_mm": {
+          "$ref": "#/$defs/__schema2"
+        },
+        "kind": {
+          "type": "string",
+          "const": "image"
+        },
+        "image": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9._-]+(?:\\/[A-Za-z0-9._-]+)*$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "fit": {
+          "type": "string",
+          "enum": ["contain", "cover"]
+        }
+      },
+      "required": ["id", "label", "rect_mm", "kind", "image", "fit"],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/__schema0"
+        },
+        "label": {
+          "$ref": "#/$defs/__schema1"
+        },
+        "rect_mm": {
+          "$ref": "#/$defs/__schema2"
+        },
+        "kind": {
+          "type": "string",
+          "const": "box"
+        },
+        "color": {
+          "$ref": "#/$defs/__schema5"
+        },
+        "radius_mm": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 500
+        }
+      },
+      "required": ["id", "label", "rect_mm", "kind", "color", "radius_mm"],
+      "additionalProperties": false
+    }
+  ],
+  "$defs": {
+    "__schema0": {
+      "type": "string",
+      "maxLength": 40,
+      "pattern": "^[a-z0-9-]+$"
+    },
+    "__schema1": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 40
+    },
+    "__schema2": {
+      "type": "object",
+      "properties": {
+        "x": {
+          "$ref": "#/$defs/__schema3"
+        },
+        "y": {
+          "$ref": "#/$defs/__schema3"
+        },
+        "w": {
+          "$ref": "#/$defs/__schema4"
+        },
+        "h": {
+          "$ref": "#/$defs/__schema4"
+        }
+      },
+      "required": ["x", "y", "w", "h"],
+      "additionalProperties": false
+    },
+    "__schema3": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1000
+    },
+    "__schema4": {
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "maximum": 1000
+    },
+    "__schema5": {
+      "type": "string",
+      "pattern": "^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$"
+    }
+  },
+  "title": "CardField"
+}

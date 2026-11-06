@@ -1,0 +1,200 @@
+{
+  "goods": {
+    "id": "goods",
+    "name": "Goods",
+    "size_mm": [63, 88],
+    "background": "#fbf6ec",
+    "fields": [
+      {
+        "id": "frame",
+        "label": "Frame",
+        "kind": "box",
+        "rect_mm": {
+          "x": 0,
+          "y": 0,
+          "w": 63,
+          "h": 88
+        },
+        "color": "#2f6fb0",
+        "radius_mm": 3
+      },
+      {
+        "id": "panel",
+        "label": "Panel",
+        "kind": "box",
+        "rect_mm": {
+          "x": 3.5,
+          "y": 14,
+          "w": 56,
+          "h": 62
+        },
+        "color": "#fbf6ec",
+        "radius_mm": 2
+      },
+      {
+        "id": "title",
+        "label": "Good",
+        "kind": "text",
+        "rect_mm": {
+          "x": 4,
+          "y": 2.5,
+          "w": 55,
+          "h": 11
+        },
+        "text": "Good",
+        "size_mm": 7,
+        "color": "#ffffff",
+        "font": "cinzel",
+        "bold": true,
+        "align": "center",
+        "valign": "middle"
+      },
+      {
+        "id": "value",
+        "label": "Value",
+        "kind": "text",
+        "rect_mm": {
+          "x": 3.5,
+          "y": 20,
+          "w": 56,
+          "h": 38
+        },
+        "text": "1",
+        "size_mm": 30,
+        "color": "#1d2733",
+        "font": "oswald",
+        "bold": true,
+        "align": "center",
+        "valign": "middle"
+      },
+      {
+        "id": "caption",
+        "label": "Caption",
+        "kind": "text",
+        "rect_mm": {
+          "x": 3.5,
+          "y": 60,
+          "w": 56,
+          "h": 12
+        },
+        "text": "goods worth this much when shipped",
+        "size_mm": 3.2,
+        "color": "#6b655c",
+        "font": "atkinson-hyperlegible",
+        "bold": false,
+        "align": "center",
+        "valign": "top"
+      },
+      {
+        "id": "footer",
+        "label": "Footer",
+        "kind": "text",
+        "rect_mm": {
+          "x": 4,
+          "y": 77,
+          "w": 55,
+          "h": 9
+        },
+        "text": "Harbor Market",
+        "size_mm": 3.6,
+        "color": "#ffffff",
+        "font": "cinzel",
+        "bold": false,
+        "align": "center",
+        "valign": "middle"
+      }
+    ],
+    "back": "goods-back",
+    "data": {
+      "source": "6a1e5c1d-3d0b-4f63-9a52-0d3f4b1c7e21",
+      "columns": {
+        "frame": "color",
+        "title": "good",
+        "value": "value"
+      },
+      "idColumn": "id",
+      "nameColumn": "name",
+      "countColumn": null
+    },
+    "generated": []
+  },
+  "back": {
+    "id": "goods-back",
+    "name": "Goods back",
+    "size_mm": [63, 88],
+    "background": "#1d3557",
+    "fields": [
+      {
+        "id": "border",
+        "label": "Border",
+        "kind": "box",
+        "rect_mm": {
+          "x": 3,
+          "y": 3,
+          "w": 57,
+          "h": 82
+        },
+        "color": "#e9c46a",
+        "radius_mm": 2.5
+      },
+      {
+        "id": "inner",
+        "label": "Inner",
+        "kind": "box",
+        "rect_mm": {
+          "x": 4.5,
+          "y": 4.5,
+          "w": 54,
+          "h": 79
+        },
+        "color": "#1d3557",
+        "radius_mm": 2
+      },
+      {
+        "id": "word-1",
+        "label": "Harbor",
+        "kind": "text",
+        "rect_mm": {
+          "x": 6,
+          "y": 28,
+          "w": 51,
+          "h": 14
+        },
+        "text": "Harbor",
+        "size_mm": 10,
+        "color": "#f1e3c6",
+        "font": "cinzel",
+        "bold": true,
+        "align": "center",
+        "valign": "bottom"
+      },
+      {
+        "id": "word-2",
+        "label": "Market",
+        "kind": "text",
+        "rect_mm": {
+          "x": 6,
+          "y": 44,
+          "w": 51,
+          "h": 14
+        },
+        "text": "Market",
+        "size_mm": 10,
+        "color": "#f1e3c6",
+        "font": "cinzel",
+        "bold": true,
+        "align": "center",
+        "valign": "top"
+      }
+    ],
+    "back": null,
+    "data": {
+      "source": null,
+      "columns": {},
+      "idColumn": null,
+      "nameColumn": null,
+      "countColumn": null
+    },
+    "generated": []
+  }
+}
