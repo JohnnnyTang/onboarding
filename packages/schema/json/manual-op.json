@@ -139,6 +139,17 @@
       },
       "required": ["op"],
       "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "op": {
+          "type": "string",
+          "const": "endGame"
+        }
+      },
+      "required": ["op"],
+      "additionalProperties": false
     }
   ],
   "$defs": {

@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { createSandboxDefinition, hashState, replay } from "@bgp/rules";
 import type { ClientView, ComponentsFile, HostBuild } from "@bgp/schema";
 import { describe, expect, it } from "vitest";
 import { loadBuild } from "../src/build-store.js";
@@ -84,6 +85,28 @@ describe("sandbox games in the rules host", () => {
       expect(identities(views["0"] as ClientView)).toHaveLength(1);
       expect(identities(views["1"] as ClientView)).toHaveLength(1);
       expect(await sandbox.hash()).toMatch(/^[a-f0-9]{64}$/);
+    } finally {
+      sandbox.dispose();
+    }
+  });
+
+  it("ends a sandbox match with the same result and hash as the runtime in Node", async () => {
+    const sandbox = await QuickJsSandbox.loadSandbox(COMPONENTS);
+    try {
+      await sandbox.create(INIT);
+      const pass = { move: "manual", args: { op: "endTurn" } };
+      const end = { move: "manual", args: { op: "endGame" } };
+      expect(await sandbox.apply("0", pass)).toMatchObject({ ok: true });
+      expect(await sandbox.apply("1", end)).toMatchObject({ ok: true, event: { seq: 2 } });
+      const state = await sandbox.exportState();
+      expect(state.result).toEqual({ winners: [], reason: "Ended by Seat 2" });
+      const events = [
+        { seq: 1, seat: "0", intent: pass },
+        { seq: 2, seat: "1", intent: end },
+      ];
+      const local = replay(createSandboxDefinition(COMPONENTS), INIT, events);
+      expect(await sandbox.hash()).toBe(await hashState(local));
+      expect(await sandbox.apply("0", pass)).toMatchObject({ ok: false, code: "MATCH_FINISHED" });
     } finally {
       sandbox.dispose();
     }

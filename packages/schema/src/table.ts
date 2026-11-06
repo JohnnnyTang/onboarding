@@ -248,6 +248,7 @@ export const ManualOpSchema = z.discriminatedUnion("op", [
   }),
   z.strictObject({ op: z.literal("roll"), item: IdSchema }),
   z.strictObject({ op: z.literal("endTurn") }),
+  z.strictObject({ op: z.literal("endGame") }),
 ]);
 export type ManualOp = z.infer<typeof ManualOpSchema>;
 export const SandboxSetupSchema = z.strictObject({

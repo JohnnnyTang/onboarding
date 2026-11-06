@@ -118,7 +118,7 @@ function validOperation(
         : op.op === "deal"
           ? op.from
           : undefined;
-  if (op.op === "endTurn") return true;
+  if (op.op === "endTurn" || op.op === "endGame") return true;
   const source = zones.find((zone) => zone.id === sourceId);
   if (!source || !canTouch(source, seat)) return false;
   if (op.op === "move") {
@@ -160,6 +160,10 @@ function applyOperation(
 ): void {
   if (op.op === "endTurn") {
     ctx.events.endTurn();
+    return;
+  }
+  if (op.op === "endGame") {
+    ctx.events.endGame({ winners: [], reason: `Ended by ${seatName(ctx.seat)}` });
     return;
   }
   if (op.op === "shuffle") {
@@ -279,9 +283,15 @@ function zoneName(zone: ZoneDef | Zone): string {
   return zone.label ?? zone.id;
 }
 
+/** Seats are "0".."n-1"; people count from one. */
+function seatName(seat: SeatId): string {
+  return `Seat ${Number(seat) + 1}`;
+}
+
 /**
  * Buttons for one selected item: flip, rotate, roll (dice), shuffle its zone and deal from
- * it into each seat's zone of every `owner: "each"` declaration. End turn is always offered.
+ * it into each seat's zone of every `owner: "each"` declaration. End turn and end game are
+ * always offered; ending the game asks first because it cannot be undone.
  */
 function sandboxActions(
   components: ComponentsFile,
@@ -298,6 +308,13 @@ function sandboxActions(
     enabled: true,
     intent: manual({ op: "endTurn" }),
   };
+  const endGame: ActionButton = {
+    id: "end-game",
+    label: "End game",
+    enabled: true,
+    intent: manual({ op: "endGame" }),
+    confirm: "End the game for everyone? This cannot be undone.",
+  };
   const item =
     selection.length === 1 ? view.game.items.find((other) => other.id === selection[0]) : undefined;
   const zone = zones.find((candidate) => candidate.id === item?.zone);
@@ -308,6 +325,7 @@ function sandboxActions(
       { id: "rotate", label: "Rotate", enabled: false, hint },
       { id: "shuffle", label: "Shuffle", enabled: false, hint },
       endTurn,
+      endGame,
     ];
   }
   const inZone = view.game.items.filter((other) => other.zone === zone.id).length;
@@ -362,7 +380,7 @@ function sandboxActions(
         : { hint: `Needs ${targets.length} items` }),
     });
   }
-  buttons.push(endTurn);
+  buttons.push(endTurn, endGame);
   return buttons;
 }
 

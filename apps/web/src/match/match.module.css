@@ -205,3 +205,19 @@ fieldset.actions {
 .replaySteps input[type="range"] {
   width: 100%;
 }
+
+/* An action that asks before it is sent, such as ending the game. */
+.confirm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border: 1px solid var(--color-accent);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+}
+
+.confirm > p {
+  margin: 0;
+  font-weight: 600;
+}

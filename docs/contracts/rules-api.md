@@ -170,6 +170,7 @@ export interface ActionButton {
   enabled: boolean;
   intent?: MoveIntent; // sent when clicked; required if enabled
   hint?: string;
+  confirm?: string; // 1–200 chars; the table asks this question before sending the intent
 }
 ```
 

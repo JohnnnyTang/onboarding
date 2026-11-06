@@ -105,6 +105,11 @@ describe("integer-only JSON and runtime contracts", () => {
         intent: { move: "ship" },
       }),
     ).toBeDefined();
+    const ending = { id: "end", label: "End", enabled: true, intent: { move: "end" } };
+    expect(ActionButtonSchema.parse({ ...ending, confirm: "End now?" }).confirm).toBe("End now?");
+    for (const confirm of ["", "x".repeat(201)]) {
+      expect(ActionButtonSchema.safeParse({ ...ending, confirm }).success).toBe(false);
+    }
     expect(
       AcceptedEventSchema.safeParse({ seq: 0, seat: "0", intent: { move: "ship" } }).success,
     ).toBe(false);
