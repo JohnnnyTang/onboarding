@@ -2,6 +2,7 @@ import { resolve } from "node:path";
 import { parseArgs } from "node:util";
 import type { ValidationError } from "@bgp/schema";
 import { buildGame } from "./build.js";
+import { DEFAULT_DEV_PORT, DEFAULT_WEB_ORIGIN, startDevServer } from "./dev.js";
 import { loadGamePackage, PackageError } from "./game-package.js";
 import { initGame } from "./init.js";
 import { DEFAULT_VALIDATE_OPTIONS, validateGame } from "./validate.js";
@@ -16,6 +17,7 @@ export const USAGE = `Usage: bgp <command> [options]
 
 Commands:
   init <dir>       Create a new game package from the starter template
+  dev [dir]        Serve the game to the web app's hot-seat table; reload on every change
   build [dir]      Bundle the game into the manifest's entry (one ES module, no imports)
   validate [dir]   Check the package, the bundle, determinism and hidden information
   help             Show this help
@@ -45,6 +47,15 @@ Writes a starter game package (a small, complete card game) into an empty direct
 Options:
   --id <slug>      Game id (default: from the directory name)
   --name <name>    Display name (default: from the id)`;
+
+const DEV_USAGE = `Usage: bgp dev [dir] [--port <n>] [--web <origin>]
+
+Rebuilds the game on every change in the package and serves it to the web app's hot-seat
+page, which reloads it and replays the current game. Open the printed link; stop with Ctrl+C.
+
+Options:
+  --port <n>       Port on 127.0.0.1 (default ${DEFAULT_DEV_PORT}; 0 picks a free one)
+  --web <origin>   The web app (default ${DEFAULT_WEB_ORIGIN})`;
 
 /** A usage error: wrong arguments. Exit code 2. */
 class UsageError extends Error {}
@@ -91,6 +102,63 @@ async function initCommand(args: string[], output: Output): Promise<number> {
   });
   output.out(`Created ${created.name} (${created.id}) in ${created.dir}`);
   output.out("Next: bgp dev (hot-seat table), bgp validate, then bgp publish.");
+  return 0;
+}
+
+function origin(name: string, value: string): string {
+  let url: URL;
+  try {
+    url = new URL(value);
+  } catch {
+    throw new UsageError(`--${name} must be an absolute URL`);
+  }
+  if (url.protocol !== "http:" && url.protocol !== "https:") {
+    throw new UsageError(`--${name} must use http or https`);
+  }
+  return url.origin;
+}
+
+/** Resolves when the process is asked to stop. */
+function interrupted(): Promise<void> {
+  return new Promise((resolve) => {
+    process.once("SIGINT", () => resolve());
+    process.once("SIGTERM", () => resolve());
+  });
+}
+
+async function devCommand(args: string[], output: Output): Promise<number> {
+  const { values, positionals } = parseArgs({
+    args,
+    allowPositionals: true,
+    options: {
+      help: { type: "boolean", short: "h" },
+      port: { type: "string" },
+      web: { type: "string" },
+    },
+  });
+  if (values.help) {
+    output.out(DEV_USAGE);
+    return 0;
+  }
+  const port = integer("port", values.port, DEFAULT_DEV_PORT, 0);
+  if (port > 65535) throw new UsageError("--port must be at most 65535");
+  const webOrigin = origin("web", values.web ?? DEFAULT_WEB_ORIGIN);
+  const server = await startDevServer(packageDir(positionals), {
+    port,
+    webOrigin,
+    onBuild(game) {
+      if (game.errors.length === 0) {
+        output.out(`Build ${game.buildId}: ${game.manifest.id} is ready`);
+      } else {
+        output.err(`Build ${game.buildId} failed:`);
+        printErrors(output, game.errors);
+      }
+    },
+  });
+  output.out(`Serving on ${server.origin}`);
+  output.out(`Open the hot-seat table: ${server.pageUrl}`);
+  await interrupted();
+  await server.close();
   return 0;
 }
 
@@ -167,6 +235,7 @@ async function validateCommand(args: string[], output: Output): Promise<number> 
 
 const COMMANDS: Record<string, (args: string[], output: Output) => Promise<number>> = {
   init: initCommand,
+  dev: devCommand,
   build: buildCommand,
   validate: validateCommand,
 };

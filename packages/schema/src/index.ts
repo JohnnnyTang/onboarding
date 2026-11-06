@@ -2,6 +2,7 @@ export * from "./auth.js";
 export * from "./bundle-scan.js";
 export * from "./cards.js";
 export * from "./common.js";
+export * from "./dev-server.js";
 export * from "./http.js";
 export * from "./json-schema.js";
 export * from "./manifest.js";

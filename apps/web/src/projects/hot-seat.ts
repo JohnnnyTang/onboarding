@@ -3,6 +3,7 @@ import type {
   ClientView,
   Gesture,
   HotSeatMatchRecord,
+  Json,
   MoveIntent,
   SeatId,
   TableSnapshot,
@@ -38,6 +39,8 @@ export interface HotSeatDeps {
   newId(): string;
   newSeed(): number;
   now(): string;
+  /** Options for new games: the manifest's defaults. Sandbox projects have none. */
+  options?: Json;
 }
 
 export interface HotSeatController {
@@ -52,6 +55,11 @@ export interface HotSeatController {
   act(intent: MoveIntent | undefined): void;
   dismissRejection(): void;
   destroy(): void;
+}
+
+/** A uint32 match seed from the browser's CSPRNG (page code; never game code). */
+export function randomSeed(): number {
+  return crypto.getRandomValues(new Uint32Array(1))[0] ?? 0;
 }
 
 export function seatsFor(count: number): SeatId[] {
@@ -159,7 +167,7 @@ export function createHotSeat(deps: HotSeatDeps): HotSeatController {
     const match: HotSeatMatchRecord = {
       id: deps.newId(),
       projectId,
-      init: { seats: seatsFor(seatCount), seed: deps.newSeed(), options: {} },
+      init: { seats: seatsFor(seatCount), seed: deps.newSeed(), options: deps.options ?? {} },
       events: [],
       updatedAt: deps.now(),
     };

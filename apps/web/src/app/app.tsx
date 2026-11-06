@@ -1,6 +1,7 @@
 import { Route, Routes } from "react-router";
 import { CALLBACK_PATH } from "../auth/auth";
 import { AuthCallbackPage } from "../pages/auth-callback";
+import { DevPlayPage } from "../pages/dev-play";
 import { GamePage, GamesPage } from "../pages/games";
 import { HomePage } from "../pages/home";
 import { HotSeatPage } from "../pages/hot-seat";
@@ -32,6 +33,7 @@ export function AppRoutes() {
         <Route path="matches/:matchId/lobby" element={<LobbyPage />} />
         <Route path="matches/:matchId/replay" element={<ReplayPage />} />
         <Route path="join/:token" element={<JoinPage />} />
+        <Route path="dev" element={<DevPlayPage />} />
         <Route path={CALLBACK_PATH.slice(1)} element={<AuthCallbackPage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Route>

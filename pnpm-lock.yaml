@@ -179,6 +179,9 @@ importers:
         specifier: workspace:*
         version: link:../../packages/schema
     devDependencies:
+      '@bgp/cli':
+        specifier: workspace:*
+        version: link:../../packages/cli
       '@bgp/testing':
         specifier: workspace:*
         version: link:../../packages/testing

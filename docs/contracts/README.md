@@ -26,3 +26,4 @@ The JSON blocks in these contracts are executable fixtures, checked directly by
 | [protocol.md](protocol.md)                         | WebSocket messages, ordering, rate limits, error codes                                                                      | `PROTOCOL_VERSION = 1`                  |
 | [http-api.md](http-api.md)                         | REST endpoints, authentication, error body                                                                                  | —                                       |
 | [card-generator.md](card-generator.md)             | Card layout templates, CSV sources, how rows become card faces                                                              | —                                       |
+| [dev-server.md](dev-server.md)                     | What `bgp dev` serves to the web app's `/dev` hot-seat page                                                                 | `protocol: 1`                           |

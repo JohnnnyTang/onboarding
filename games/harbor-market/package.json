@@ -19,6 +19,7 @@
     "@bgp/schema": "workspace:*"
   },
   "devDependencies": {
+    "@bgp/cli": "workspace:*",
     "@bgp/testing": "workspace:*",
     "fast-check": "4.10.2"
   }
