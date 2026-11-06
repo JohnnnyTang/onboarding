@@ -179,7 +179,8 @@ function Version({ gameId, versionId }: { gameId: string; versionId: string }) {
     queryFn: () => api.getVersion(versionId),
   });
   if (version.isPending) return <Loading />;
-  if (version.isError) return <ErrorNotice error={version.error} />;
+  if (version.isError)
+    return <ErrorNotice error={version.error} onRetry={() => void version.refetch()} />;
   const { manifest } = version.data;
   return (
     <>

@@ -48,6 +48,7 @@ export function MatchPage() {
   const presenter = game.kind === "ready" ? game.presenter : null;
   const table = useTable(presenter);
   const [dismissed, setDismissed] = useState(0);
+  const [dismissedError, setDismissedError] = useState(0);
   // The renderer is only needed once the game is ready; fetch it meanwhile.
   useEffect(() => {
     void preloadTable().catch(() => {});
@@ -117,6 +118,9 @@ export function MatchPage() {
   const mySeat = room?.seat ?? null;
   const result = room?.result ?? view?.result ?? null;
   const rejection = room?.rejected && room.rejected.id > dismissed ? room.rejected : null;
+  // Non-fatal errors (a dropped action) are shown like a rejection until dismissed.
+  const notice =
+    room?.error && !room.error.fatal && room.error.id > dismissedError ? room.error : null;
   const gameError = game.kind === "error" ? game.error : table.error;
   const title = game.kind === "ready" ? game.pkg.manifest.name : "Match";
 
@@ -167,6 +171,14 @@ export function MatchPage() {
           <RejectedNotice
             rejection={rejection}
             onDismiss={() => setDismissed(rejection?.id ?? dismissed)}
+          />
+          <RejectedNotice
+            rejection={
+              notice
+                ? { id: notice.id, code: notice.code, message: roomErrorMessage(notice) }
+                : null
+            }
+            onDismiss={() => setDismissedError(notice?.id ?? dismissedError)}
           />
           <ActionBar
             actions={result ? [] : table.actions}

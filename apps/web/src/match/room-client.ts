@@ -49,6 +49,8 @@ export interface Rejection {
 }
 
 export interface RoomError {
+  /** Increases with every error, so a page can dismiss one and show the next. */
+  id: number;
   code: ErrorCode;
   message: string;
   fatal: boolean;
@@ -166,6 +168,7 @@ export function createRoomClient(options: RoomClientOptions): RoomClient {
   let stopped = false;
   let rejections = 0;
   let chats = 0;
+  let errors = 0;
 
   function update(patch: Partial<RoomState>): void {
     state = { ...state, ...patch };
@@ -260,8 +263,17 @@ export function createRoomClient(options: RoomClientOptions): RoomClient {
         update({ result: message.result });
         return;
       case "error": {
-        const error = { code: message.code, message: message.message, fatal: message.fatal };
+        errors += 1;
+        const error = {
+          id: errors,
+          code: message.code,
+          message: message.message,
+          fatal: message.fatal,
+        };
         if (message.fatal && FINAL_ERRORS.has(message.code)) stopped = true;
+        // A non-fatal error drops the message it answers (RATE_LIMITED, BAD_MESSAGE): a pending
+        // move will never be acknowledged, so let the seat act again.
+        if (!message.fatal) acknowledge(undefined);
         update({ error });
         return;
       }
@@ -292,7 +304,12 @@ export function createRoomClient(options: RoomClientOptions): RoomClient {
       stopped = true;
       update({
         status: "closed",
-        error: { code: "UNAUTHORIZED", message: "Sign in or rejoin to continue.", fatal: true },
+        error: {
+          id: ++errors,
+          code: "UNAUTHORIZED",
+          message: "Sign in or rejoin to continue.",
+          fatal: true,
+        },
       });
       return;
     }

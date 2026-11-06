@@ -237,6 +237,28 @@ describe("room client", () => {
     expect(sockets).toHaveLength(1);
   });
 
+  it("lets the seat act again after a non-fatal error dropped its move", () => {
+    const { client, last } = setup();
+    client.connect();
+    last().open();
+    last().receive(welcome(1));
+    expect(client.move({ move: "pass" })).toBe(true);
+    expect(client.getState().movePending).toBe(true);
+    last().receive({
+      t: "error",
+      code: "RATE_LIMITED",
+      message: "Too many messages",
+      fatal: false,
+    });
+    expect(client.getState()).toMatchObject({
+      status: "open",
+      movePending: false,
+      error: { id: 1, code: "RATE_LIMITED", fatal: false },
+    });
+    last().receive({ t: "error", code: "BAD_MESSAGE", message: "Invalid message", fatal: false });
+    expect(client.getState().error).toMatchObject({ id: 2, code: "BAD_MESSAGE" });
+  });
+
   it("reconnects after a fatal internal error", () => {
     const { client, timers, last } = setup();
     client.connect();
