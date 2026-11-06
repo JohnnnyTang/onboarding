@@ -14,7 +14,7 @@ describe("page error boundary", () => {
     expect(PageErrorBoundary.getDerivedStateFromError()).toEqual({ failed: true });
     const boundary = new PageErrorBoundary({ children: <p>Secret hand</p> });
     boundary.state = PageErrorBoundary.getDerivedStateFromError();
-    const html = renderToStaticMarkup(<>{boundary.render()}</>);
+    const html = renderToStaticMarkup(boundary.render());
     expect(html).toContain("This page stopped working");
     expect(html).toContain("Reload");
     expect(html).not.toContain("Secret hand");
