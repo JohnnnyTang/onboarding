@@ -6,6 +6,7 @@ import {
   focusOrder,
   hitItem,
   hitZone,
+  keyboardDropTargets,
   layoutZone,
   screenToTable,
   tableToScreen,
@@ -241,5 +242,87 @@ describe("keyboard focus order", () => {
   it("follows the rotated view of the seat across the table", () => {
     const view = fitViewport(table, 1000, 800, "1");
     expect(focusOrder(table, placements, view)).toEqual(["h1", "h0", "m1", "m0", "d1", "f0"]);
+  });
+});
+
+describe("keyboard drag and drop targets", () => {
+  const table: TableSnapshot = {
+    table: { size_mm: [801, 601] },
+    zones: [
+      {
+        id: "hand",
+        layout: "row",
+        owner: "0",
+        droppable: true,
+        rect_mm: { x: 0, y: -220, w: 400, h: 120 },
+      },
+      {
+        id: "deck",
+        layout: "stack",
+        droppable: true,
+        rect_mm: { x: -200, y: 100, w: 120, h: 120 },
+      },
+      { id: "market", layout: "row", droppable: true, rect_mm: { x: 100, y: 100, w: 300, h: 120 } },
+      { id: "board", layout: "free", droppable: true, rect_mm: { x: 250, y: -120, w: 101, h: 61 } },
+      { id: "far", layout: "row", owner: "1", rect_mm: { x: 0, y: 230, w: 400, h: 120 } },
+    ],
+    items: [
+      { id: "h0", zone: "hand", index: 0, face: "up", draggable: true },
+      { id: "h1", zone: "hand", index: 1, face: "up", draggable: true },
+      { id: "d0", zone: "deck", index: 0, face: "down" },
+      { id: "d1", zone: "deck", index: 1, face: "down" },
+      { id: "m0", zone: "market", index: 0, face: "up" },
+      { id: "m1", zone: "market", index: 1, face: "up" },
+      { id: "f0", zone: "far", index: 0, face: "down" },
+    ],
+  };
+  const placements = table.zones.flatMap((z) => layoutZone(z, table.items, components));
+  const view = fitViewport(table, 1000, 800, "0");
+  const carried = table.items[0] as ItemPlacement;
+  const targets = keyboardDropTargets(table, placements, carried, view);
+
+  it("offers every piece of a row and the end of every droppable zone, in focus order", () => {
+    expect(targets.map((target) => [target.gesture.to, target.at ?? null])).toEqual([
+      ["deck", null],
+      ["market", "m0"],
+      ["market", "m1"],
+      ["market", null],
+      ["board", null],
+      ["hand", "h1"],
+      ["hand", null],
+    ]);
+  });
+
+  it("gives the same gesture as a pointer dropped on the piece", () => {
+    const market = placements.find((p) => p.item.id === "m1");
+    if (!market) throw new Error("Missing m1");
+    const pointer = dropGesture(table, placements, carried, market.x, market.y);
+    expect(targets[2]?.gesture).toEqual(pointer);
+    expect(targets[2]?.gesture).toEqual({
+      kind: "drop",
+      item: "h0",
+      from: "hand",
+      to: "market",
+      index: 1,
+    });
+  });
+
+  it("drops on top of a stack, after the last piece of a row, and at a free zone's centre", () => {
+    expect(targets[0]?.gesture).toMatchObject({ to: "deck", index: 2 });
+    expect(targets[3]?.gesture).toMatchObject({ to: "market", index: 2 });
+    expect(targets[4]?.gesture).toEqual({
+      kind: "drop",
+      item: "h0",
+      from: "hand",
+      to: "board",
+      pos_mm: [250, -120],
+    });
+    // Within its own row the piece's own place is not a target; the end is, after the others.
+    expect(targets[6]?.gesture).toMatchObject({ to: "hand", index: 1 });
+  });
+
+  it("offers nothing when no zone accepts drops", () => {
+    const closed = { ...table, zones: table.zones.map((z) => ({ ...z, droppable: false })) };
+    expect(keyboardDropTargets(closed, placements, carried, view)).toEqual([]);
   });
 });

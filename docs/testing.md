@@ -183,6 +183,13 @@ header and the meta tag, and plays a move in a 2-seat Harbor Market match while 
 `securitypolicyviolation` events (`e2e/support/csp.ts`): there must be none, and the game
 worker's script must arrive with its own stricter policy.
 
+Keyboard operation (T20): `e2e/table-2d.spec.ts` picks up a market card with M in the
+renderer harness, cancels with Escape, and drops it on a grid piece and in the free zone with
+Enter and Space, checking the `drop` gestures. `e2e/match.spec.ts` plays the start of a
+2-seat Harbor Market match with the keyboard alone: Tab from the table to Restock and Enter,
+then a swap with M, the arrow keys and Enter, and checks that the canvas points at the visible
+key list. `keyboardDropTargets` has unit tests in `packages/table-2d/test/layout.test.ts`.
+
 Physical Android/iPhone renderer profiling is a T20 gate, deferred from T13 by
 the project owner on 2026-10-27. Run both the three-engine spike and production
 `/dev/table/?stress=1` on identified hardware. Record 300-item frame cadence

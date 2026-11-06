@@ -1,6 +1,7 @@
 import { expect, type Page, test } from "@playwright/test";
 import { designerToken, keycloakLogin, WEB_URL } from "./support/app.js";
 import {
+  canvas,
   createHarborMatch,
   discard,
   joinAsGuest,
@@ -204,4 +205,66 @@ test("Q-018: a designer who reloads mid-match signs in again and is back at the 
   expect(page.url()).toBe(`${WEB_URL}/matches/${match.matchId}`);
   expect(elapsed).toBeLessThan(3_000);
   for (const player of [designer, bo]) await player.context.close();
+});
+
+/** Presses Tab until the button named `name` has the focus. */
+async function tabTo(page: Page, name: string): Promise<void> {
+  for (let step = 0; step < 40; step += 1) {
+    await page.keyboard.press("Tab");
+    const focused = await page.evaluate(() => {
+      const element = document.activeElement;
+      return element instanceof HTMLButtonElement ? element.textContent : null;
+    });
+    if (focused === name) return;
+  }
+  throw new Error(`Tab never reached ${name}`);
+}
+
+test("T20: Harbor Market plays with the keyboard alone, action bar and drag and drop", async ({
+  browser,
+}) => {
+  test.setTimeout(180_000);
+  const token = await designerToken(browser, "designer2");
+  const match = await createHarborMatch(token, 2);
+  const players = [
+    await joinAsGuest(browser, match, "0", "Ann"),
+    await joinAsGuest(browser, match, "1", "Bo"),
+  ];
+  await startMatch(token, match.matchId);
+  await seatAtTable(players, match.matchId);
+  const [ann, bo] = players as [Player, Player];
+  await expect(prompt(ann.page)).toHaveText("Your turn: swap, ship or restock");
+
+  // Seat 1 restocks from the action bar, reached with Tab from the table.
+  await canvas(ann.page).focus();
+  await tabTo(ann.page, "Restock");
+  await ann.page.keyboard.press("Enter");
+  await expect(prompt(bo.page)).toHaveText("Your turn: swap, ship or restock");
+
+  // Seat 2 swaps a hand card into the market: M picks it up, Enter drops it on a market card.
+  const table = canvas(bo.page);
+  const hint = await table.getAttribute("aria-describedby");
+  await expect(bo.page.locator(`[id="${hint}"]`)).toContainText("M picks a piece up");
+  await table.focus();
+  for (let step = 0; step < 30; step += 1) {
+    await bo.page.keyboard.press("ArrowLeft");
+    if (/, in Seat 2 hand$/.test((await table.getAttribute("aria-label")) ?? "")) break;
+  }
+  const picked = /^Game table: (.+), in Seat 2 hand$/.exec(
+    (await table.getAttribute("aria-label")) ?? "",
+  );
+  if (!picked?.[1]) throw new Error("No hand card focused");
+  await bo.page.keyboard.press("m");
+  // The first target outside the hand is the first market card.
+  const carrying = `Game table: moving ${picked[1]} to `;
+  await expect
+    .poll(async () => {
+      const label = (await table.getAttribute("aria-label")) ?? "";
+      return label.startsWith(carrying) && /, in Market \(1 of \d+\); Enter drops/.test(label);
+    })
+    .toBe(true);
+  await bo.page.keyboard.press("Enter");
+  await expect(prompt(bo.page)).toHaveText(/^Waiting for Seat 1/);
+  await expect(prompt(ann.page)).toHaveText(/^(Your turn|Discard)/);
+  for (const { context } of players) await context.close();
 });
