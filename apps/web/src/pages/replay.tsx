@@ -109,7 +109,13 @@ export function HashCheckNotice({ check }: { check: HashCheck }) {
 export function stepCaption(replay: ReplayResponse, seq: number, seats: readonly SeatInfo[]) {
   const event = replay.events[seq - 1];
   if (seq === 0 || !event) return "Setup";
-  return `${playerName(event.seat, seats)}: ${event.intent.move}`;
+  // Sandbox moves are all "manual"; the operation says more.
+  const args = event.intent.args;
+  const op =
+    event.intent.move === "manual" && typeof args === "object" && args !== null && "op" in args
+      ? args.op
+      : undefined;
+  return `${playerName(event.seat, seats)}: ${typeof op === "string" ? op : event.intent.move}`;
 }
 
 function StepControls({

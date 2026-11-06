@@ -1,10 +1,17 @@
-import { expect, type Page, test } from "@playwright/test";
+import { type Browser, expect, type Page, test } from "@playwright/test";
 import {
   type ClientView,
   type MoveIntent,
   ReplayResponseSchema,
 } from "../packages/schema/src/index.js";
-import { API_URL, api, designerToken, WEB_URL } from "./support/app.js";
+import {
+  API_URL,
+  api,
+  createSandboxMatch,
+  designerToken,
+  type FixtureMatch,
+  WEB_URL,
+} from "./support/app.js";
 import { createHarborMatch, startMatch } from "./support/harbor-market.js";
 import { ScriptedSeat } from "./support/scripted-seat.js";
 
@@ -48,9 +55,8 @@ interface Recorded {
   events: number;
 }
 
-/** Publishes Harbor Market, seats three guests and plays the match to the end over WebSockets. */
-async function recordMatch(token: string): Promise<Recorded> {
-  const match = await createHarborMatch(token, SEATS, { shortGame: false });
+/** Claims every invite of a lobby match as a guest, in seat order. */
+async function claimSeats(match: FixtureMatch): Promise<{ seat: string; token: string }[]> {
   const guests: { seat: string; token: string }[] = [];
   for (const invite of match.invites) {
     const inviteToken = new URL(invite.url).pathname.split("/").at(-1) ?? "";
@@ -63,6 +69,41 @@ async function recordMatch(token: string): Promise<Recorded> {
     if (!claimed.guestToken) throw new Error("Missing guest token");
     guests.push({ seat: claimed.seat, token: claimed.guestToken });
   }
+  return guests;
+}
+
+/** Opens a browser tab holding a guest's seat, as the invite page keeps it (Q-018). */
+async function guestPage(
+  browser: Browser,
+  matchId: string,
+  guest: { seat: string; token: string },
+) {
+  const context = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+  await context.addInitScript(
+    ({ origin, seat }) => {
+      if (location.origin !== origin) return;
+      sessionStorage.setItem("bgp.claimedSeats", JSON.stringify([seat]));
+    },
+    {
+      origin: WEB_URL,
+      seat: {
+        matchId,
+        seat: guest.seat,
+        displayName: `Bot ${Number(guest.seat) + 1}`,
+        guestToken: guest.token,
+      },
+    },
+  );
+  const page = await context.newPage();
+  const errors: string[] = [];
+  page.on("pageerror", (error) => errors.push(error.message));
+  return { context, page, errors };
+}
+
+/** Publishes Harbor Market, seats three guests and plays the match to the end over WebSockets. */
+async function recordMatch(token: string): Promise<Recorded> {
+  const match = await createHarborMatch(token, SEATS, { shortGame: false });
+  const guests = await claimSeats(match);
   await startMatch(token, match.matchId);
   const url = `${API_URL.replace(/^http/, "ws")}/ws`;
   const seats = await Promise.all(
@@ -138,26 +179,7 @@ test("E2E-06: the game worker replays a recorded match to the rules host's final
   );
   expect(replay.events).toHaveLength(recorded.events);
 
-  // The guest's seat as the invite page would have kept it in this tab (Q-018).
-  const context = await browser.newContext({ viewport: { width: 1280, height: 900 } });
-  await context.addInitScript(
-    ({ origin, seat }) => {
-      if (location.origin !== origin) return;
-      sessionStorage.setItem("bgp.claimedSeats", JSON.stringify([seat]));
-    },
-    {
-      origin: WEB_URL,
-      seat: {
-        matchId: recorded.matchId,
-        seat: recorded.guest.seat,
-        displayName: "Bot 1",
-        guestToken: recorded.guest.token,
-      },
-    },
-  );
-  const page = await context.newPage();
-  const errors: string[] = [];
-  page.on("pageerror", (error) => errors.push(error.message));
+  const { context, page, errors } = await guestPage(browser, recorded.matchId, recorded.guest);
   await page.goto(`${WEB_URL}/matches/${recorded.matchId}/replay`);
 
   const check = page.getByTestId("hash-check");
@@ -194,4 +216,63 @@ test("E2E-06: the game worker replays a recorded match to the rules host's final
   await expect(page.getByRole("region", { name: "Result" })).toBeVisible();
   expect(errors).toEqual([]);
   await context.close();
+});
+
+test("Q-026: a guest ends a sandbox match from the table, and its replay checks out", async ({
+  browser,
+}) => {
+  const token = await designerToken(browser, "designer2");
+  const match = await createSandboxMatch(token, 2);
+  const [me, other] = await claimSeats(match);
+  if (!me || !other) throw new Error("Missing guests");
+  await startMatch(token, match.matchId);
+  const url = `${API_URL.replace(/^http/, "ws")}/ws`;
+  const bot = await ScriptedSeat.connect(url, match.matchId, other.token);
+  const { context, page, errors } = await guestPage(browser, match.matchId, me);
+  try {
+    // The other seat shuffles the public deck and passes the turn.
+    bot.move({ move: "manual", args: { op: "shuffle", zone: "deck" } });
+    await bot.until(() => bot.seq >= 1);
+    bot.move({ move: "manual", args: { op: "endTurn" } });
+    await bot.until(() => bot.seq >= 2);
+
+    await page.goto(`${WEB_URL}/matches/${match.matchId}`);
+    await expect(page.getByTestId("move-count")).toHaveText("2 moves so far");
+    await page.getByRole("button", { name: "End game" }).click();
+    const confirm = page.getByRole("alertdialog", { name: "End game" });
+    await expect(confirm).toContainText("End the game for everyone? This cannot be undone.");
+    // Cancel keeps playing; confirming ends the match for everyone.
+    await confirm.getByRole("button", { name: "Cancel" }).click();
+    await expect(confirm).toHaveCount(0);
+    await expect(page.getByTestId("move-count")).toHaveText("2 moves so far");
+    await page.getByRole("button", { name: "End game" }).click();
+    await confirm.getByRole("button", { name: "End game" }).click();
+    const result = page.getByRole("region", { name: "Result" });
+    await expect(result).toContainText("Nobody won.");
+    await expect(result).toContainText("Ended by Seat 1");
+    await bot.until(() => bot.result !== null);
+    expect(bot.result).toEqual({ winners: [], reason: "Ended by Seat 1" });
+
+    const replay = ReplayResponseSchema.parse(
+      await api(token, "GET", `/api/matches/${match.matchId}/replay`),
+    );
+    expect(replay.events.map((event) => [event.seat, event.intent.args])).toEqual([
+      ["1", { op: "shuffle", zone: "deck" }],
+      ["1", { op: "endTurn" }],
+      ["0", { op: "endGame" }],
+    ]);
+    await page.getByRole("link", { name: "Watch the replay" }).click();
+    await expect(page).toHaveURL(`${WEB_URL}/matches/${match.matchId}/replay`);
+    const check = page.getByTestId("hash-check");
+    await expect(check).toHaveAttribute("data-hash", replay.finalHash);
+    await page.getByRole("button", { name: "End", exact: true }).click();
+    const step = page.getByTestId("replay-step");
+    await expect(step).toHaveAttribute("data-shown", "3");
+    await expect(step).toContainText("Move 3 of 3 · Seat 1 · Bot 1: endGame");
+    await expect(page.getByRole("region", { name: "Result" })).toContainText("Ended by Seat 1");
+    expect(errors).toEqual([]);
+  } finally {
+    bot.close();
+    await context.close();
+  }
 });

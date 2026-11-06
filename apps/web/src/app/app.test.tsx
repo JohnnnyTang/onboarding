@@ -189,5 +189,10 @@ describe("replay page parts", () => {
     const seats = summary("finished").seats;
     expect(stepCaption(replay, 0, seats)).toBe("Setup");
     expect(stepCaption(replay, 1, seats)).toBe("Seat 1 · Tess: restock");
+    const manual = {
+      ...replay,
+      events: [{ seq: 1, seat: "1", intent: { move: "manual", args: { op: "endGame" } } }],
+    };
+    expect(stepCaption(manual, 1, seats)).toBe("Seat 2: endGame");
   });
 });
