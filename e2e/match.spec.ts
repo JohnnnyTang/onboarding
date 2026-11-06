@@ -1,5 +1,5 @@
 import { expect, type Page, test } from "@playwright/test";
-import { designerToken, WEB_URL } from "./support/app.js";
+import { designerToken, keycloakLogin, WEB_URL } from "./support/app.js";
 import {
   createHarborMatch,
   discard,
@@ -157,4 +157,51 @@ test("E2E-05: a reload mid-match returns to the same seat and view within 3 seco
   await expect(prompt(ann.page)).toHaveText(/^(Your turn|Discard)/);
   await expect(prompt(bo.page)).toHaveText(/^(Waiting for Seat 1|Discard)/);
   for (const { context } of players) await context.close();
+});
+
+test("Q-018: a designer who reloads mid-match signs in again and is back at the seat within 3 seconds", async ({
+  browser,
+}) => {
+  test.setTimeout(180_000);
+  const token = await designerToken(browser, "designer2");
+  const match = await createHarborMatch(token, 2);
+  const invite = match.invites.find((entry) => entry.seat === "0");
+  if (!invite) throw new Error("Missing invite for seat 0");
+
+  // designer1 signs in on the invite page and takes seat 1 with their account.
+  const context = await browser.newContext({ viewport: { width: 1024, height: 768 } });
+  const page = await context.newPage();
+  await page.goto(invite.url);
+  await page.getByRole("banner").getByRole("button", { name: "Sign in" }).click();
+  await keycloakLogin(page, "designer1");
+  await expect(page.getByText("You will join as Designer One's account.")).toBeVisible();
+  await page.getByRole("button", { name: "Join" }).click();
+  await expect(page).toHaveURL(`${WEB_URL}/matches/${match.matchId}/lobby`);
+  const bo = await joinAsGuest(browser, match, "1", "Bo");
+  await startMatch(token, match.matchId);
+  const designer: Player = { seat: "0", context, page };
+  await seatAtTable([designer, bo], match.matchId);
+  await page.getByRole("button", { name: "Restock" }).click();
+  await expect(prompt(page)).toHaveText(/^Waiting for Seat 2/);
+  const hud = page.getByRole("list", { name: "Players" });
+  const hudBefore = await hud.textContent();
+
+  // Designer tokens live in memory (D-007), so the reload signs out; signing in again goes
+  // through the Keycloak session without a form and returns to the match.
+  const started = Date.now();
+  await page.reload();
+  const signIn = page.getByRole("main").getByRole("button", { name: "Sign in" });
+  await signIn.click({ timeout: 3_000 });
+  const clicked = Date.now();
+  await expect(prompt(page)).toHaveText(/^Waiting for Seat 2/, { timeout: 3_000 });
+  await expect(hud).toHaveText(hudBefore ?? "", { timeout: 3_000 });
+  await expect(page.getByTestId("table").locator("canvas")).toBeVisible({ timeout: 3_000 });
+  const elapsed = Date.now() - started;
+  test.info().annotations.push({
+    type: "designer reload",
+    description: `${elapsed} ms in total: ${clicked - started} ms to the sign-in button, ${Date.now() - clicked} ms from the click back to the table`,
+  });
+  expect(page.url()).toBe(`${WEB_URL}/matches/${match.matchId}`);
+  expect(elapsed).toBeLessThan(3_000);
+  for (const player of [designer, bo]) await player.context.close();
 });
