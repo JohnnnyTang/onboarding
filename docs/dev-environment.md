@@ -97,11 +97,16 @@ T10/T11 transactions. PostgreSQL already enforces keys, numeric bounds and immut
 
 - Realm `bgp`.
 - Public client `bgp-web`: standard flow with PKCE (S256), redirect URI `http://localhost:5173/*`, web origin `http://localhost:5173`.
-- An audience mapper so access tokens for `bgp-web` include `bgp-api` in `aud`.
+- Public client `bgp-cli` for `bgp publish` (T19): only the OAuth device authorization grant
+  is enabled (no redirect URIs). Keycloak asks the designer to grant it access after sign-in.
+- An audience mapper so access tokens for `bgp-web` and `bgp-cli` include `bgp-api` in `aud`.
 - The `basic` default client scope, which puts `sub` in access tokens (Keycloak 26); the API
   requires it. Realm imports only create missing realms, so a Keycloak started before T12
   keeps the old client: add `basic` as a Default client scope of `bgp-web` in the admin
   console, or reset the services (`docker compose ... down -v`).
+- A Keycloak started before T19 has no `bgp-cli` client, so `bgp publish` reports that device
+  sign-in was refused: import the client from `infra/keycloak/bgp-realm.json` in the admin
+  console (Clients, Import client), or reset the services.
 - Test users: `designer1` / `designer1`, `designer2` / `designer2` (used by E2E tests).
 
 ## Environment variables

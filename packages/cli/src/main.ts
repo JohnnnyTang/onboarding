@@ -1,10 +1,17 @@
 import { resolve } from "node:path";
 import { parseArgs } from "node:util";
 import type { ValidationError } from "@bgp/schema";
+import {
+  DEFAULT_CLI_CLIENT_ID,
+  DEFAULT_ISSUER,
+  SignInError,
+  signInWithDeviceCode,
+} from "./auth.js";
 import { buildGame } from "./build.js";
 import { DEFAULT_DEV_PORT, DEFAULT_WEB_ORIGIN, startDevServer } from "./dev.js";
 import { loadGamePackage, PackageError } from "./game-package.js";
 import { initGame } from "./init.js";
+import { DEFAULT_API_ORIGIN, PublishError, publishGame } from "./publish.js";
 import { DEFAULT_VALIDATE_OPTIONS, validateGame } from "./validate.js";
 
 /** Where the CLI writes; tests capture it. */
@@ -20,6 +27,7 @@ Commands:
   dev [dir]        Serve the game to the web app's hot-seat table; reload on every change
   build [dir]      Bundle the game into the manifest's entry (one ES module, no imports)
   validate [dir]   Check the package, the bundle, determinism and hidden information
+  publish [dir]    Sign in and upload the game as a new version
   help             Show this help
 
 Run "bgp <command> --help" for a command's options. [dir] defaults to the current directory.`;
@@ -56,6 +64,22 @@ page, which reloads it and replays the current game. Open the printed link; stop
 Options:
   --port <n>       Port on 127.0.0.1 (default ${DEFAULT_DEV_PORT}; 0 picks a free one)
   --web <origin>   The web app (default ${DEFAULT_WEB_ORIGIN})`;
+
+const PUBLISH_USAGE = `Usage: bgp publish [dir] [--api <origin>] [--issuer <url>] [--visibility private|unlisted]
+
+Builds the game, checks its files, signs you in and uploads a new version (the manifest's
+"version"); the server validates it and runs setup in the rules host before it is ready.
+Re-publishing identical files is a no-op. Run bgp validate first.
+
+Sign-in uses a device code: open the printed link in any browser and confirm the code. Set
+BGP_TOKEN to an access token instead, for scripts; it is never printed.
+
+Options:
+  --api <origin>      Platform API (default ${DEFAULT_API_ORIGIN})
+  --issuer <url>      Sign-in service (default ${DEFAULT_ISSUER})
+  --client-id <id>    OIDC client of the CLI (default ${DEFAULT_CLI_CLIENT_ID})
+  --visibility <v>    private or unlisted, when the game is created (default private)
+  --web <origin>      Web app, for the link to the version (default ${DEFAULT_WEB_ORIGIN})`;
 
 /** A usage error: wrong arguments. Exit code 2. */
 class UsageError extends Error {}
@@ -162,6 +186,62 @@ async function devCommand(args: string[], output: Output): Promise<number> {
   return 0;
 }
 
+async function publishCommand(args: string[], output: Output): Promise<number> {
+  const { values, positionals } = parseArgs({
+    args,
+    allowPositionals: true,
+    options: {
+      help: { type: "boolean", short: "h" },
+      api: { type: "string" },
+      issuer: { type: "string" },
+      "client-id": { type: "string" },
+      visibility: { type: "string" },
+      web: { type: "string" },
+    },
+  });
+  if (values.help) {
+    output.out(PUBLISH_USAGE);
+    return 0;
+  }
+  const visibility = values.visibility ?? "private";
+  if (visibility !== "private" && visibility !== "unlisted") {
+    throw new UsageError("--visibility must be private or unlisted");
+  }
+  const apiOrigin = origin("api", values.api ?? DEFAULT_API_ORIGIN);
+  const webOrigin = origin("web", values.web ?? DEFAULT_WEB_ORIGIN);
+  const issuer = values.issuer ?? DEFAULT_ISSUER;
+  origin("issuer", issuer);
+  const pkg = await loadGamePackage(packageDir(positionals));
+  output.out(`Publishing ${pkg.manifest.id} ${pkg.manifest.version} to ${apiOrigin}`);
+  const token =
+    process.env.BGP_TOKEN ||
+    (await signInWithDeviceCode({
+      issuer,
+      clientId: values["client-id"] ?? DEFAULT_CLI_CLIENT_ID,
+      prompt({ url, code, completeUrl }) {
+        output.out(`To sign in, open ${url} and enter the code ${code}`);
+        if (completeUrl) output.out(`Or open ${completeUrl}`);
+        output.out("Waiting for sign-in…");
+      },
+    }));
+  const result = await publishGame(pkg, {
+    apiOrigin,
+    token,
+    visibility,
+    onProgress: (message) => output.out(message),
+  });
+  const link = `${webOrigin}/games/${result.game.id}/versions/${result.version.id}`;
+  output.out(
+    result.status === "unchanged"
+      ? `Version ${pkg.manifest.version} is already published with these files.`
+      : `Published ${pkg.manifest.id} ${pkg.manifest.version}.`,
+  );
+  output.out(`Version: ${result.version.id}`);
+  output.out(`Build hash: ${result.buildHash}`);
+  output.out(`Create a match: ${link}`);
+  return 0;
+}
+
 async function buildCommand(args: string[], output: Output): Promise<number> {
   const { values, positionals } = parseArgs({
     args,
@@ -238,6 +318,7 @@ const COMMANDS: Record<string, (args: string[], output: Output) => Promise<numbe
   dev: devCommand,
   build: buildCommand,
   validate: validateCommand,
+  publish: publishCommand,
 };
 
 /** Runs one CLI invocation and returns its exit code. */
@@ -255,7 +336,11 @@ export async function main(argv: readonly string[], output: Output): Promise<num
   try {
     return await run(args, output);
   } catch (error) {
-    if (error instanceof PackageError) {
+    if (error instanceof SignInError) {
+      output.err(error.message);
+      return 1;
+    }
+    if (error instanceof PackageError || error instanceof PublishError) {
       output.err(error.message);
       printErrors(output, error.errors);
       return 1;
