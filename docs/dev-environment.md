@@ -166,6 +166,9 @@ Web app (`apps/web/.env`):
   `TEST_DATABASE_URL=postgres://bgp:bgp@localhost:15432/bgp_test`. `pnpm dev` reads these
   settings and starts Compose with the override. For direct Compose calls, omit `-f` so
   Compose also reads `COMPOSE_FILE` from `.env`. The e2e and perf databases follow `DATABASE_URL`.
+- **Port 8080 is taken**. In the same Compose override, set
+  `ports: !override ["127.0.0.1:18080:8080"]` under `services.keycloak`. Update
+  `OIDC_ISSUER`, `OIDC_JWKS_URL`, and `VITE_OIDC_ISSUER` in `.env` to use port 18080.
 - **Windows refuses a port** that looks free: Windows reserves port ranges (see
   `netsh interface ipv4 show excludedportrange protocol=tcp`); pick a port outside them.
 - **Sign-in fails after pulling** a newer realm: realm imports only create missing realms; see
