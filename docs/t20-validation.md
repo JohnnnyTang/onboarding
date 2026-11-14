@@ -190,8 +190,11 @@ Note any step the docs did not cover.
 
 On 2026-11-14, a fresh source checkout on the Windows development machine passed
 the frozen install from the existing pnpm cache, `pnpm build`, `pnpm dev` with new
-Compose containers and a fresh PostgreSQL volume, Chromium sign-in, and `pnpm test`
-(798 package tests and 75 tooling tests). The local PostgreSQL service already owned
+Compose containers and a fresh PostgreSQL volume, and Chromium sign-in. `pnpm test`
+passed 798 package tests and 75 tooling tests. `pnpm test:e2e --workers=1` passed 98
+tests with four expected skips across Chromium, Firefox and WebKit, including guest
+and designer reloads within three seconds. Lint, typecheck and the WASM inventory also
+passed. The local PostgreSQL service already owned
 5432. The run exposed that `pnpm dev` ignored the documented Compose override, and
 the launcher now reads `COMPOSE_FILE`. It also exposed the missing Harbor Market CLI
 shim on first install. The guide now invokes the built CLI directly, which served
