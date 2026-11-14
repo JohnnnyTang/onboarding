@@ -1,9 +1,8 @@
 # T20 validation: hardening and handoff check
 
 Work on the `claude/t20-hardening` branch, based on the T19 tip `8324d0d`.
-Status: **open**. The project owner elected to keep physical-phone qualification
-(AC-12) and the clean-machine run (AC-15) open. See
-[Left for the project owner](#left-for-the-project-owner) for the remaining runs.
+Status: **open** pending the clean-machine run (AC-15). On 2026-11-14, the project
+owner deferred physical-phone qualification (AC-12) as a non-blocking follow-up.
 
 ## Delivered
 
@@ -117,31 +116,28 @@ at 20 concurrent matches.
 
 ## Acceptance criteria
 
-| ID    | Status   | Evidence                                                                                                                                                                                                                |
-| ----- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| AC-01 | Pass     | E2E-01, `e2e/projects.spec.ts`, all three browsers, under the content security policy                                                                                                                                   |
-| AC-02 | Pass     | E2E-02 `e2e/publish.spec.ts`; INT-UPLOAD `apps/server/test/int-upload.test.ts`                                                                                                                                          |
-| AC-03 | Pass     | E2E-03 `e2e/publish.spec.ts`, all three browsers                                                                                                                                                                        |
-| AC-04 | Pass     | UNIT-LEAK (`games/harbor-market/test/game.prop.test.ts`, `packages/testing/test/leaks.prop.test.ts`); INT-LEAK `apps/server/test/room-harbor.test.ts`                                                                   |
-| AC-05 | Pass     | E2E-04 `e2e/match.spec.ts`, all three browsers                                                                                                                                                                          |
-| AC-06 | Pass     | E2E-05 (guest) and the Q-018 designer reload, `e2e/match.spec.ts`, all three browsers                                                                                                                                   |
-| AC-07 | Pass     | INT-REPLAY `apps/server/test/room-harbor.test.ts`; the replay page in E2E-06                                                                                                                                            |
-| AC-08 | Pass     | [Node PROP-DET](../games/harbor-market/test/game.prop.test.ts) and [Chromium property replay](../e2e/harbor-determinism.spec.ts) passed 1,000 games each. [E2E-06](../e2e/replay.spec.ts) passed in all three browsers. |
-| AC-09 | Pass     | INT-ISOLATION `packages/rules-host/test/host-client.test.ts`; the endless move stopped under 1.5 s in `apps/server/test/room-protocol.test.ts`                                                                          |
-| AC-10 | Pass     | INT-RECOVERY `apps/server/test/room-harbor.test.ts`, `packages/rules-host/test/host-client.test.ts`                                                                                                                     |
-| AC-11 | Pass     | PERF-01, [docs/perf/perf-01-results.json](perf/perf-01-results.json)                                                                                                                                                    |
-| AC-12 | **Open** | Desktop Playwright Chromium, Firefox and WebKit pass at 360 px and 1440 px. Safari on iOS and Chrome on Android need the device run below.                                                                              |
-| AC-13 | Pass     | E2E-07 `e2e/cli.spec.ts` (T19; `bgp dev` in all three browsers here)                                                                                                                                                    |
-| AC-14 | Pass     | CI-WASM-INVENTORY, `pnpm check:wasm`                                                                                                                                                                                    |
-| AC-15 | **Open** | Needs a clean machine; the docs were brought up to date for it                                                                                                                                                          |
+| ID    | Status       | Evidence                                                                                                                                                                                                                |
+| ----- | ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| AC-01 | Pass         | E2E-01, `e2e/projects.spec.ts`, all three browsers, under the content security policy                                                                                                                                   |
+| AC-02 | Pass         | E2E-02 `e2e/publish.spec.ts`; INT-UPLOAD `apps/server/test/int-upload.test.ts`                                                                                                                                          |
+| AC-03 | Pass         | E2E-03 `e2e/publish.spec.ts`, all three browsers                                                                                                                                                                        |
+| AC-04 | Pass         | UNIT-LEAK (`games/harbor-market/test/game.prop.test.ts`, `packages/testing/test/leaks.prop.test.ts`); INT-LEAK `apps/server/test/room-harbor.test.ts`                                                                   |
+| AC-05 | Pass         | E2E-04 `e2e/match.spec.ts`, all three browsers                                                                                                                                                                          |
+| AC-06 | Pass         | E2E-05 (guest) and the Q-018 designer reload, `e2e/match.spec.ts`, all three browsers                                                                                                                                   |
+| AC-07 | Pass         | INT-REPLAY `apps/server/test/room-harbor.test.ts`; the replay page in E2E-06                                                                                                                                            |
+| AC-08 | Pass         | [Node PROP-DET](../games/harbor-market/test/game.prop.test.ts) and [Chromium property replay](../e2e/harbor-determinism.spec.ts) passed 1,000 games each. [E2E-06](../e2e/replay.spec.ts) passed in all three browsers. |
+| AC-09 | Pass         | INT-ISOLATION `packages/rules-host/test/host-client.test.ts`; the endless move stopped under 1.5 s in `apps/server/test/room-protocol.test.ts`                                                                          |
+| AC-10 | Pass         | INT-RECOVERY `apps/server/test/room-harbor.test.ts`, `packages/rules-host/test/host-client.test.ts`                                                                                                                     |
+| AC-11 | Pass         | PERF-01, [docs/perf/perf-01-results.json](perf/perf-01-results.json)                                                                                                                                                    |
+| AC-12 | **Deferred** | Desktop Playwright Chromium, Firefox and WebKit pass at 360 px and 1440 px. The physical Safari on iOS and Chrome on Android run is a non-blocking follow-up.                                                           |
+| AC-13 | Pass         | E2E-07 `e2e/cli.spec.ts` (T19; `bgp dev` in all three browsers here)                                                                                                                                                    |
+| AC-14 | Pass         | CI-WASM-INVENTORY, `pnpm check:wasm`                                                                                                                                                                                    |
+| AC-15 | **Open**     | Needs a clean machine; the docs were brought up to date for it                                                                                                                                                          |
 
 "All three browsers" means desktop Chromium, Firefox and WebKit through Playwright. Desktop
 WebKit and synthetic touch do not stand in for iOS or Android (testing.md).
 
-## Left for the project owner
-
-Physical-device measurements and clean-machine smoke test results are pending.
-T20 stays open until both are recorded here.
+## Handoff runs
 
 ### Physical-device table qualification (AC-12, deferred from T13)
 

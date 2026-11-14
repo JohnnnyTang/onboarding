@@ -195,9 +195,9 @@ The project owner confirmed Q-018 (guest seats in session storage) on 2026-11-04
 
 ### T20 Hardening and handoff check
 
-**Status:** Open. The 1,000-game Node and Chromium determinism runs passed (AC-08).
-Physical-phone qualification (AC-12) and the clean-machine run (AC-15) remain open
-at the project owner's direction. See [t20-validation.md](t20-validation.md) for evidence.
+**Status:** Open pending the clean-machine run (AC-15). The project owner deferred
+physical-phone qualification (AC-12) as a non-blocking follow-up on 2026-11-14.
+See [t20-validation.md](t20-validation.md) for evidence.
 
 **Deliverables:** PERF-01 script and results; physical-device table qualification
 (deferred from T13 by the project owner on 2026-10-27), including the three-engine
@@ -209,4 +209,5 @@ full browser matrix run; a content security policy for the web app that still al
 game worker's blob module, the offline service worker (Q-020), PixiJS and the configured API, room and OIDC origins (Q-018);
 a measured designer reload against AC-06 (Q-018); keyboard operation of selection and the action bar; error and empty states reviewed; README and dev-environment.md verified on a clean machine; the acceptance criteria table in [phase-1-spec.md](phase-1-spec.md#acceptance-criteria) checked off with links to passing runs.
 
-**Done when:** every acceptance criterion AC-01 to AC-15 passes.
+**Done when:** AC-01 through AC-11 and AC-13 through AC-15 pass. AC-12 is tracked
+as a separate follow-up and does not block the T20 handoff.

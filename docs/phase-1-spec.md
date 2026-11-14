@@ -55,6 +55,7 @@ Stretch, only if everything else is done: per-moment playtest feedback comments 
 
 Each criterion is checked by the test named in brackets ([testing.md](testing.md)).
 The [T20 handoff](t20-validation.md#acceptance-criteria) records the status and evidence.
+The project owner deferred physical-device qualification under AC-12 as a non-blocking follow-up on 2026-11-14.
 
 | ID    | Criterion                                                                                                                                                                                                                                      |
 | ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
