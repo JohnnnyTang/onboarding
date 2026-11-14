@@ -74,6 +74,8 @@ export default defineConfig({
   timeout: 120_000,
   reporter: process.env.CI ? "github" : "list",
   expect: { timeout: 30_000 },
+  // Checked-in visual baselines use Windows fonts and rasterization.
+  ignoreSnapshots: process.platform !== "win32",
   use: { trace: "retain-on-failure" },
   webServer: [tableServer, ...appServers()],
   projects: [

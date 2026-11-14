@@ -5,7 +5,8 @@
 - **Node.js** active LTS, matching `.nvmrc` (use nvm, fnm or Volta).
 - **pnpm**, version pinned in the root `package.json` `packageManager` field. Install it with npm or pnpm's standalone installer; do not rely on Corepack, which newer Node releases no longer bundle.
 - **Docker** with Compose, for PostgreSQL and Keycloak.
-- Playwright browsers: `pnpm exec playwright install --with-deps` (first run only).
+- Playwright browsers and system packages. Install them after the workspace dependencies
+  using the command below. On Linux this step can ask for `sudo` to install system packages.
 
 ## First run
 
@@ -26,6 +27,7 @@ values take precedence. Generate `GUEST_TOKEN_SECRET` using the command in the e
 
 ```bash
 pnpm install --frozen-lockfile
+pnpm exec playwright install --with-deps # first run, or after a Playwright version change
 cp .env.example .env                    # then set GUEST_TOKEN_SECRET (command in the file)
 pnpm dev                                # builds the packages, then API :3000 and web :5173
 ```
@@ -64,13 +66,14 @@ match-event guard) are created with `pnpm --filter @bgp/server exec drizzle-kit 
 safely run again. Migration startup uses a PostgreSQL advisory lock so simultaneous
 worktree and test startup cannot race. No migrations run merely by importing database code.
 
-`pnpm test` includes real PostgreSQL integration tests. Start Docker services first:
+`pnpm test` includes real PostgreSQL integration tests. Stop `pnpm dev` with Ctrl+C and
+leave its Compose services running. If the services are stopped, start them with
+`docker compose -f infra/docker-compose.yml up -d --wait` (see the port override below).
 
 ```bash
-docker compose -f infra/docker-compose.yml up -d --wait
 pnpm test
 pnpm build                              # the rules host bundle and the CLI, for e2e and perf
-pnpm test:e2e --project=chromium        # or all of Chromium, Firefox and WebKit
+pnpm test:e2e                           # Chromium, Firefox and WebKit
 pnpm perf                               # PERF-01 (AC-11)
 ```
 
@@ -79,7 +82,8 @@ no manual test-database migration is needed. It defaults to `bgp_test`, refuses 
 database URLs, and fails clearly if PostgreSQL is unavailable. Tests roll back their data
 instead of clearing shared tables. The Keycloak browser tests verify both account-page
 sign-ins, the web client's PKCE requirement, its `bgp-api` audience and the `sub` claim.
-Browser tests need healthy Keycloak and the Playwright browser installation.
+Browser tests need healthy Keycloak and the Playwright browser installation. The screenshot
+comparisons use Windows baselines. The rest of the browser matrix also runs on Linux and macOS.
 
 From T12, `pnpm test:e2e` also starts the API on port 3000 and the web app on 5173 (after
 `pnpm build`). The API uses its own database, `bgp_e2e` on the `DATABASE_URL` server, which

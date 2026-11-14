@@ -138,8 +138,8 @@ Firefox and WebKit matrix, while push and pull-request jobs run Chromium.
 
 T13 adds real table renderer interactions and screenshots at 360/1440 px. Windows
 baselines are enforced in the `table-visuals` job across Chromium, Firefox and
-WebKit. Linux jobs keep the interaction matrix and pass `--ignore-snapshots` to
-avoid comparing Windows font/GPU rasterization on Linux. Review every changed
+WebKit. Playwright skips screenshot comparisons by default on Linux and macOS,
+where font and GPU rasterization differ. It still runs the interaction matrix. Review every changed
 PNG before accepting `--update-snapshots`. The fixture server starts automatically
 through Playwright; with `BGP_E2E_APP=0` (set in the `table-visuals` job) the renderer
 tests need neither Docker nor the T12 app servers.

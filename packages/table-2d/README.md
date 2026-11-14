@@ -79,8 +79,8 @@ T12 can mount the same library on its `/dev/table` route later.
 
 Run `pnpm --filter @bgp/table-2d test` for layout/drop unit tests and
 `pnpm test:e2e e2e/table-2d.spec.ts --workers=1` for the browser matrix.
-Reviewed visual baselines use Windows. Linux CI runs interaction tests with
-`--ignore-snapshots`; the dedicated Windows CI job compares all three browsers.
+Reviewed visual baselines use Windows. Linux and macOS run the interaction tests.
+The dedicated Windows CI job compares screenshots in all three browsers.
 Update with `--update-snapshots` only after reviewing the actual images.
 
 The project owner confirmed PixiJS 8.6.6 at T13 on 2026-10-27; D-009 for 2D is
