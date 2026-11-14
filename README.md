@@ -57,8 +57,6 @@ Use Node **24.22.1** (see `.nvmrc`), pnpm **11.9.0**, and Docker with Compose fo
 ```sh
 pnpm install --frozen-lockfile
 # Copy .env.example to .env and set GUEST_TOKEN_SECRET for local use.
-docker compose -f infra/docker-compose.yml up -d --wait
-pnpm db:migrate
 pnpm dev        # API and room server on :3000, web app on http://localhost:5173
 ```
 

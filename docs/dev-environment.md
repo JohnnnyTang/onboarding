@@ -27,8 +27,6 @@ values take precedence. Generate `GUEST_TOKEN_SECRET` using the command in the e
 ```bash
 pnpm install --frozen-lockfile
 cp .env.example .env                    # then set GUEST_TOKEN_SECRET (command in the file)
-docker compose -f infra/docker-compose.yml up -d --wait
-pnpm db:migrate
 pnpm dev                                # builds the packages, then API :3000 and web :5173
 ```
 
@@ -115,28 +113,28 @@ T10/T11 transactions. PostgreSQL already enforces keys, numeric bounds and immut
 
 ## Environment variables
 
-Server (`apps/server/.env`):
+Server (root `.env` or process environment):
 
-| Variable                                                                                                                                                                                                              | Local default                                                    | Purpose                                                                                |
-| --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
-| `HOST`                                                                              , `127.0.0.1`                                                      , Listen address; use `0.0.0.0` to test from phones on the LAN |
-| `PORT`                                                                                                                                                                                                                | `3000`                                                           |                                                                                        |
-| `PUBLIC_WEB_ORIGIN`                                                                                                                                                                                                   | `http://localhost:5173`                                          | CORS and invite link base                                                              |
-| `DATABASE_URL`                                                                                                                                                                                                        | `postgres://bgp:bgp@localhost:5432/bgp`                          |                                                                                        |
-| `TEST_DATABASE_URL`                                                                                                                                                                                                   | `postgres://bgp:bgp@localhost:5432/bgp_test`                     | Integration tests                                                                      |
-| `OIDC_ISSUER`                                                                                                                                                                                                         | `http://localhost:8080/realms/bgp`                               | Token verification via the issuer's JWKS                                               |
-| `OIDC_AUDIENCE`                                                                                                                                                                                                       | `bgp-api`                                                        | Required `aud`                                                                         |
-| `OIDC_JWKS_URL`                                                                                                                                                                                                       | `http://localhost:8080/realms/bgp/protocol/openid-connect/certs` | Trusted signing-key endpoint for OIDC access-token verification                        |
-| `GUEST_TOKEN_SECRET`                                                                                                                                                                                                  | 32+ random bytes, base64                                         | Signs guest tokens; never commit real values                                           |
-| `BLOB_DRIVER`                                                                                                                                                                                                         | `fs`                                                             | `fs` or `s3`                                                                           |
-| `BLOB_FS_DIR`                                                                                                                                                                                                         | `./.data/blobs`                                                  |                                                                                        |
-| `S3_ENDPOINT`, `S3_BUCKET`, `S3_REGION`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`                                                                                                                                   | unset                                                            | Production storage                                                                     |
-| `BUNDLE_CACHE_DIR`                                                                                                                                                                                                    | `./.data/bundle-cache`                                           | Read-only for the rules host                                                           |
-| `RULES_HOST_PROCESSES`                                                                                                                                                                                                | `1`                                                              |                                                                                        |
-| `RULES_CALL_TIMEOUT_MS`                                                                                                                                                                                               | `1000`                                                           | Per call into game code                                                                |
-| `RULES_MEMORY_MB`                                                                                                                                                                                                     | `64`                                                             | Memory cap per match sandbox                                                           |
-| `RULES_SANDBOX`                                                                                                                                                                                                       | `quickjs`                                                        | `quickjs` or `node-vm`, so the T08 spike and fallbacks can switch without code changes |
-| `LOG_LEVEL`                                                                                                                                                                                                           | `info`                                                           | pino level                                                                             |
+| Variable                                                                            | Local default                                                    | Purpose                                                                                |
+| ----------------------------------------------------------------------------------- | ---------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| `HOST`                                                                              | `127.0.0.1`                                                      | Listen address. Use `0.0.0.0` to test from phones on the LAN.                          |
+| `PORT`                                                                              | `3000`                                                           |                                                                                        |
+| `PUBLIC_WEB_ORIGIN`                                                                 | `http://localhost:5173`                                          | CORS and invite link base                                                              |
+| `DATABASE_URL`                                                                      | `postgres://bgp:bgp@localhost:5432/bgp`                          |                                                                                        |
+| `TEST_DATABASE_URL`                                                                 | `postgres://bgp:bgp@localhost:5432/bgp_test`                     | Integration tests                                                                      |
+| `OIDC_ISSUER`                                                                       | `http://localhost:8080/realms/bgp`                               | Token verification via the issuer's JWKS                                               |
+| `OIDC_AUDIENCE`                                                                     | `bgp-api`                                                        | Required `aud`                                                                         |
+| `OIDC_JWKS_URL`                                                                     | `http://localhost:8080/realms/bgp/protocol/openid-connect/certs` | Trusted signing-key endpoint for OIDC access-token verification                        |
+| `GUEST_TOKEN_SECRET`                                                                | 32+ random bytes, base64                                         | Signs guest tokens; never commit real values                                           |
+| `BLOB_DRIVER`                                                                       | `fs`                                                             | `fs` or `s3`                                                                           |
+| `BLOB_FS_DIR`                                                                       | `./.data/blobs`                                                  |                                                                                        |
+| `S3_ENDPOINT`, `S3_BUCKET`, `S3_REGION`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY` | unset                                                            | Production storage                                                                     |
+| `BUNDLE_CACHE_DIR`                                                                  | `./.data/bundle-cache`                                           | Read-only for the rules host                                                           |
+| `RULES_HOST_PROCESSES`                                                              | `1`                                                              |                                                                                        |
+| `RULES_CALL_TIMEOUT_MS`                                                             | `1000`                                                           | Per call into game code                                                                |
+| `RULES_MEMORY_MB`                                                                   | `64`                                                             | Memory cap per match sandbox                                                           |
+| `RULES_SANDBOX`                                                                     | `quickjs`                                                        | `quickjs` or `node-vm`, so the T08 spike and fallbacks can switch without code changes |
+| `LOG_LEVEL`                                                                         | `info`                                                           | pino level                                                                             |
 
 Web app (`apps/web/.env`):
 
@@ -150,12 +148,20 @@ Web app (`apps/web/.env`):
 ## Troubleshooting
 
 - **Port 5432 is taken** (a PostgreSQL installed on the machine): Compose cannot bind the
-  database. Keep the native server and publish the container elsewhere with an override file
-  kept outside the repository, for example `ports: !override ["127.0.0.1:15432:5432"]` under
-  `services.postgres`, passed as a second `-f` to `docker compose`. Then set
+  database. Keep the native server and save an override as `infra/docker-compose.local.yml`:
+
+  ```yaml
+  services:
+    postgres:
+      ports: !override ["127.0.0.1:15432:5432"]
+  ```
+
+  Set `COMPOSE_FILE=infra/docker-compose.yml:infra/docker-compose.local.yml` in `.env`
+  (use `;` as the separator on Windows), plus
   `DATABASE_URL=postgres://bgp:bgp@localhost:15432/bgp` and
-  `TEST_DATABASE_URL=postgres://bgp:bgp@localhost:15432/bgp_test` in `.env`; the e2e and
-  perf databases follow `DATABASE_URL`.
+  `TEST_DATABASE_URL=postgres://bgp:bgp@localhost:15432/bgp_test`. `pnpm dev` reads these
+  settings and starts Compose with the override. For direct Compose calls, omit `-f` so
+  Compose also reads `COMPOSE_FILE` from `.env`. The e2e and perf databases follow `DATABASE_URL`.
 - **Windows refuses a port** that looks free: Windows reserves port ranges (see
   `netsh interface ipv4 show excludedportrange protocol=tcp`); pick a port outside them.
 - **Sign-in fails after pulling** a newer realm: realm imports only create missing realms; see

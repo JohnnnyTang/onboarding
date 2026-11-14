@@ -11,3 +11,4 @@ test-results/
 .env.*
 !.env.example
 *.tsbuildinfo
+/infra/docker-compose.local.yml
