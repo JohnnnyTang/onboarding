@@ -157,8 +157,9 @@ same Wi-Fi network as the development machine.
    overlay reading, which uses up to 180 intervals from that drag.
 3. For each, record in the table below: device model, OS and browser version, DPR, the
    graphics backend where the page shows it, and p50/p95 frame intervals against the 60 fps
-   target (16.7 ms). Check card text at the fitted view in each comparison engine, and
-   again after pinch-zooming in the production renderer.
+   target (16.7 ms). After recording timings, check card text at the fitted view and
+   after pinch-zooming. The comparison pages use browser zoom and the production
+   renderer zooms the table.
 4. On `/dev/table/?stress=1` and the five-layout fixture, check by hand with real touch: drag
    and drop a card into each zone, pinch to zoom, pan, the seat rotation buttons, and the page
    from 360 px wide (portrait) to landscape.
@@ -186,6 +187,17 @@ On a machine with only the prerequisites in [dev-environment.md](dev-environment
 follow "Full development environment" through `pnpm dev` and sign in. Stop the app
 watchers, leave Compose running, and run `pnpm test`, `pnpm build`, and `pnpm test:e2e`.
 Note any step the docs did not cover.
+
+On 2026-11-14, a fresh source checkout on the Windows development machine passed
+the frozen install from the existing pnpm cache, `pnpm build`, `pnpm dev` with new
+Compose containers and a fresh PostgreSQL volume, Chromium sign-in, and `pnpm test`
+(798 package tests and 75 tooling tests). The local PostgreSQL service already owned
+5432. The run exposed that `pnpm dev` ignored the documented Compose override, and
+the launcher now reads `COMPOSE_FILE`. It also exposed the missing Harbor Market CLI
+shim on first install. The guide now invokes the built CLI directly, which served
+Harbor Market and passed game validation in the fresh checkout. This run reused the
+host's installed Playwright browsers and cached Docker images. The clean-machine
+run remains open.
 
 ## Decisions and open questions
 
