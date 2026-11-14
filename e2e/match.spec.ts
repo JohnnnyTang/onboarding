@@ -186,6 +186,10 @@ test("Q-018: a designer who reloads mid-match signs in again and is back at the 
   await page.getByRole("button", { name: "Restock" }).click();
   await expect(prompt(page)).toHaveText(/^Waiting for Seat 2/);
   const hud = page.getByRole("list", { name: "Players" });
+  // Keep the measured page foregrounded without another browser context drawing the table.
+  await bo.context.close();
+  await page.bringToFront();
+  await expect(hud).toContainText("away");
   const hudBefore = await hud.textContent();
 
   // Designer tokens live in memory (D-007), so the reload signs out; signing in again goes
@@ -221,7 +225,7 @@ test("Q-018: a designer who reloads mid-match signs in again and is back at the 
   });
   expect(page.url()).toBe(`${WEB_URL}/matches/${match.matchId}`);
   expect(elapsed).toBeLessThan(3_000);
-  for (const player of [designer, bo]) await player.context.close();
+  await context.close();
 });
 
 /** Presses Tab until the button named `name` has the focus. */
