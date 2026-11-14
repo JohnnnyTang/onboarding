@@ -191,14 +191,30 @@ test("Q-018: a designer who reloads mid-match signs in again and is back at the 
   // Designer tokens live in memory (D-007), so the reload signs out; signing in again goes
   // through the Keycloak session without a form and returns to the match.
   const started = Date.now();
-  await page.reload();
+  await page.reload({ waitUntil: "commit" });
   const signIn = page.getByRole("main").getByRole("button", { name: "Sign in" });
   await signIn.click({ timeout: 3_000 });
   const clicked = Date.now();
-  await expect(prompt(page)).toHaveText(/^Waiting for Seat 2/, { timeout: 3_000 });
-  await expect(hud).toHaveText(hudBefore ?? "", { timeout: 3_000 });
-  await expect(page.getByTestId("table").locator("canvas")).toBeVisible({ timeout: 3_000 });
+  // Check the view together so sequential assertion polling does not add to the timing.
+  const ready = await page.waitForFunction(
+    (players) => {
+      const table = document.querySelector('[data-testid="table"] canvas');
+      return (
+        document
+          .querySelector('[data-testid="prompt"]')
+          ?.textContent?.startsWith("Waiting for Seat 2") &&
+        document.querySelector('[aria-label="Players"]')?.textContent === players &&
+        table &&
+        table.getBoundingClientRect().width > 0 &&
+        table.getBoundingClientRect().height > 0 &&
+        getComputedStyle(table).visibility === "visible"
+      );
+    },
+    hudBefore,
+    { timeout: 3_000 },
+  );
   const elapsed = Date.now() - started;
+  await ready.dispose();
   test.info().annotations.push({
     type: "designer reload",
     description: `${elapsed} ms in total: ${clicked - started} ms to the sign-in button, ${Date.now() - clicked} ms from the click back to the table`,
