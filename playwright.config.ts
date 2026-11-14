@@ -71,6 +71,8 @@ export default defineConfig({
   testDir: "./e2e",
   forbidOnly: Boolean(process.env.CI),
   retries: process.env.CI ? 2 : 0,
+  // All projects share one room server. Keep concurrent tests from distorting timing limits.
+  workers: 1,
   timeout: 120_000,
   reporter: process.env.CI ? "github" : "list",
   expect: { timeout: 30_000 },
