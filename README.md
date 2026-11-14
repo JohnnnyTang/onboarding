@@ -93,7 +93,7 @@ $BGP validate   # schemas, bundle, determinism and leaked cards, with random gam
 $BGP publish    # device sign-in in any browser, then upload a version
 ```
 
-A package inside the workspace, such as `games/harbor-market`, can depend on `"@bgp/cli": "workspace:*"` and run `pnpm exec bgp …`. `bgp dev` needs the web app (`pnpm dev`, or `--web` for another origin); `bgp publish` needs the API and Keycloak. `bgp build` writes the bundle alone; publish builds it too. A version holds the bundle (a deterministic rules definition), the component declarations and the assets. Published versions are immutable and addressed by their content hash, so matches and replays remain tied to the exact rules they used. The starter package's README explains its files and the rules for game code.
+For a game inside the workspace, pass its directory to the built CLI. For example, run `node packages/cli/dist/bin.js dev games/harbor-market` from the workspace root. `bgp dev` needs the web app (`pnpm dev`, or `--web` for another origin); `bgp publish` needs the API and Keycloak. `bgp build` writes the bundle alone; publish builds it too. A version holds the bundle (a deterministic rules definition), the component declarations and the assets. Published versions are immutable and addressed by their content hash, so matches and replays remain tied to the exact rules they used. The starter package's README explains its files and the rules for game code.
 
 For the rules surface and data format, start with [rules API](docs/contracts/rules-api.md), [components and table](docs/contracts/components-and-table.md), and [manifest](docs/contracts/manifest.md).
 

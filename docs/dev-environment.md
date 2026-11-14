@@ -172,10 +172,10 @@ Web app (`apps/web/.env`):
 
 ## Useful commands
 
-| Command                                              | Purpose                                            |
-| ---------------------------------------------------- | -------------------------------------------------- |
-| `pnpm --filter @bgp/rules test --watch`              | Iterate on the runtime                             |
-| `pnpm --filter harbor-market exec bgp dev`           | Reference game in a hot-seat table with hot reload |
-| `pnpm db:generate` then `pnpm db:migrate`            | After changing the Drizzle schema                  |
-| `docker compose -f infra/docker-compose.yml down -v` | Reset local services and data                      |
-| `rm -rf .data`                                       | Reset local blobs and bundle cache                 |
+| Command                                                 | Purpose                                            |
+| ------------------------------------------------------- | -------------------------------------------------- |
+| `pnpm --filter @bgp/rules test --watch`                 | Iterate on the runtime                             |
+| `node packages/cli/dist/bin.js dev games/harbor-market` | Reference game in a hot-seat table with hot reload |
+| `pnpm db:generate` then `pnpm db:migrate`               | After changing the Drizzle schema                  |
+| `docker compose -f infra/docker-compose.yml down -v`    | Reset local services and data                      |
+| `rm -rf .data`                                          | Reset local blobs and bundle cache                 |
