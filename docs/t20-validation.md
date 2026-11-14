@@ -1,7 +1,7 @@
 # T20 validation: hardening and handoff check
 
 Work on the `claude/t20-hardening` branch, based on the T19 tip `8324d0d`.
-Status: **open** pending the clean-machine run (AC-15). On 2026-11-14, the project
+Status: **complete**. The clean-machine run passed (AC-15). On 2026-11-14, the project
 owner deferred physical-phone qualification (AC-12) as a non-blocking follow-up.
 
 ## Delivered
@@ -132,7 +132,7 @@ at 20 concurrent matches.
 | AC-12 | **Deferred** | Desktop Playwright Chromium, Firefox and WebKit pass at 360 px and 1440 px. The physical Safari on iOS and Chrome on Android run is a non-blocking follow-up.                                                           |
 | AC-13 | Pass         | E2E-07 `e2e/cli.spec.ts` (T19; `bgp dev` in all three browsers here)                                                                                                                                                    |
 | AC-14 | Pass         | CI-WASM-INVENTORY, `pnpm check:wasm`                                                                                                                                                                                    |
-| AC-15 | **Open**     | Needs a clean machine; the docs were brought up to date for it                                                                                                                                                          |
+| AC-15 | Pass         | [Clean Windows run](#clean-machine-check-ac-15). Frozen install, browser install, startup, sign-in, workspace tests and full desktop browser matrix.                                                                    |
 
 "All three browsers" means desktop Chromium, Firefox and WebKit through Playwright. Desktop
 WebKit and synthetic touch do not stand in for iOS or Android (testing.md).
@@ -195,8 +195,28 @@ passed. The local PostgreSQL service already owned
 the launcher now reads `COMPOSE_FILE`. It also exposed the missing Harbor Market CLI
 shim on first install. The guide now invokes the built CLI directly, which served
 Harbor Market and passed game validation in the fresh checkout. This run reused the
-host's installed Playwright browsers and cached Docker images. The clean-machine
-run remains open.
+host's installed Playwright browsers and cached Docker images.
+
+A second Windows run started with an empty pnpm store and a separate Playwright
+browser directory. The frozen install downloaded all 202 packages into the new
+store. Direct browser downloads intermittently timed out. Playwright installed all
+three engines using the official archives, with a temporary loopback mirror for
+the downloads that needed to be resumed. PostgreSQL and Keycloak used new containers,
+a fresh database volume and the pinned images from the local Docker cache. The
+native PostgreSQL service already owned port 5432, so the run used the documented
+Compose port override. The clean checkout passed `pnpm dev` and designer sign-in,
+`pnpm build`, and `pnpm test` (798 package tests and 75 tooling tests). The final
+`pnpm test:e2e` run passed 98 tests with four expected skips across Chromium,
+Firefox and WebKit, including guest and designer reloads under three seconds.
+Lint, typecheck, and the WASM inventory passed. WebKit also replayed all 300 events
+with the expected final hash after the browser worker batches were reduced from
+50 to 16 events. Its step timing was 54 ms p50 and 80 ms p95.
+
+An additional check in a new Ubuntu 24.04 WSL 2 guest passed `pnpm dev`, lint, typecheck,
+build, and the WASM inventory. The official Playwright image's Firefox could not launch
+in the guest container, and the Chromium replay timing and WebKit match checks failed
+in that run. This leaves the Ubuntu browser matrix unverified. The clean Windows run
+uses native Playwright browsers.
 
 ## Decisions and open questions
 

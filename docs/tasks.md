@@ -195,7 +195,7 @@ The project owner confirmed Q-018 (guest seats in session storage) on 2026-11-04
 
 ### T20 Hardening and handoff check
 
-**Status:** Open pending the clean-machine run (AC-15). The project owner deferred
+**Status:** Complete. The clean-machine run passed (AC-15). The project owner deferred
 physical-phone qualification (AC-12) as a non-blocking follow-up on 2026-11-14.
 See [t20-validation.md](t20-validation.md) for evidence.
 
