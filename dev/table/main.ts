@@ -8,7 +8,8 @@ if (!host) throw new Error("Table container missing");
 const params = new URLSearchParams(location.search);
 let current: TableSnapshot = structuredClone(params.has("stress") ? stressFixture : fixture);
 let seat = params.get("seat") === "1" ? "1" : "0";
-let renderer = new PixiTableRenderer();
+const meter = params.has("fps") ? frameMeter() : undefined;
+let renderer = new PixiTableRenderer(meter?.frame);
 let gestureCount = 0;
 const MAX_LOG = 8;
 const assetUrl = fixtureAssets();
@@ -97,6 +98,8 @@ async function mount(): Promise<void> {
   const instance = renderer;
   await instance.mount(host as HTMLElement, { components, assetUrl, seat });
   if (instance !== renderer) return;
+  const canvas = host?.querySelector("canvas");
+  if (canvas) meter?.attach(canvas);
   instance.onGesture(logGesture);
   instance.onSelectionChange(showSelection);
   setSnapshot(current);
@@ -133,7 +136,7 @@ for (const id of ["0", "1"])
     press(["seat-0", "seat-1"], `seat-${id}`);
     showSelection([]);
     renderer.destroy();
-    renderer = new PixiTableRenderer();
+    renderer = new PixiTableRenderer(meter?.frame);
     void mount();
   });
 button("reset", () => renderer.resize());
@@ -143,35 +146,65 @@ press(["seat-0", "seat-1"], `seat-${seat}`);
 window.addEventListener("pagehide", () => renderer.destroy());
 void mount();
 
-/**
- * `?fps=1`: frame intervals on screen, for phones without developer tools (T20 device
- * qualification). Every animation frame is timed; the overlay shows p50 and p95 of the last
- * 180 intervals, the device pixel ratio and the WebGL renderer string where exposed. Drag a
- * card while reading it: an idle table stops drawing, so idle intervals mean little.
- */
-function frameMeter(): void {
+/** `?fps=1`: intervals between frames submitted during the current or last continuous drag. */
+function frameMeter() {
   const output = document.createElement("output");
+  output.id = "frame-meter";
   output.className = "frame-meter";
   output.setAttribute("aria-live", "off");
   document.body.append(output);
-  const probe = document.createElement("canvas").getContext("webgl");
-  const debug = probe?.getExtension("WEBGL_debug_renderer_info");
-  const backend = debug ? String(probe?.getParameter(debug.UNMASKED_RENDERER_WEBGL)) : "hidden";
   const intervals: number[] = [];
   let previous: number | undefined;
-  let frame = 0;
-  const tick = (time: number) => {
-    if (previous !== undefined) intervals.push(time - previous);
-    if (intervals.length > 180) intervals.shift();
-    previous = time;
-    frame += 1;
-    if (frame % 30 === 0 && intervals.length > 0) {
-      const sorted = [...intervals].sort((a, b) => a - b);
-      const at = (p: number) => sorted[Math.min(sorted.length - 1, Math.floor(sorted.length * p))];
-      output.textContent = `p50 ${at(0.5)?.toFixed(1)} ms · p95 ${at(0.95)?.toFixed(1)} ms · DPR ${devicePixelRatio} · ${backend}`;
-    }
-    requestAnimationFrame(tick);
+  let samples = 0;
+  let backend = "";
+  const details = () => `DPR ${devicePixelRatio} · ${backend}`;
+  const instruction = () => `Drag a card for at least 30 frame intervals · ${details()}`;
+  const reset = () => {
+    intervals.length = 0;
+    samples = 0;
+    previous = undefined;
   };
-  requestAnimationFrame(tick);
+  const show = () => {
+    if (samples < 30) {
+      output.textContent = instruction();
+    } else {
+      const sorted = [...intervals].sort((a, b) => a - b);
+      const at = (p: number) => sorted[Math.floor((sorted.length - 1) * p)]?.toFixed(1);
+      output.textContent = `p50 ${at(0.5)} ms · p95 ${at(0.95)} ms · ${intervals.length} intervals · ${details()}`;
+    }
+  };
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden && previous !== undefined) {
+      show();
+      reset();
+    }
+  });
+  return {
+    attach(canvas: HTMLCanvasElement) {
+      const gl = canvas.getContext("webgl2") ?? canvas.getContext("webgl");
+      const info = gl?.getExtension("WEBGL_debug_renderer_info");
+      const name = gl && info ? String(gl.getParameter(info.UNMASKED_RENDERER_WEBGL)) : "hidden";
+      backend = gl ? `${gl.getParameter(gl.VERSION)} · ${name}` : "WebGL unavailable";
+      reset();
+      show();
+    },
+    frame(time: number, dragging: boolean) {
+      if (document.hidden) return;
+      if (!dragging) {
+        if (previous !== undefined) {
+          show();
+          reset();
+        }
+        return;
+      }
+      if (previous === undefined) {
+        output.textContent = instruction();
+      } else {
+        intervals.push(time - previous);
+        if (intervals.length > 180) intervals.shift();
+        if (++samples % 30 === 0) show();
+      }
+      previous = time;
+    },
+  };
 }
-if (params.has("fps")) frameMeter();

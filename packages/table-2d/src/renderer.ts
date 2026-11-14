@@ -177,6 +177,9 @@ export class PixiTableRenderer implements TableRenderer<HTMLElement> {
   private mounting = false;
   private settled = 0;
 
+  /** The fixture harness can observe submitted frames without keeping an idle table awake. */
+  constructor(private readonly onFrame?: (time: number, dragging: boolean) => void) {}
+
   async mount(container: HTMLElement, init: Init): Promise<void> {
     if (this.app || this.mounting) throw new Error("Table renderer is already mounted");
     const components = ComponentsFileSchema.parse(init.components);
@@ -233,6 +236,12 @@ export class PixiTableRenderer implements TableRenderer<HTMLElement> {
     this.observer = new ResizeObserver(() => this.resize());
     this.observer.observe(container);
     app.ticker.add((ticker) => this.animate(ticker.deltaMS));
+    const onFrame = this.onFrame;
+    if (onFrame) {
+      app.renderer.runners.postrender.add({
+        postrender: () => onFrame(performance.now(), this.dragged() !== undefined),
+      });
+    }
     this.setSnapshot(this.snapshot);
   }
 

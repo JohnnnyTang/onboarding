@@ -38,8 +38,10 @@ Status: **open**. The project owner elected to keep physical-phone qualification
   again on failed loads.
 - **README and dev-environment.md** brought up to date (the README still called the API,
   room server, web flows and Harbor Market pending), with a troubleshooting section.
-- **Device qualification aid**: `/dev/table/?fps=1` shows p50/p95 frame intervals, DPR and the
-  WebGL renderer on screen, for phones without developer tools.
+- **Device qualification aid**: `/dev/table/?fps=1` measures intervals between frames submitted
+  by the production renderer during a continuous card drag. It shows p50/p95, sample count,
+  DPR and the table canvas's WebGL backend where exposed. The last reading stays visible
+  after release.
 - **Test hardening**: E2E-01 and the publish test no longer fail on Windows when a closed
   browser still holds its temp profile; the designer reload test seats designer2 so the T12
   "designer1 has no matches" check holds on a reused e2e database.
@@ -66,13 +68,13 @@ Run on Windows 11 (Intel Core Ultra 7 258V, 8 cores, 31 GB) with Node 24.12.0, P
 port 15432 (a native PostgreSQL holds 5432 on this machine; see dev-environment.md,
 Troubleshooting) and Keycloak 26.8.0 from the Compose file.
 
-| Check                                       | Result                                                                                                                                                                                                                                                       |
-| ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `pnpm typecheck`, `pnpm lint`               | Pass                                                                                                                                                                                                                                                         |
-| `pnpm build`, `pnpm check:wasm`             | Pass; the only WASM module is the rules host's QuickJS                                                                                                                                                                                                       |
-| `pnpm test`                                 | Pass on the sequential rerun. 798 package tests and 75 tooling tests passed. |
-| `pnpm test:e2e` (Chromium, Firefox, WebKit) | 94 passed, four expected skips, and one WebKit designer reload timing failure. The isolated WebKit rerun passed. |
-| PERF-01 (`pnpm perf`)                       | 3,360 moves at 63/s: p50 56 ms, p95 71.7 ms, p99 84.1 ms, max 123 ms (limit: p95 < 200 ms)                                                                                                                                                                   |
+| Check                                       | Result                                                                                                                                            |
+| ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pnpm typecheck`, `pnpm lint`               | Pass                                                                                                                                              |
+| `pnpm build`, `pnpm check:wasm`             | Pass; the only WASM module is the rules host's QuickJS                                                                                            |
+| `pnpm test`                                 | Pass on the sequential rerun. 798 package tests and 75 tooling tests passed.                                                                      |
+| `pnpm test:e2e` (Chromium, Firefox, WebKit) | 94 passed, four expected skips, and one WebKit designer reload timing failure. The isolated WebKit rerun passed.                                  |
+| PERF-01 (`pnpm perf`)                       | 3,360 moves at 63/s: p50 56 ms, p95 71.7 ms, p99 84.1 ms, max 123 ms (limit: p95 < 200 ms)                                                        |
 | PROP-DET, 1,000 Harbor Market games         | Pass. Node replayed all 1,000 games in 27m 34s. Chromium replayed the same 1,000 games in 21.5 minutes and matched all 116,163 Node state hashes. |
 
 In the November 6 matrix, E2E-01 and guest reloads passed in all three engines.
@@ -115,23 +117,23 @@ at 20 concurrent matches.
 
 ## Acceptance criteria
 
-| ID    | Status        | Evidence                                                                                                                                              |
-| ----- | ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| AC-01 | Pass          | E2E-01, `e2e/projects.spec.ts`, all three browsers, under the content security policy                                                                 |
-| AC-02 | Pass          | E2E-02 `e2e/publish.spec.ts`; INT-UPLOAD `apps/server/test/int-upload.test.ts`                                                                        |
-| AC-03 | Pass          | E2E-03 `e2e/publish.spec.ts`, all three browsers                                                                                                      |
-| AC-04 | Pass          | UNIT-LEAK (`games/harbor-market/test/game.prop.test.ts`, `packages/testing/test/leaks.prop.test.ts`); INT-LEAK `apps/server/test/room-harbor.test.ts` |
-| AC-05 | Pass          | E2E-04 `e2e/match.spec.ts`, all three browsers                                                                                                        |
-| AC-06 | Pass          | E2E-05 (guest) and the Q-018 designer reload, `e2e/match.spec.ts`, all three browsers                                                                 |
-| AC-07 | Pass          | INT-REPLAY `apps/server/test/room-harbor.test.ts`; the replay page in E2E-06                                                                          |
-| AC-08 | Pass          | [Node PROP-DET](../games/harbor-market/test/game.prop.test.ts) and [Chromium property replay](../e2e/harbor-determinism.spec.ts) passed 1,000 games each. [E2E-06](../e2e/replay.spec.ts) passed in all three browsers. |
-| AC-09 | Pass          | INT-ISOLATION `packages/rules-host/test/host-client.test.ts`; the endless move stopped under 1.5 s in `apps/server/test/room-protocol.test.ts`        |
-| AC-10 | Pass          | INT-RECOVERY `apps/server/test/room-harbor.test.ts`, `packages/rules-host/test/host-client.test.ts`                                                   |
-| AC-11 | Pass          | PERF-01, [docs/perf/perf-01-results.json](perf/perf-01-results.json)                                                                                  |
-| AC-12 | **Open**      | Desktop Playwright Chromium, Firefox and WebKit pass at 360 px and 1440 px. Safari on iOS and Chrome on Android need the device run below.             |
-| AC-13 | Pass          | E2E-07 `e2e/cli.spec.ts` (T19; `bgp dev` in all three browsers here)                                                                                  |
-| AC-14 | Pass          | CI-WASM-INVENTORY, `pnpm check:wasm`                                                                                                                  |
-| AC-15 | **Open**      | Needs a clean machine; the docs were brought up to date for it                                                                                        |
+| ID    | Status   | Evidence                                                                                                                                                                                                                |
+| ----- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| AC-01 | Pass     | E2E-01, `e2e/projects.spec.ts`, all three browsers, under the content security policy                                                                                                                                   |
+| AC-02 | Pass     | E2E-02 `e2e/publish.spec.ts`; INT-UPLOAD `apps/server/test/int-upload.test.ts`                                                                                                                                          |
+| AC-03 | Pass     | E2E-03 `e2e/publish.spec.ts`, all three browsers                                                                                                                                                                        |
+| AC-04 | Pass     | UNIT-LEAK (`games/harbor-market/test/game.prop.test.ts`, `packages/testing/test/leaks.prop.test.ts`); INT-LEAK `apps/server/test/room-harbor.test.ts`                                                                   |
+| AC-05 | Pass     | E2E-04 `e2e/match.spec.ts`, all three browsers                                                                                                                                                                          |
+| AC-06 | Pass     | E2E-05 (guest) and the Q-018 designer reload, `e2e/match.spec.ts`, all three browsers                                                                                                                                   |
+| AC-07 | Pass     | INT-REPLAY `apps/server/test/room-harbor.test.ts`; the replay page in E2E-06                                                                                                                                            |
+| AC-08 | Pass     | [Node PROP-DET](../games/harbor-market/test/game.prop.test.ts) and [Chromium property replay](../e2e/harbor-determinism.spec.ts) passed 1,000 games each. [E2E-06](../e2e/replay.spec.ts) passed in all three browsers. |
+| AC-09 | Pass     | INT-ISOLATION `packages/rules-host/test/host-client.test.ts`; the endless move stopped under 1.5 s in `apps/server/test/room-protocol.test.ts`                                                                          |
+| AC-10 | Pass     | INT-RECOVERY `apps/server/test/room-harbor.test.ts`, `packages/rules-host/test/host-client.test.ts`                                                                                                                     |
+| AC-11 | Pass     | PERF-01, [docs/perf/perf-01-results.json](perf/perf-01-results.json)                                                                                                                                                    |
+| AC-12 | **Open** | Desktop Playwright Chromium, Firefox and WebKit pass at 360 px and 1440 px. Safari on iOS and Chrome on Android need the device run below.                                                                              |
+| AC-13 | Pass     | E2E-07 `e2e/cli.spec.ts` (T19; `bgp dev` in all three browsers here)                                                                                                                                                    |
+| AC-14 | Pass     | CI-WASM-INVENTORY, `pnpm check:wasm`                                                                                                                                                                                    |
+| AC-15 | **Open** | Needs a clean machine; the docs were brought up to date for it                                                                                                                                                          |
 
 "All three browsers" means desktop Chromium, Firefox and WebKit through Playwright. Desktop
 WebKit and synthetic touch do not stand in for iOS or Android (testing.md).
@@ -149,12 +151,14 @@ same Wi-Fi network as the development machine.
 1. Serve the renderer harness to the network: `pnpm dev:table --host 0.0.0.0`, then open
    `http://<machine-ip>:4313/dev/table/` on the phone.
 2. Three-engine comparison: open `/dev/table/spike.html?engine=pixi&measure=1`, then
-   `engine=three` and `engine=canvas`. Production renderer: `/dev/table/?stress=1&fps=1`
-   (300 draggable cards; the overlay shows p50/p95 frame intervals, DPR and the WebGL
-   renderer while you drag).
+   `engine=three` and `engine=canvas`. Keep each page foregrounded until its automatic
+   measurement appears. For the production renderer, open `/dev/table/?stress=1&fps=1`,
+   then drag one of the 300 cards continuously for five seconds. Release it and record the
+   overlay reading, which uses up to 180 intervals from that drag.
 3. For each, record in the table below: device model, OS and browser version, DPR, the
-   graphics backend where the page shows it, p50/p95 frame intervals against the 60 fps target
-   (16.7 ms), and whether card text is readable after zooming in.
+   graphics backend where the page shows it, and p50/p95 frame intervals against the 60 fps
+   target (16.7 ms). Check card text at the fitted view in each comparison engine, and
+   again after pinch-zooming in the production renderer.
 4. On `/dev/table/?stress=1` and the five-layout fixture, check by hand with real touch: drag
    and drop a card into each zone, pinch to zoom, pan, the seat rotation buttons, and the page
    from 360 px wide (portrait) to landscape.
@@ -171,13 +175,17 @@ same Wi-Fi network as the development machine.
 |        |              |     |         | three  |              |      |              |
 |        |              |     |         | canvas |              |      |              |
 |        |              |     |         | prod   |              |      |              |
+|        |              |     |         | pixi   |              |      |              |
+|        |              |     |         | three  |              |      |              |
+|        |              |     |         | canvas |              |      |              |
+|        |              |     |         | prod   |              |      |              |
 
 ### Clean-machine check (AC-15)
 
-On a machine without this repository's tools beyond Node (`.nvmrc`), pnpm (`packageManager`)
-and Docker, follow [dev-environment.md](dev-environment.md) from "Full development
-environment" alone: `pnpm dev` opens the web app and sign-in works; `pnpm test` passes;
-`pnpm build` then `pnpm test:e2e` passes. Note any step the docs did not cover.
+On a machine with only the prerequisites in [dev-environment.md](dev-environment.md),
+follow "Full development environment" through `pnpm dev` and sign in. Stop the app
+watchers, leave Compose running, and run `pnpm test`, `pnpm build`, and `pnpm test:e2e`.
+Note any step the docs did not cover.
 
 ## Decisions and open questions
 

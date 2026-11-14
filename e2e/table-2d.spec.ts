@@ -1,7 +1,7 @@
 import { GestureSchema } from "@bgp/schema";
 import type { Page } from "@playwright/test";
 import { expect, test } from "@playwright/test";
-import { components, fixture } from "../dev/table/fixture.js";
+import { components, fixture, stressFixture } from "../dev/table/fixture.js";
 import { fitViewport, layoutSnapshot, tableToScreen } from "../packages/table-2d/src/layout.js";
 
 const pageErrors = new WeakMap<Page, string[]>();
@@ -86,6 +86,34 @@ test("an idle table stops drawing frames and wakes up for changes", async ({ pag
   // Hovering wakes it for the hover feedback, and it settles again.
   await page.mouse.move(700, 500);
   await expect.poll(draws).toBeGreaterThan(settled);
+});
+
+test("the qualification meter records submitted frames only during a card drag", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 360, height: 1000 });
+  await page.goto("http://127.0.0.1:4313/dev/table/?stress=1&fps=1");
+  await expect(page.locator("body")).toHaveAttribute("data-ready", "true");
+  const meter = page.locator("#frame-meter");
+  await expect(meter).toHaveText(/^Drag a card .* · DPR \d+ · WebGL/);
+  const box = await page.locator("canvas").boundingBox();
+  const card = layoutSnapshot(stressFixture, components)[150];
+  if (!box || !card) throw new Error("Stress fixture missing");
+  const view = fitViewport(stressFixture, box.width, box.height, "0");
+  const [x, y] = tableToScreen(card.x, card.y, view);
+  await page.mouse.move(box.x + x, box.y + y);
+  await page.mouse.down();
+  await page.mouse.move(box.x + x + 30, box.y + y);
+  await expect(meter).toHaveText(
+    /^p50 [\d.]+ ms · p95 [\d.]+ ms · \d+ intervals · DPR \d+ · WebGL/,
+  );
+  await page.mouse.up();
+  await expect(page.locator("#gesture")).toContainText('"kind":"drop"');
+  // A finished reading stays available after the table is idle.
+  await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(resolve)));
+  const reading = await meter.textContent();
+  await page.waitForTimeout(700);
+  expect(await meter.textContent()).toBe(reading);
 });
 
 test("selection, clickZone, and drops use contract shapes without predicting the move", async ({
