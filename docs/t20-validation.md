@@ -215,8 +215,55 @@ with the expected final hash after the browser worker batches were reduced from
 An additional check in a new Ubuntu 24.04 WSL 2 guest passed `pnpm dev`, lint, typecheck,
 build, and the WASM inventory. The official Playwright image's Firefox could not launch
 in the guest container, and the Chromium replay timing and WebKit match checks failed
-in that run. This leaves the Ubuntu browser matrix unverified. The clean Windows run
-uses native Playwright browsers.
+in that run. The clean Windows run uses native Playwright browsers.
+
+### Ubuntu browser follow-up (2026-11-15)
+
+The failed nested-container run reported Firefox's missing temporary profile, Chromium
+replay p95 of 179.4 ms, and a stalled WebKit four-seat match. The follow-up uses the
+existing Ubuntu 24.04.5 WSL 2 guest with native Playwright browsers, Node 24.22.1 and
+pnpm 11.9.0, a Linux-filesystem checkout, and the pinned Compose services. It reuses the
+guest's installed browsers and dependencies; it is a browser regression run, not another
+cold-install qualification. All three native engines launch successfully.
+
+The focused native run reproduced a WebKit worker deadline in the fourth seat and a
+559 ms replay step. It also established a Chromium replay baseline of 124.8 ms p95.
+The renderer now retains unchanged felt, grid, zone graphics and text between snapshots.
+Changes to table dimensions, zone declarations, seat angle and drag feedback invalidate
+that drawing; teardown clears it. This avoids rebuilding static graphics and text textures
+on every move. The worker deadline and replay limits remain unchanged.
+Piece artwork is also retained for position, rotation, ordering and interaction-only
+changes; changes to its visible face, definition, back, value, highlight, badge or size
+still rebuild it. A new three-engine regression compares updated tables with freshly
+mounted tables, including visible-to-hidden card transitions. Replay diagnostics now
+attach every step's duration and identify the slowest move.
+
+The nightly CI job now explicitly builds the workspace before browser tests, including
+the CLI invoked by E2E-07, and retains browser diagnostics on failure. The native Ubuntu
+setup and resumed-service troubleshooting are in [dev-environment.md](dev-environment.md).
+
+The focused WebKit verification passed six tests with no retries: three four-seat matches
+and three 300-event replays. Replay p95 was 42–47 ms and the worst steps were 268–289 ms
+(limits: p95 below 150 ms, every step below 500 ms). Reproduce with:
+
+```bash
+pnpm test:e2e e2e/match.spec.ts e2e/replay.spec.ts --project=webkit --grep 'E2E-04|E2E-06' --repeat-each=3
+```
+
+The final `pnpm test:e2e` matrix passed **101 tests, with four expected skips**, in
+8.8 minutes with retries disabled and no flaky results. The skips are the Chromium-only
+CLI publishing and AC-08 property replay cases in Firefox and WebKit. Lint, workspace
+typecheck, build, WASM inventory and `pnpm test` also passed (798 package tests plus
+75 tooling tests). The pushed renderer commit `f339894` passed the three-engine Windows
+visual-baseline job in [CI run 43792476961](https://github.com/JohnnnyTang/onboarding/actions/runs/43792476961).
+
+Final native Ubuntu replay timings (300 steps in each engine):
+
+| Engine   | p50     | p95     | Maximum  |
+| -------- | ------- | ------- | -------- |
+| Chromium | 55.0 ms | 73.8 ms | 94.9 ms  |
+| Firefox  | 17.0 ms | 21.0 ms | 198.0 ms |
+| WebKit   | 32.0 ms | 41.0 ms | 280.0 ms |
 
 ## Decisions and open questions
 

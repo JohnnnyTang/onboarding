@@ -176,6 +176,17 @@ Web app (`apps/web/.env`):
 - **`pnpm test:e2e` reuses a running `pnpm dev`**: outside CI Playwright uses servers already
   on 3000 and 5173. Stop `pnpm dev` first so the tests get their own database and the
   production build.
+- **Ubuntu / WSL browser matrix**: run Node, pnpm and Playwright in the same Ubuntu guest,
+  from a checkout on its Linux filesystem (for example `~/onboarding`). Install browsers
+  there with `pnpm exec playwright install --with-deps chromium firefox webkit`, then run
+  `pnpm build` and `pnpm test:e2e`. Docker is needed for PostgreSQL and Keycloak; the browsers
+  can run natively in the guest. The T20 nested Playwright-container attempt failed to open
+  Firefox's temporary profile; the native guest installation launches all three engines.
+  Do not reuse Windows `node_modules` or Windows browser binaries in the Linux checkout.
+- **WSL services are healthy but connections fail after resuming**: first check the
+  configured database and OIDC ports. If the isolated Compose containers lost their port
+  forwarding, `docker compose restart` followed by `docker compose up -d --wait` restores
+  it without removing database volumes. Run this only when those local services are idle.
 
 ## Useful commands
 
