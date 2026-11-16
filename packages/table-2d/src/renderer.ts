@@ -153,6 +153,7 @@ export class PixiTableRenderer implements TableRenderer<HTMLElement> {
   private init: Init | undefined;
   private root = new Container();
   private zones = new Container();
+  private zonesSignature = "";
   private pieces = new Container();
   private snapshot: TableSnapshot = EMPTY;
   private placements: PlacedItem[] = [];
@@ -356,6 +357,7 @@ export class PixiTableRenderer implements TableRenderer<HTMLElement> {
     this.carry = undefined;
     this.selection = [];
     this.snapshot = EMPTY;
+    this.zonesSignature = "";
     this.placements = [];
   }
 
@@ -373,9 +375,21 @@ export class PixiTableRenderer implements TableRenderer<HTMLElement> {
   }
 
   private drawZones(): void {
-    for (const child of this.zones.removeChildren()) child.destroy({ children: true });
     const [width, height] = this.snapshot.table.size_mm;
     const dragging = Boolean(this.dragged()) || this.carry !== undefined;
+    // Moves usually change only pieces. Retain the felt, grid and text textures until
+    // their inputs change instead of rebuilding them for every replay step and pointer move.
+    const signature = JSON.stringify([
+      width,
+      height,
+      this.snapshot.zones,
+      this.view.angle,
+      dragging,
+      this.dropZone,
+    ]);
+    if (signature === this.zonesSignature) return;
+    this.zonesSignature = signature;
+    for (const child of this.zones.removeChildren()) child.destroy({ children: true });
     this.zones.addChild(
       new Graphics()
         .roundRect(-width / 2, -height / 2, width, height, 18)
@@ -487,7 +501,19 @@ export class PixiTableRenderer implements TableRenderer<HTMLElement> {
   private drawItem(visual: Visual): void {
     if (!this.init) return;
     const { item, width, height, count } = visual.target;
-    const signature = JSON.stringify([item, count, width, height]);
+    // Placement and interaction flags do not change the piece's artwork. Keep its
+    // graphics and textures while it moves; animation and selection update separately.
+    const signature = JSON.stringify([
+      item.def,
+      item.back,
+      item.face,
+      item.value,
+      item.highlight,
+      item.badge,
+      count,
+      width,
+      height,
+    ]);
     if (signature === visual.signature) return;
     visual.signature = signature;
     visual.ringSignature = "";

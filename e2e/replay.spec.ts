@@ -191,12 +191,16 @@ test("E2E-06: the game worker replays a recorded match to the rules host's final
   await expect(page.getByTestId("table").locator("canvas")).toBeVisible();
 
   const times = await stepThrough(page, recorded.events);
+  await test.info().attach("replay-step-timings", {
+    body: JSON.stringify(times.map((elapsed, index) => ({ seq: index + 1, elapsed }))),
+    contentType: "application/json",
+  });
   const sorted = [...times].sort((a, b) => a - b);
   const p95 = sorted[Math.floor(sorted.length * 0.95)] ?? Number.POSITIVE_INFINITY;
   const worst = sorted.at(-1) ?? Number.POSITIVE_INFINITY;
   test.info().annotations.push({
     type: "step timing",
-    description: `${times.length} steps: p50 ${sorted[Math.floor(sorted.length / 2)]?.toFixed(1)} ms, p95 ${p95.toFixed(1)} ms, max ${worst.toFixed(1)} ms`,
+    description: `${times.length} steps: p50 ${sorted[Math.floor(sorted.length / 2)]?.toFixed(1)} ms, p95 ${p95.toFixed(1)} ms, max ${worst.toFixed(1)} ms at move ${times.indexOf(worst) + 1}`,
   });
   console.log(test.info().annotations.at(-1)?.description);
   // Locally p95 is 15–80 ms depending on the engine; the bound leaves room for a busy CI host.
