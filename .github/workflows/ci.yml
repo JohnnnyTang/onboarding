@@ -88,8 +88,19 @@ jobs:
           docker compose -f infra/docker-compose.yml up -d --wait
           pnpm db:migrate
       - run: pnpm test
+      # This job has a fresh checkout; test only builds dependency packages, not the CLI itself.
+      - run: pnpm build
       - run: pnpm exec playwright install --with-deps
       - run: pnpm test:e2e --ignore-snapshots
+      - name: Upload matrix browser diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: matrix-browser-diagnostics
+          path: |
+            test-results/
+            playwright-report/
+          if-no-files-found: ignore
       - name: PERF-01 (AC-11)
         run: pnpm perf --out perf-results/perf-01.json
       - name: Upload performance results
