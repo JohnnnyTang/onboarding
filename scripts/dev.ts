@@ -8,8 +8,11 @@ const envFile = resolve(root, ".env");
 if (existsSync(envFile)) process.loadEnvFile(envFile);
 
 const composeFile = resolve(root, "infra/docker-compose.yml");
-if (existsSync(composeFile)) {
-  const result = spawnSync("docker", ["compose", "-f", composeFile, "up", "-d", "--wait"], {
+// biome-ignore lint/suspicious/noUndeclaredEnvVars: Compose runs before Turborepo starts.
+const hasComposeOverride = Boolean(process.env.COMPOSE_FILE);
+const composeArgs = hasComposeOverride ? [] : ["-f", composeFile];
+if (hasComposeOverride || existsSync(composeFile)) {
+  const result = spawnSync("docker", ["compose", ...composeArgs, "up", "-d", "--wait"], {
     cwd: root,
     stdio: "inherit",
   });

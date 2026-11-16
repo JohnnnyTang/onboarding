@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { GAME_WORKER_POLICY } from "../apps/web/src/security/content-security-policy.js";
-import { designerToken, WEB_URL } from "./support/app.js";
+import { designerToken, ISSUER, WEB_URL } from "./support/app.js";
 import { recordViolations, violations } from "./support/csp.js";
 import {
   canvas,
@@ -22,7 +22,7 @@ test("the web app sends its policy in a header and a meta tag", async ({ request
   expect(header).toContain("script-src 'self' blob:");
   expect(header).toContain("worker-src 'self' blob:");
   expect(header).toContain("frame-ancestors 'none'");
-  for (const origin of ["http://localhost:3000", "ws://localhost:3000", "http://localhost:8080"]) {
+  for (const origin of ["http://localhost:3000", "ws://localhost:3000", new URL(ISSUER).origin]) {
     expect(header).toContain(` ${origin} `);
   }
   expect(header).not.toMatch(/unsafe-inline|unsafe-eval/);

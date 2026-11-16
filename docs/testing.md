@@ -135,11 +135,14 @@ not the full game-worker and Harbor Market E2E-06 acceptance test due in later t
 The nightly job sets `BGP_PROPERTY_RUNS=1000` and `BGP_PRNG_DRAWS=100000`; property and
 distribution suites must read these settings when implemented. It runs the Chromium,
 Firefox and WebKit matrix, while push and pull-request jobs run Chromium.
+The nightly job builds the workspace before the browser matrix, including the CLI
+invoked by E2E-07, and uploads browser traces and error contexts on failure. Unit
+tests alone build only their dependency packages, so they do not replace that build.
 
 T13 adds real table renderer interactions and screenshots at 360/1440 px. Windows
 baselines are enforced in the `table-visuals` job across Chromium, Firefox and
-WebKit. Linux jobs keep the interaction matrix and pass `--ignore-snapshots` to
-avoid comparing Windows font/GPU rasterization on Linux. Review every changed
+WebKit. Playwright skips screenshot comparisons by default on Linux and macOS,
+where font and GPU rasterization differ. It still runs the interaction matrix. Review every changed
 PNG before accepting `--update-snapshots`. The fixture server starts automatically
 through Playwright; with `BGP_E2E_APP=0` (set in the `table-visuals` job) the renderer
 tests need neither Docker nor the T12 app servers.

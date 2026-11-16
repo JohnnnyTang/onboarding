@@ -1,7 +1,7 @@
-import { GestureSchema } from "@bgp/schema";
+import { GestureSchema, type TableSnapshot } from "@bgp/schema";
 import type { Page } from "@playwright/test";
 import { expect, test } from "@playwright/test";
-import { components, fixture } from "../dev/table/fixture.js";
+import { components, fixture, stressFixture } from "../dev/table/fixture.js";
 import { fitViewport, layoutSnapshot, tableToScreen } from "../packages/table-2d/src/layout.js";
 
 const pageErrors = new WeakMap<Page, string[]>();
@@ -86,6 +86,109 @@ test("an idle table stops drawing frames and wakes up for changes", async ({ pag
   // Hovering wakes it for the hover feedback, and it settles again.
   await page.mouse.move(700, 500);
   await expect.poll(draws).toBeGreaterThan(settled);
+});
+
+test("retained graphics match a fresh table after snapshot changes", async ({ page }) => {
+  await ready(page);
+  const snapshots: TableSnapshot[] = [
+    { table: { size_mm: [400, 400] }, zones: fixture.zones, items: [] },
+    {
+      table: { size_mm: [600, 500] },
+      zones: fixture.zones.map((zone) => ({ ...zone, label: `Updated ${zone.id}` })),
+      items: [],
+    },
+    { table: { size_mm: [400, 400] }, zones: [], items: [] },
+    fixture,
+    {
+      ...fixture,
+      items: fixture.items.map((item) =>
+        item.id === "market-0"
+          ? { ...item, zone: "free", pos_mm: [200, -100], rotation_deg: 45 }
+          : item,
+      ),
+    },
+    {
+      ...fixture,
+      items: fixture.items.map((item) =>
+        item.id === "market-0"
+          ? { id: item.id, zone: item.zone, face: "down", back: "back" }
+          : item,
+      ),
+    },
+    fixture,
+  ];
+  for (const snapshot of snapshots) {
+    await page.evaluate(async (next) => {
+      const moduleUrl = "/packages/table-2d/dist/index.js";
+      const fixtureUrl = "/dev/table/fixture.ts";
+      const { PixiTableRenderer } = (await import(moduleUrl)) as typeof import("@bgp/table-2d");
+      const { components, fixtureAssets } = (await import(
+        fixtureUrl
+      )) as typeof import("../dev/table/fixture.js");
+      const tables = window as unknown as {
+        zoneTables?: InstanceType<typeof PixiTableRenderer>[];
+      };
+      if (!tables.zoneTables) {
+        tables.zoneTables = [];
+        for (const [index, id] of ["retained-zones", "fresh-zones"].entries()) {
+          const host = document.createElement("div");
+          host.id = id;
+          // Align both canvases to whole screen pixels and keep them in view together.
+          host.style.cssText = `position:fixed;left:${index * 420}px;top:0;width:400px;height:400px;z-index:1000`;
+          document.body.append(host);
+        }
+      }
+      for (const [index, id] of ["retained-zones", "fresh-zones"].entries()) {
+        const host = document.getElementById(id);
+        if (!host) throw new Error("Comparison table missing");
+        let table = tables.zoneTables[index];
+        if (!table || index === 1) {
+          table?.destroy();
+          table = new PixiTableRenderer();
+          tables.zoneTables[index] = table;
+          await table.mount(host, { components, seat: "0", assetUrl: fixtureAssets() });
+        }
+        table.setSnapshot(next);
+        // Repeated unchanged snapshots must preserve the same drawing too.
+        table.setSnapshot(next);
+      }
+    }, snapshot);
+    await expect
+      .poll(async () => {
+        const retained = await page.locator("#retained-zones").screenshot();
+        const fresh = await page.locator("#fresh-zones").screenshot();
+        return retained.equals(fresh);
+      })
+      .toBe(true);
+  }
+});
+
+test("the qualification meter records submitted frames only during a card drag", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 360, height: 1000 });
+  await page.goto("http://127.0.0.1:4313/dev/table/?stress=1&fps=1");
+  await expect(page.locator("body")).toHaveAttribute("data-ready", "true");
+  const meter = page.locator("#frame-meter");
+  await expect(meter).toHaveText(/^Drag a card .* · DPR \d+ · WebGL/);
+  const box = await page.locator("canvas").boundingBox();
+  const card = layoutSnapshot(stressFixture, components)[150];
+  if (!box || !card) throw new Error("Stress fixture missing");
+  const view = fitViewport(stressFixture, box.width, box.height, "0");
+  const [x, y] = tableToScreen(card.x, card.y, view);
+  await page.mouse.move(box.x + x, box.y + y);
+  await page.mouse.down();
+  await page.mouse.move(box.x + x + 30, box.y + y);
+  await expect(meter).toHaveText(
+    /^p50 [\d.]+ ms · p95 [\d.]+ ms · \d+ intervals · DPR \d+ · WebGL/,
+  );
+  await page.mouse.up();
+  await expect(page.locator("#gesture")).toContainText('"kind":"drop"');
+  // A finished reading stays available after the table is idle.
+  await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(resolve)));
+  const reading = await meter.textContent();
+  await page.waitForTimeout(700);
+  expect(await meter.textContent()).toBe(reading);
 });
 
 test("selection, clickZone, and drops use contract shapes without predicting the move", async ({

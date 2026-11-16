@@ -6,7 +6,7 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
 import { expect, type Page, test } from "@playwright/test";
-import { API_URL, api, designerToken, keycloakLogin } from "./support/app.js";
+import { API_URL, api, designerToken, ISSUER, keycloakLogin } from "./support/app.js";
 
 // E2E-07 (AC-13): the developer path in a temporary directory, with the built CLI against the
 // local server: bgp init, validate, build, dev (hot-seat table with hot reload) and publish
@@ -106,7 +106,7 @@ test("E2E-07: bgp init, validate, build and publish a new game package", async (
     expect((await stat(join(dir, "dist", "game.js"))).size).toBeGreaterThan(0);
 
     // bgp publish: device sign-in in a browser, then the upload flow.
-    const publish = start(["publish", dir, "--visibility", "unlisted"]);
+    const publish = start(["publish", dir, "--issuer", ISSUER, "--visibility", "unlisted"]);
     running.push(publish);
     const signIn = await publish.waitFor(/Or open (\S+)/);
     const login = await browser.newContext();

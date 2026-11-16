@@ -40,8 +40,8 @@ export interface ReplayController {
   destroy(): void;
 }
 
-/** Events per worker call while rebuilding; each call has its own deadline. */
-export const REPLAY_CHUNK = 50;
+/** Bound the replay work in each call so it fits the game worker's deadline. */
+export const REPLAY_CHUNK = 16;
 
 type ReplayWorker = Pick<GameWorker, "present" | "replay" | "stopped">;
 

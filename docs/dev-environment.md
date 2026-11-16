@@ -5,7 +5,8 @@
 - **Node.js** active LTS, matching `.nvmrc` (use nvm, fnm or Volta).
 - **pnpm**, version pinned in the root `package.json` `packageManager` field. Install it with npm or pnpm's standalone installer; do not rely on Corepack, which newer Node releases no longer bundle.
 - **Docker** with Compose, for PostgreSQL and Keycloak.
-- Playwright browsers: `pnpm exec playwright install --with-deps` (first run only).
+- Playwright browsers and system packages. Install them after the workspace dependencies
+  using the command below. On Linux this step can ask for `sudo` to install system packages.
 
 ## First run
 
@@ -26,9 +27,8 @@ values take precedence. Generate `GUEST_TOKEN_SECRET` using the command in the e
 
 ```bash
 pnpm install --frozen-lockfile
+pnpm exec playwright install --with-deps # first run, or after a Playwright version change
 cp .env.example .env                    # then set GUEST_TOKEN_SECRET (command in the file)
-docker compose -f infra/docker-compose.yml up -d --wait
-pnpm db:migrate
 pnpm dev                                # builds the packages, then API :3000 and web :5173
 ```
 
@@ -66,13 +66,14 @@ match-event guard) are created with `pnpm --filter @bgp/server exec drizzle-kit 
 safely run again. Migration startup uses a PostgreSQL advisory lock so simultaneous
 worktree and test startup cannot race. No migrations run merely by importing database code.
 
-`pnpm test` includes real PostgreSQL integration tests. Start Docker services first:
+`pnpm test` includes real PostgreSQL integration tests. Stop `pnpm dev` with Ctrl+C and
+leave its Compose services running. If the services are stopped, start them with
+`docker compose -f infra/docker-compose.yml up -d --wait` (see the port override below).
 
 ```bash
-docker compose -f infra/docker-compose.yml up -d --wait
 pnpm test
 pnpm build                              # the rules host bundle and the CLI, for e2e and perf
-pnpm test:e2e --project=chromium        # or all of Chromium, Firefox and WebKit
+pnpm test:e2e                           # Chromium, Firefox and WebKit
 pnpm perf                               # PERF-01 (AC-11)
 ```
 
@@ -81,7 +82,8 @@ no manual test-database migration is needed. It defaults to `bgp_test`, refuses 
 database URLs, and fails clearly if PostgreSQL is unavailable. Tests roll back their data
 instead of clearing shared tables. The Keycloak browser tests verify both account-page
 sign-ins, the web client's PKCE requirement, its `bgp-api` audience and the `sub` claim.
-Browser tests need healthy Keycloak and the Playwright browser installation.
+Browser tests need healthy Keycloak and the Playwright browser installation. The screenshot
+comparisons use Windows baselines. The rest of the browser matrix also runs on Linux and macOS.
 
 From T12, `pnpm test:e2e` also starts the API on port 3000 and the web app on 5173 (after
 `pnpm build`). The API uses its own database, `bgp_e2e` on the `DATABASE_URL` server, which
@@ -115,28 +117,28 @@ T10/T11 transactions. PostgreSQL already enforces keys, numeric bounds and immut
 
 ## Environment variables
 
-Server (`apps/server/.env`):
+Server (root `.env` or process environment):
 
-| Variable                                                                                                                                                                                                              | Local default                                                    | Purpose                                                                                |
-| --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
-| `HOST`                                                                              , `127.0.0.1`                                                      , Listen address; use `0.0.0.0` to test from phones on the LAN |
-| `PORT`                                                                                                                                                                                                                | `3000`                                                           |                                                                                        |
-| `PUBLIC_WEB_ORIGIN`                                                                                                                                                                                                   | `http://localhost:5173`                                          | CORS and invite link base                                                              |
-| `DATABASE_URL`                                                                                                                                                                                                        | `postgres://bgp:bgp@localhost:5432/bgp`                          |                                                                                        |
-| `TEST_DATABASE_URL`                                                                                                                                                                                                   | `postgres://bgp:bgp@localhost:5432/bgp_test`                     | Integration tests                                                                      |
-| `OIDC_ISSUER`                                                                                                                                                                                                         | `http://localhost:8080/realms/bgp`                               | Token verification via the issuer's JWKS                                               |
-| `OIDC_AUDIENCE`                                                                                                                                                                                                       | `bgp-api`                                                        | Required `aud`                                                                         |
-| `OIDC_JWKS_URL`                                                                                                                                                                                                       | `http://localhost:8080/realms/bgp/protocol/openid-connect/certs` | Trusted signing-key endpoint for OIDC access-token verification                        |
-| `GUEST_TOKEN_SECRET`                                                                                                                                                                                                  | 32+ random bytes, base64                                         | Signs guest tokens; never commit real values                                           |
-| `BLOB_DRIVER`                                                                                                                                                                                                         | `fs`                                                             | `fs` or `s3`                                                                           |
-| `BLOB_FS_DIR`                                                                                                                                                                                                         | `./.data/blobs`                                                  |                                                                                        |
-| `S3_ENDPOINT`, `S3_BUCKET`, `S3_REGION`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`                                                                                                                                   | unset                                                            | Production storage                                                                     |
-| `BUNDLE_CACHE_DIR`                                                                                                                                                                                                    | `./.data/bundle-cache`                                           | Read-only for the rules host                                                           |
-| `RULES_HOST_PROCESSES`                                                                                                                                                                                                | `1`                                                              |                                                                                        |
-| `RULES_CALL_TIMEOUT_MS`                                                                                                                                                                                               | `1000`                                                           | Per call into game code                                                                |
-| `RULES_MEMORY_MB`                                                                                                                                                                                                     | `64`                                                             | Memory cap per match sandbox                                                           |
-| `RULES_SANDBOX`                                                                                                                                                                                                       | `quickjs`                                                        | `quickjs` or `node-vm`, so the T08 spike and fallbacks can switch without code changes |
-| `LOG_LEVEL`                                                                                                                                                                                                           | `info`                                                           | pino level                                                                             |
+| Variable                                                                            | Local default                                                    | Purpose                                                                                |
+| ----------------------------------------------------------------------------------- | ---------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| `HOST`                                                                              | `127.0.0.1`                                                      | Listen address. Use `0.0.0.0` to test from phones on the LAN.                          |
+| `PORT`                                                                              | `3000`                                                           |                                                                                        |
+| `PUBLIC_WEB_ORIGIN`                                                                 | `http://localhost:5173`                                          | CORS and invite link base                                                              |
+| `DATABASE_URL`                                                                      | `postgres://bgp:bgp@localhost:5432/bgp`                          |                                                                                        |
+| `TEST_DATABASE_URL`                                                                 | `postgres://bgp:bgp@localhost:5432/bgp_test`                     | Integration tests                                                                      |
+| `OIDC_ISSUER`                                                                       | `http://localhost:8080/realms/bgp`                               | Token verification via the issuer's JWKS                                               |
+| `OIDC_AUDIENCE`                                                                     | `bgp-api`                                                        | Required `aud`                                                                         |
+| `OIDC_JWKS_URL`                                                                     | `http://localhost:8080/realms/bgp/protocol/openid-connect/certs` | Trusted signing-key endpoint for OIDC access-token verification                        |
+| `GUEST_TOKEN_SECRET`                                                                | 32+ random bytes, base64                                         | Signs guest tokens; never commit real values                                           |
+| `BLOB_DRIVER`                                                                       | `fs`                                                             | `fs` or `s3`                                                                           |
+| `BLOB_FS_DIR`                                                                       | `./.data/blobs`                                                  |                                                                                        |
+| `S3_ENDPOINT`, `S3_BUCKET`, `S3_REGION`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY` | unset                                                            | Production storage                                                                     |
+| `BUNDLE_CACHE_DIR`                                                                  | `./.data/bundle-cache`                                           | Read-only for the rules host                                                           |
+| `RULES_HOST_PROCESSES`                                                              | `1`                                                              |                                                                                        |
+| `RULES_CALL_TIMEOUT_MS`                                                             | `1000`                                                           | Per call into game code                                                                |
+| `RULES_MEMORY_MB`                                                                   | `64`                                                             | Memory cap per match sandbox                                                           |
+| `RULES_SANDBOX`                                                                     | `quickjs`                                                        | `quickjs` or `node-vm`, so the T08 spike and fallbacks can switch without code changes |
+| `LOG_LEVEL`                                                                         | `info`                                                           | pino level                                                                             |
 
 Web app (`apps/web/.env`):
 
@@ -150,12 +152,23 @@ Web app (`apps/web/.env`):
 ## Troubleshooting
 
 - **Port 5432 is taken** (a PostgreSQL installed on the machine): Compose cannot bind the
-  database. Keep the native server and publish the container elsewhere with an override file
-  kept outside the repository, for example `ports: !override ["127.0.0.1:15432:5432"]` under
-  `services.postgres`, passed as a second `-f` to `docker compose`. Then set
+  database. Keep the native server and save an override as `infra/docker-compose.local.yml`:
+
+  ```yaml
+  services:
+    postgres:
+      ports: !override ["127.0.0.1:15432:5432"]
+  ```
+
+  Set `COMPOSE_FILE=infra/docker-compose.yml:infra/docker-compose.local.yml` in `.env`
+  (use `;` as the separator on Windows), plus
   `DATABASE_URL=postgres://bgp:bgp@localhost:15432/bgp` and
-  `TEST_DATABASE_URL=postgres://bgp:bgp@localhost:15432/bgp_test` in `.env`; the e2e and
-  perf databases follow `DATABASE_URL`.
+  `TEST_DATABASE_URL=postgres://bgp:bgp@localhost:15432/bgp_test`. `pnpm dev` reads these
+  settings and starts Compose with the override. For direct Compose calls, omit `-f` so
+  Compose also reads `COMPOSE_FILE` from `.env`. The e2e and perf databases follow `DATABASE_URL`.
+- **Port 8080 is taken**. In the same Compose override, set
+  `ports: !override ["127.0.0.1:18080:8080"]` under `services.keycloak`. Update
+  `OIDC_ISSUER`, `OIDC_JWKS_URL`, and `VITE_OIDC_ISSUER` in `.env` to use port 18080.
 - **Windows refuses a port** that looks free: Windows reserves port ranges (see
   `netsh interface ipv4 show excludedportrange protocol=tcp`); pick a port outside them.
 - **Sign-in fails after pulling** a newer realm: realm imports only create missing realms; see
@@ -163,13 +176,24 @@ Web app (`apps/web/.env`):
 - **`pnpm test:e2e` reuses a running `pnpm dev`**: outside CI Playwright uses servers already
   on 3000 and 5173. Stop `pnpm dev` first so the tests get their own database and the
   production build.
+- **Ubuntu / WSL browser matrix**: run Node, pnpm and Playwright in the same Ubuntu guest,
+  from a checkout on its Linux filesystem (for example `~/onboarding`). Install browsers
+  there with `pnpm exec playwright install --with-deps chromium firefox webkit`, then run
+  `pnpm build` and `pnpm test:e2e`. Docker is needed for PostgreSQL and Keycloak; the browsers
+  can run natively in the guest. The T20 nested Playwright-container attempt failed to open
+  Firefox's temporary profile; the native guest installation launches all three engines.
+  Do not reuse Windows `node_modules` or Windows browser binaries in the Linux checkout.
+- **WSL services are healthy but connections fail after resuming**: first check the
+  configured database and OIDC ports. If the isolated Compose containers lost their port
+  forwarding, `docker compose restart` followed by `docker compose up -d --wait` restores
+  it without removing database volumes. Run this only when those local services are idle.
 
 ## Useful commands
 
-| Command                                              | Purpose                                            |
-| ---------------------------------------------------- | -------------------------------------------------- |
-| `pnpm --filter @bgp/rules test --watch`              | Iterate on the runtime                             |
-| `pnpm --filter harbor-market exec bgp dev`           | Reference game in a hot-seat table with hot reload |
-| `pnpm db:generate` then `pnpm db:migrate`            | After changing the Drizzle schema                  |
-| `docker compose -f infra/docker-compose.yml down -v` | Reset local services and data                      |
-| `rm -rf .data`                                       | Reset local blobs and bundle cache                 |
+| Command                                                 | Purpose                                            |
+| ------------------------------------------------------- | -------------------------------------------------- |
+| `pnpm --filter @bgp/rules test --watch`                 | Iterate on the runtime                             |
+| `node packages/cli/dist/bin.js dev games/harbor-market` | Reference game in a hot-seat table with hot reload |
+| `pnpm db:generate` then `pnpm db:migrate`               | After changing the Drizzle schema                  |
+| `docker compose -f infra/docker-compose.yml down -v`    | Reset local services and data                      |
+| `rm -rf .data`                                          | Reset local blobs and bundle cache                 |

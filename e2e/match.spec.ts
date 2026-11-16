@@ -186,26 +186,46 @@ test("Q-018: a designer who reloads mid-match signs in again and is back at the 
   await page.getByRole("button", { name: "Restock" }).click();
   await expect(prompt(page)).toHaveText(/^Waiting for Seat 2/);
   const hud = page.getByRole("list", { name: "Players" });
+  // Keep the measured page foregrounded without another browser context drawing the table.
+  await bo.context.close();
+  await page.bringToFront();
+  await expect(hud).toContainText("away");
   const hudBefore = await hud.textContent();
 
   // Designer tokens live in memory (D-007), so the reload signs out; signing in again goes
   // through the Keycloak session without a form and returns to the match.
   const started = Date.now();
-  await page.reload();
+  await page.reload({ waitUntil: "commit" });
   const signIn = page.getByRole("main").getByRole("button", { name: "Sign in" });
   await signIn.click({ timeout: 3_000 });
   const clicked = Date.now();
-  await expect(prompt(page)).toHaveText(/^Waiting for Seat 2/, { timeout: 3_000 });
-  await expect(hud).toHaveText(hudBefore ?? "", { timeout: 3_000 });
-  await expect(page.getByTestId("table").locator("canvas")).toBeVisible({ timeout: 3_000 });
+  // Check the view together so sequential assertion polling does not add to the timing.
+  const ready = await page.waitForFunction(
+    (players) => {
+      const table = document.querySelector('[data-testid="table"] canvas');
+      return (
+        document
+          .querySelector('[data-testid="prompt"]')
+          ?.textContent?.startsWith("Waiting for Seat 2") &&
+        document.querySelector('[aria-label="Players"]')?.textContent === players &&
+        table &&
+        table.getBoundingClientRect().width > 0 &&
+        table.getBoundingClientRect().height > 0 &&
+        getComputedStyle(table).visibility === "visible"
+      );
+    },
+    hudBefore,
+    { timeout: 3_000 },
+  );
   const elapsed = Date.now() - started;
+  await ready.dispose();
   test.info().annotations.push({
     type: "designer reload",
     description: `${elapsed} ms in total: ${clicked - started} ms to the sign-in button, ${Date.now() - clicked} ms from the click back to the table`,
   });
   expect(page.url()).toBe(`${WEB_URL}/matches/${match.matchId}`);
   expect(elapsed).toBeLessThan(3_000);
-  for (const player of [designer, bo]) await player.context.close();
+  await context.close();
 });
 
 /** Presses Tab until the button named `name` has the focus. */
