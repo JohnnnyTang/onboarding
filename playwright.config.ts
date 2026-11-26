@@ -55,8 +55,11 @@ function appServers() {
     {
       // A production build, so load-time criteria (AC-06) measure what users get. The
       // VITE_* settings are baked in at build time.
-      command: "pnpm --filter @bgp/web exec vite build && pnpm --filter @bgp/web preview",
-      url: "http://localhost:5173/",
+      // Keep the OIDC localhost origin, but bind the test server to the IPv4 loopback
+      // like the API and Keycloak, including on Windows hosts that resolve ::1 first.
+      command:
+        "pnpm --filter @bgp/web exec vite build && pnpm --filter @bgp/web preview --host 127.0.0.1",
+      url: "http://127.0.0.1:5173/",
       reuseExistingServer,
       env: {
         VITE_API_URL: "http://localhost:3000",
