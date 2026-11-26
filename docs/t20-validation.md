@@ -238,6 +238,12 @@ Final native Ubuntu replay timings (300 steps in each engine):
 | Firefox  | 17.0 ms | 21.0 ms | 198.0 ms |
 | WebKit   | 32.0 ms | 41.0 ms | 280.0 ms |
 
+## Scheduled browser checks, 2026-11-26
+
+The [November 25 run](https://github.com/JohnnnyTang/onboarding/actions/runs/45669225993) measured Chromium replay p95 above the 150 ms limit on all three attempts. On the same local Windows machine, E2E-06 measured 126 ms p95 with trace screenshots enabled and 87–89 ms with screenshots disabled. The final 300-step run measured 88.4 ms p95 and 174.3 ms maximum. The timed test retains DOM snapshots, per-step timings and the original 150 ms p95 and 500 ms maximum assertions.
+
+The [November 23 matrix](https://github.com/JohnnnyTang/onboarding/actions/runs/45244988737) reached the nightly job. Firefox could not create a graphics context. One WebKit guest reported a worker timeout during the four-seat match. In the Playwright 1.64.1 Ubuntu 24.04 image, headless Firefox returned a null WebGL2 context without a display and obtained a Mesa llvmpipe context under Xvfb. The nightly job now starts its browser matrix under Xvfb. Firefox and WebKit each passed the four-seat match and idle-table test under Xvfb with tracing and zero retries against the local server. The WebKit timeout did not recur in this focused run. A run on the hosted runner is needed to confirm the workflow change there.
+
 ## Decisions and open questions
 
 - **Q-018** updated with the designer reload measurement.
