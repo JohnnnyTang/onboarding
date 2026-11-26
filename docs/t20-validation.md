@@ -1,8 +1,7 @@
 # T20 validation: hardening and handoff check
 
 Work on the `claude/t20-hardening` branch, based on the T19 tip `8324d0d`.
-Status: **complete**. The clean-machine run passed (AC-15). On 2026-11-14, the project
-owner deferred physical-phone qualification (AC-12) as a non-blocking follow-up.
+Status: **complete**. The clean-machine run passed (AC-15). On 2026-11-26, the project owner permanently deferred Phase 1 physical-phone qualification. Desktop browser coverage for AC-12 passed.
 
 ## Delivered
 
@@ -129,7 +128,7 @@ at 20 concurrent matches.
 | AC-09 | Pass         | INT-ISOLATION `packages/rules-host/test/host-client.test.ts`; the endless move stopped under 1.5 s in `apps/server/test/room-protocol.test.ts`                                                                          |
 | AC-10 | Pass         | INT-RECOVERY `apps/server/test/room-harbor.test.ts`, `packages/rules-host/test/host-client.test.ts`                                                                                                                     |
 | AC-11 | Pass         | PERF-01, [docs/perf/perf-01-results.json](perf/perf-01-results.json)                                                                                                                                                    |
-| AC-12 | **Deferred** | Desktop Playwright Chromium, Firefox and WebKit pass at 360 px and 1440 px. The physical Safari on iOS and Chrome on Android run is a non-blocking follow-up.                                                           |
+| AC-12 | Desktop pass; phones permanently deferred | Desktop Chromium, Firefox and WebKit passed at 360 px and 1440 px. Physical iOS Safari and Android Chrome remain unmeasured. |
 | AC-13 | Pass         | E2E-07 `e2e/cli.spec.ts` (T19; `bgp dev` in all three browsers here)                                                                                                                                                    |
 | AC-14 | Pass         | CI-WASM-INVENTORY, `pnpm check:wasm`                                                                                                                                                                                    |
 | AC-15 | Pass         | [Clean Windows run](#clean-machine-check-ac-15). Frozen install, browser install, startup, sign-in, workspace tests and full desktop browser matrix.                                                                    |
@@ -139,43 +138,9 @@ WebKit and synthetic touch do not stand in for iOS or Android (testing.md).
 
 ## Handoff runs
 
-### Physical-device table qualification (AC-12, deferred from T13)
+### Physical-device table qualification
 
-Run on one identified mid-range Android phone (Chrome) and one iPhone (Safari), both on the
-same Wi-Fi network as the development machine.
-
-1. Serve the renderer harness to the network: `pnpm dev:table --host 0.0.0.0`, then open
-   `http://<machine-ip>:4313/dev/table/` on the phone.
-2. Three-engine comparison: open `/dev/table/spike.html?engine=pixi&measure=1`, then
-   `engine=three` and `engine=canvas`. Keep each page foregrounded until its automatic
-   measurement appears. For the production renderer, open `/dev/table/?stress=1&fps=1`,
-   then drag one of the 300 cards continuously for five seconds. Release it and record the
-   overlay reading, which uses up to 180 intervals from that drag.
-3. For each, record in the table below: device model, OS and browser version, DPR, the
-   graphics backend where the page shows it, and p50/p95 frame intervals against the 60 fps
-   target (16.7 ms). After recording timings, check card text at the fitted view and
-   after pinch-zooming. The comparison pages use browser zoom and the production
-   renderer zooms the table.
-4. On `/dev/table/?stress=1` and the five-layout fixture, check by hand with real touch: drag
-   and drop a card into each zone, pinch to zoom, pan, the seat rotation buttons, and the page
-   from 360 px wide (portrait) to landscape.
-5. Optional, the whole app: start the API with `PUBLIC_WEB_ORIGIN=http://<machine-ip>:5173`,
-   build the web app with `VITE_API_URL=http://<machine-ip>:3000` and
-   `VITE_WS_URL=ws://<machine-ip>:3000/ws`, serve it with `vite preview --host 0.0.0.0`, and join
-   a match from an invite link as a guest (guests need no Keycloak sign-in, whose client only
-   allows `localhost`). Plain-http LAN origins are not a secure context, so the replay page
-   skips its hash check there.
-
-| Device | OS / browser | DPR | Backend | Engine | p50 / p95 ms | Text | Touch checks |
-| ------ | ------------ | --- | ------- | ------ | ------------ | ---- | ------------ |
-|        |              |     |         | pixi   |              |      |              |
-|        |              |     |         | three  |              |      |              |
-|        |              |     |         | canvas |              |      |              |
-|        |              |     |         | prod   |              |      |              |
-|        |              |     |         | pixi   |              |      |              |
-|        |              |     |         | three  |              |      |              |
-|        |              |     |         | canvas |              |      |              |
-|        |              |     |         | prod   |              |      |              |
+The owner permanently deferred this run on 2026-11-26, superseding the 2026-11-14 follow-up. The team has no physical-device measurements for the 300-item frame rate, text clarity or touch interaction.
 
 ### Clean-machine check (AC-15)
 

@@ -135,7 +135,7 @@ from the Harbor Market measurements. Validation and evidence: [t08-validation.md
 ### T13 `@bgp/table-2d`
 
 **Status:** Complete. The project owner confirmed PixiJS 8.6.6 on 2026-10-27.
-Physical-phone qualification is deferred to T20. Scope and evidence:
+The owner permanently deferred Phase 1 physical-phone qualification on 2026-11-26. Scope and evidence:
 [t13-validation.md](t13-validation.md).
 
 **Starts with a spike (2 days):** render the same fixture snapshot with PixiJS, a top-down orthographic Three.js view, and plain Canvas 2D; measure against the T13 criteria in [decisions.md](decisions.md#decision-points-by-stage); write `docs/spikes/t13-renderer-2d.md`; get the choice confirmed. The completed spike confirmed PixiJS for the deliverables below.
@@ -195,19 +195,11 @@ The project owner confirmed Q-018 (guest seats in session storage) on 2026-11-04
 
 ### T20 Hardening and handoff check
 
-**Status:** Complete. The clean-machine run passed (AC-15). The project owner deferred
-physical-phone qualification (AC-12) as a non-blocking follow-up on 2026-11-14.
+**Status:** Complete. The clean-machine run passed (AC-15). The desktop AC-12 matrix passed. The project owner permanently deferred the physical-phone portion on 2026-11-26.
 See [t20-validation.md](t20-validation.md) for evidence.
 
-**Deliverables:** PERF-01 script and results; physical-device table qualification
-(deferred from T13 by the project owner on 2026-10-27), including the three-engine
-comparison and production renderer with 300 draggable items targeting 60 fps on
-identified mid-range Android and iPhone hardware; record device model, OS/browser,
-DPR, p50/p95 frame intervals, actual graphics backend where exposed, text clarity,
-and real-touch drag/drop, pinch/pan, seat rotation and resizing from 360 px up;
-full browser matrix run; a content security policy for the web app that still allows the
+**Deliverables:** PERF-01 script and results; full browser matrix run; a content security policy for the web app that still allows the
 game worker's blob module, the offline service worker (Q-020), PixiJS and the configured API, room and OIDC origins (Q-018);
 a measured designer reload against AC-06 (Q-018); keyboard operation of selection and the action bar; error and empty states reviewed; README and dev-environment.md verified on a clean machine; the acceptance criteria table in [phase-1-spec.md](phase-1-spec.md#acceptance-criteria) checked off with links to passing runs.
 
-**Done when:** AC-01 through AC-11 and AC-13 through AC-15 pass. AC-12 is tracked
-as a separate follow-up and does not block the T20 handoff.
+**Done when:** AC-01 through AC-11, desktop AC-12 and AC-13 through AC-15 pass.
