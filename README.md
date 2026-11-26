@@ -35,18 +35,18 @@ The intended full system is described in [architecture.md](docs/architecture.md)
 
 ## What is in this repository
 
-| Area                      | Role                                                              | Current state                                     |
-| ------------------------- | ----------------------------------------------------------------- | ------------------------------------------------- |
-| `packages/schema`         | Zod contracts and generated JSON Schemas                          | Implemented                                       |
-| `packages/rules`          | Seeded RNG, rules runtime, sandbox operations, replay and hashing | Implemented                                       |
-| `packages/testing`        | Headless runner, random bot, leak and determinism checks          | Implemented                                       |
-| `packages/rules-host`     | Isolated server-side game execution (QuickJS) and recovery client | Implemented                                       |
+| Area                      | Role                                                              | Current state                      |
+| ------------------------- | ----------------------------------------------------------------- | ---------------------------------- |
+| `packages/schema`         | Zod contracts and generated JSON Schemas                          | Implemented                        |
+| `packages/rules`          | Seeded RNG, rules runtime, sandbox operations, replay and hashing | Implemented                        |
+| `packages/testing`        | Headless runner, random bot, leak and determinism checks          | Implemented                        |
+| `packages/rules-host`     | Isolated server-side game execution (QuickJS) and recovery client | Implemented                        |
 | `packages/table-2d`       | PixiJS table renderer, gestures and keyboard play                 | Implemented; desktop matrix passed |
-| `apps/server`             | HTTP API, room server, database, auth and uploads                 | Implemented                                       |
-| `apps/web`                | Browser application: projects, publishing, matches, replays       | Implemented                                       |
-| `games/harbor-market`     | Enforced reference game                                           | Implemented                                       |
-| `packages/card-generator` | Card faces from templates and CSV rows                            | Implemented (T16)                                 |
-| `packages/cli`            | `bgp init`, `dev`, `validate`, `build`, `publish`                 | Implemented (T19)                                 |
+| `apps/server`             | HTTP API, room server, database, auth and uploads                 | Implemented                        |
+| `apps/web`                | Browser application: projects, publishing, matches, replays       | Implemented                        |
+| `games/harbor-market`     | Enforced reference game                                           | Implemented                        |
+| `packages/card-generator` | Card faces from templates and CSV rows                            | Implemented (T16)                  |
+| `packages/cli`            | `bgp init`, `dev`, `validate`, `build`, `publish`                 | Implemented (T19)                  |
 
 The [Phase 1 specification](docs/phase-1-spec.md) defines the complete designer sandbox, remote match, replay, and SDK acceptance criteria. Later 3D and balance-analysis phases are direction, not current features.
 

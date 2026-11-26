@@ -4,6 +4,8 @@
 
 **Gate to Phase 2:** designers keep coming back to playtest their own games with remote guests, without being asked.
 
+**Product gate status (2026-11-26).** Open. The owner has no records of independent return sessions. The [agent playtest](t20-validation.md#last-ferry-agent-playtest) exercised two seats and surfaced a balance issue. To assess the gate, record the initial and return session dates for each participating designer and game, whether remote guests played, and who initiated the return. Anonymized records are sufficient.
+
 ## Users and their flows
 
 **Designer, sandbox game (no code)**
@@ -70,7 +72,7 @@ The desktop AC-12 matrix passed. On 2026-11-26 the owner permanently deferred it
 | AC-09 | A game whose move loops forever is stopped within 1.5 seconds with `GAME_ERROR`; the room server and other matches keep working. A game that touches `fetch`, `process` or `require` fails without effect. [INT-ISOLATION]                     |
 | AC-10 | Killing the rules host process during an active match recovers the match automatically with the same state hash. [INT-RECOVERY]                                                                                                                |
 | AC-11 | p95 move round trip (send `move` → receive `patch`) is under 200 ms with 20 concurrent matches on one server on a local network. [PERF-01]                                                                                                     |
-| AC-12 | The 2D table works in current Chrome, Firefox and Safari on desktop at 360 px width and up. [E2E matrix]                                                                                             |
+| AC-12 | The 2D table works in current Chrome, Firefox and Safari on desktop at 360 px width and up. [E2E matrix]                                                                                                                                       |
 | AC-13 | `bgp init` → `bgp dev` → `bgp validate` → `bgp publish` works for a new game package following the docs alone. [E2E-07]                                                                                                                        |
 | AC-14 | Every `.wasm` file in build outputs and in the production dependency tree is listed in `wasm-inventory.json` with a D-002 entry; in Phase 1 that is only the QuickJS module in the rules host, and the web app ships none. [CI-WASM-INVENTORY] |
 | AC-15 | `pnpm dev`, `pnpm test`, `pnpm test:e2e` work on a clean machine following [dev-environment.md](dev-environment.md). [manual check at handoff]                                                                                                 |

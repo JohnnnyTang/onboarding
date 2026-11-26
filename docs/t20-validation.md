@@ -115,23 +115,23 @@ at 20 concurrent matches.
 
 ## Acceptance criteria
 
-| ID    | Status       | Evidence                                                                                                                                                                                                                |
-| ----- | ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| AC-01 | Pass         | E2E-01, `e2e/projects.spec.ts`, all three browsers, under the content security policy                                                                                                                                   |
-| AC-02 | Pass         | E2E-02 `e2e/publish.spec.ts`; INT-UPLOAD `apps/server/test/int-upload.test.ts`                                                                                                                                          |
-| AC-03 | Pass         | E2E-03 `e2e/publish.spec.ts`, all three browsers                                                                                                                                                                        |
-| AC-04 | Pass         | UNIT-LEAK (`games/harbor-market/test/game.prop.test.ts`, `packages/testing/test/leaks.prop.test.ts`); INT-LEAK `apps/server/test/room-harbor.test.ts`                                                                   |
-| AC-05 | Pass         | E2E-04 `e2e/match.spec.ts`, all three browsers                                                                                                                                                                          |
-| AC-06 | Pass         | E2E-05 (guest) and the Q-018 designer reload, `e2e/match.spec.ts`, all three browsers                                                                                                                                   |
-| AC-07 | Pass         | INT-REPLAY `apps/server/test/room-harbor.test.ts`; the replay page in E2E-06                                                                                                                                            |
-| AC-08 | Pass         | [Node PROP-DET](../games/harbor-market/test/game.prop.test.ts) and [Chromium property replay](../e2e/harbor-determinism.spec.ts) passed 1,000 games each. [E2E-06](../e2e/replay.spec.ts) passed in all three browsers. |
-| AC-09 | Pass         | INT-ISOLATION `packages/rules-host/test/host-client.test.ts`; the endless move stopped under 1.5 s in `apps/server/test/room-protocol.test.ts`                                                                          |
-| AC-10 | Pass         | INT-RECOVERY `apps/server/test/room-harbor.test.ts`, `packages/rules-host/test/host-client.test.ts`                                                                                                                     |
-| AC-11 | Pass         | PERF-01, [docs/perf/perf-01-results.json](perf/perf-01-results.json)                                                                                                                                                    |
-| AC-12 | Desktop pass; phones permanently deferred | Desktop Chromium, Firefox and WebKit passed at 360 px and 1440 px. Physical iOS Safari and Android Chrome remain unmeasured. |
-| AC-13 | Pass         | E2E-07 `e2e/cli.spec.ts` (T19; `bgp dev` in all three browsers here)                                                                                                                                                    |
-| AC-14 | Pass         | CI-WASM-INVENTORY, `pnpm check:wasm`                                                                                                                                                                                    |
-| AC-15 | Pass         | [Clean Windows run](#clean-machine-check-ac-15). Frozen install, browser install, startup, sign-in, workspace tests and full desktop browser matrix.                                                                    |
+| ID    | Status                                    | Evidence                                                                                                                                                                                                                |
+| ----- | ----------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| AC-01 | Pass                                      | E2E-01, `e2e/projects.spec.ts`, all three browsers, under the content security policy                                                                                                                                   |
+| AC-02 | Pass                                      | E2E-02 `e2e/publish.spec.ts`; INT-UPLOAD `apps/server/test/int-upload.test.ts`                                                                                                                                          |
+| AC-03 | Pass                                      | E2E-03 `e2e/publish.spec.ts`, all three browsers                                                                                                                                                                        |
+| AC-04 | Pass                                      | UNIT-LEAK (`games/harbor-market/test/game.prop.test.ts`, `packages/testing/test/leaks.prop.test.ts`); INT-LEAK `apps/server/test/room-harbor.test.ts`                                                                   |
+| AC-05 | Pass                                      | E2E-04 `e2e/match.spec.ts`, all three browsers                                                                                                                                                                          |
+| AC-06 | Pass                                      | E2E-05 (guest) and the Q-018 designer reload, `e2e/match.spec.ts`, all three browsers                                                                                                                                   |
+| AC-07 | Pass                                      | INT-REPLAY `apps/server/test/room-harbor.test.ts`; the replay page in E2E-06                                                                                                                                            |
+| AC-08 | Pass                                      | [Node PROP-DET](../games/harbor-market/test/game.prop.test.ts) and [Chromium property replay](../e2e/harbor-determinism.spec.ts) passed 1,000 games each. [E2E-06](../e2e/replay.spec.ts) passed in all three browsers. |
+| AC-09 | Pass                                      | INT-ISOLATION `packages/rules-host/test/host-client.test.ts`; the endless move stopped under 1.5 s in `apps/server/test/room-protocol.test.ts`                                                                          |
+| AC-10 | Pass                                      | INT-RECOVERY `apps/server/test/room-harbor.test.ts`, `packages/rules-host/test/host-client.test.ts`                                                                                                                     |
+| AC-11 | Pass                                      | PERF-01, [docs/perf/perf-01-results.json](perf/perf-01-results.json)                                                                                                                                                    |
+| AC-12 | Desktop pass; phones permanently deferred | Desktop Chromium, Firefox and WebKit passed at 360 px and 1440 px. Physical iOS Safari and Android Chrome remain unmeasured.                                                                                            |
+| AC-13 | Pass                                      | E2E-07 `e2e/cli.spec.ts` (T19; `bgp dev` in all three browsers here)                                                                                                                                                    |
+| AC-14 | Pass                                      | CI-WASM-INVENTORY, `pnpm check:wasm`                                                                                                                                                                                    |
+| AC-15 | Pass                                      | [Clean Windows run](#clean-machine-check-ac-15). Frozen install, browser install, startup, sign-in, workspace tests and full desktop browser matrix.                                                                    |
 
 "All three browsers" means desktop Chromium, Firefox and WebKit through Playwright. Desktop
 WebKit and synthetic touch do not stand in for iOS or Android (testing.md).
@@ -141,6 +141,14 @@ WebKit and synthetic touch do not stand in for iOS or Android (testing.md).
 ### Physical-device table qualification
 
 The owner permanently deferred this run on 2026-11-26, superseding the 2026-11-14 follow-up. The team has no physical-device measurements for the 300-item frame rate, text clarity or touch interaction.
+
+### Last Ferry agent playtest
+
+On 2026-11-26 a designer agent created _Last Ferry_, a two-seat sandbox game. Crews alternate boarding one or two passengers from a public pier. The crew that boards the last passenger wins. Using the local integration fixture, the designer published a version, the two seats were claimed with separate credentials, and each agent chose moves from its seat's view on a separate loopback WebSocket. The coordinator relayed the moves. Match ID: `01a21817-9f2e-74be-a331-0a1d90c43986`.
+
+The designer boarded one of the four passengers and passed. The guest boarded two and passed. The designer boarded the last passenger and ended the match. Both clients observed the same counts after each update and reached sequence 6 with four aboard, the pier empty and the match finished. Under the game's manual scoring rule, the designer won. The playtest exposed a forced win for the starting crew: boarding one leaves three, so either reply lets the first crew finish on its next turn.
+
+This arranged session exercised publishing, invite claims, turn changes and finish propagation through the room server. The [Phase 2 product gate](phase-1-spec.md) still requires evidence of designers independently returning with remote guests.
 
 ### Clean-machine check (AC-15)
 
