@@ -244,6 +244,8 @@ The [November 25 run](https://github.com/JohnnnyTang/onboarding/actions/runs/456
 
 The [November 23 matrix](https://github.com/JohnnnyTang/onboarding/actions/runs/45244988737) reached the nightly job. Firefox could not create a graphics context. One WebKit guest reported a worker timeout during the four-seat match. In the Playwright 1.64.1 Ubuntu 24.04 image, headless Firefox returned a null WebGL2 context without a display and obtained a Mesa llvmpipe context under Xvfb. The nightly job now starts its browser matrix under Xvfb. Firefox and WebKit each passed the four-seat match and idle-table test under Xvfb with tracing and zero retries against the local server. The WebKit timeout did not recur in this focused run. A run on the hosted runner is needed to confirm the workflow change there.
 
+The final native Windows matrix passed 101 tests with four expected skips and zero retries in 13.2 minutes. Earlier runs exposed an IPv6-only preview listener and intermittent Firefox guest-join and canvas-comparison failures. The preview now binds to IPv4 loopback. The guest join and designer reload each passed five focused runs, and the exact canvas comparison passed three. Future comparison failures attach both PNGs. All three cases passed in the final matrix. The 300-step replay p95 was 85.1 ms in Chromium, 12 ms in Firefox and 61 ms in WebKit.
+
 ## Decisions and open questions
 
 - **Q-018** updated with the designer reload measurement.
