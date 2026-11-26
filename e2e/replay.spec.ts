@@ -15,6 +15,10 @@ import {
 import { createHarborMatch, startMatch } from "./support/harbor-market.js";
 import { ScriptedSeat } from "./support/scripted-seat.js";
 
+// Capturing a screencast reads back the canvas on each changed frame, inside the
+// latency measurement. Keep the action trace, DOM snapshots and per-step timings.
+const timedReplay = test.extend({ trace: { mode: "retain-on-failure", screenshots: false } });
+
 // T18 done-when: E2E-06 (docs/testing.md). A Harbor Market match is recorded by scripted
 // seats through the real room server, so the rules host (QuickJS) computes and stores its
 // final hash. Each browser then replays it in the game worker on the replay page and must
@@ -167,9 +171,7 @@ function stepThrough(page: Page, steps: number): Promise<number[]> {
   }, steps);
 }
 
-test("E2E-06: the game worker replays a recorded match to the rules host's final hash", async ({
-  browser,
-}) => {
+timedReplay("E2E-06: replay matches the rules host's final hash", async ({ browser }) => {
   test.setTimeout(240_000);
   const token = await designerToken(browser, "designer2");
   const recorded = await recordMatch(token);
