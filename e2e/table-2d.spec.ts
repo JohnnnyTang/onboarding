@@ -117,7 +117,7 @@ test("retained graphics match a fresh table after snapshot changes", async ({ pa
     },
     fixture,
   ];
-  for (const snapshot of snapshots) {
+  for (const [index, snapshot] of snapshots.entries()) {
     await page.evaluate(async (next) => {
       const moduleUrl = "/packages/table-2d/dist/index.js";
       const fixtureUrl = "/dev/table/fixture.ts";
@@ -153,13 +153,28 @@ test("retained graphics match a fresh table after snapshot changes", async ({ pa
         table.setSnapshot(next);
       }
     }, snapshot);
-    await expect
-      .poll(async () => {
-        const retained = await page.locator("#retained-zones").screenshot();
-        const fresh = await page.locator("#fresh-zones").screenshot();
-        return retained.equals(fresh);
-      })
-      .toBe(true);
+    let retained: Buffer | undefined;
+    let fresh: Buffer | undefined;
+    try {
+      await expect
+        .poll(
+          async () => {
+            retained = await page.locator("#retained-zones").screenshot();
+            fresh = await page.locator("#fresh-zones").screenshot();
+            return retained.equals(fresh);
+          },
+          { message: `Snapshot ${index + 1} must match a fresh table` },
+        )
+        .toBe(true);
+    } catch (error) {
+      for (const [name, body] of [
+        ["retained", retained],
+        ["fresh", fresh],
+      ] as const) {
+        if (body) await test.info().attach(name, { body, contentType: "image/png" });
+      }
+      throw error;
+    }
   }
 });
 
