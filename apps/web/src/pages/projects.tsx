@@ -70,7 +70,7 @@ export function ProjectsPage() {
             onChange={(event) => setName(event.target.value)}
           />
           <button type="submit" className={ui.button} disabled={busy || name.trim() === ""}>
-            Create project
+            {busy ? "Creating…" : "Create project"}
           </button>
         </form>
         <section aria-label="Saved projects" className={styles.saved}>
@@ -98,6 +98,13 @@ export function ProjectListView({
   onDelete(project: LocalProject): void;
 }) {
   const [confirming, setConfirming] = useState<string | null>(null);
+  const [query, setQuery] = useState("");
+  const [sort, setSort] = useState("recent");
+  const term = query.trim().toLocaleLowerCase();
+  const visible = list.projects.filter((project) =>
+    project.name.toLocaleLowerCase().includes(term),
+  );
+  if (sort === "name") visible.sort((left, right) => left.name.localeCompare(right.name));
   return (
     <>
       {list.unreadable > 0 ? (
@@ -107,13 +114,43 @@ export function ProjectListView({
             : `${list.unreadable} saved projects could not be read and are not shown.`}
         </p>
       ) : null}
+      {(list.projects.length > 1 || query !== "") && (
+        <div className={styles.libraryTools}>
+          <label className={styles.field}>
+            Find a project
+            <input
+              type="search"
+              placeholder="Project name"
+              value={query}
+              onChange={(event) => {
+                setQuery(event.target.value);
+                setConfirming(null);
+              }}
+            />
+          </label>
+          <label className={styles.field}>
+            Sort by
+            <select value={sort} onChange={(event) => setSort(event.target.value)}>
+              <option value="recent">Last edited</option>
+              <option value="name">Name (A–Z)</option>
+            </select>
+          </label>
+        </div>
+      )}
       {list.projects.length === 0 ? (
         <EmptyState title="No projects yet">
           <p>Give your prototype a name to start laying out its pieces.</p>
         </EmptyState>
+      ) : visible.length === 0 ? (
+        <EmptyState title="No matching projects">
+          <p>Try another name or clear your search to see all projects.</p>
+          <button type="button" className={ui.button} onClick={() => setQuery("")}>
+            Clear search
+          </button>
+        </EmptyState>
       ) : (
         <ul className={ui.list} aria-label="Your projects">
-          {list.projects.map((project) => (
+          {visible.map((project) => (
             <li key={project.id} className={styles.projectRow}>
               <span>
                 <Link to={projectPath(project.id)}>

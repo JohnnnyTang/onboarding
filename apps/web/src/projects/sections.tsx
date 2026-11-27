@@ -106,6 +106,25 @@ export function ImagesSection({ project, editor }: SectionProps) {
   const inputId = useId();
   const [problems, setProblems] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
+  const [over, setOver] = useState(false);
+  const [status, setStatus] = useState("");
+  async function importFiles(files: File[]) {
+    if (!files.length || busy) return;
+    setBusy(true);
+    setProblems([]);
+    setStatus("Importing images…");
+    try {
+      const errors = await editor.importImages(files);
+      setProblems(errors);
+      const count = files.length - errors.length;
+      setStatus(count > 0 ? `Imported ${count} ${count === 1 ? "image" : "images"}.` : "");
+    } catch {
+      setProblems(["The images could not be saved."]);
+      setStatus("");
+    } finally {
+      setBusy(false);
+    }
+  }
   const used = usedImages(project);
   const assets = editor.data.status === "ready" ? editor.data.assets : [];
   const missing = missingImages(
@@ -114,10 +133,36 @@ export function ImagesSection({ project, editor }: SectionProps) {
   );
   return (
     <section className={styles.panel} aria-label="Images">
-      <div className={styles.field}>
-        <label htmlFor={inputId}>Import images (PNG, JPEG, WebP or AVIF, up to 5 MB each)</label>
+      <label
+        className={styles.dropZone}
+        htmlFor={inputId}
+        data-over={over || undefined}
+        onDragOver={(event) => {
+          if (!event.dataTransfer.types.includes("Files")) return;
+          event.preventDefault();
+          event.dataTransfer.dropEffect = busy ? "none" : "copy";
+          setOver(!busy);
+        }}
+        onDragLeave={(event) => {
+          if (
+            !(
+              event.relatedTarget instanceof Node &&
+              event.currentTarget.contains(event.relatedTarget)
+            )
+          )
+            setOver(false);
+        }}
+        onDrop={(event) => {
+          event.preventDefault();
+          setOver(false);
+          void importFiles(Array.from(event.dataTransfer.files));
+        }}
+      >
+        <strong>{over ? "Release to import images" : "Drop images here"}</strong>
+        <span>PNG, JPEG, WebP or AVIF · up to 5 MB each</span>
         <input
           id={inputId}
+          aria-label="Import images"
           type="file"
           accept={IMAGE_ACCEPT}
           multiple
@@ -125,15 +170,13 @@ export function ImagesSection({ project, editor }: SectionProps) {
           onChange={(event) => {
             const files = Array.from(event.target.files ?? []);
             event.target.value = "";
-            if (files.length === 0) return;
-            setBusy(true);
-            void editor
-              .importImages(files)
-              .then(setProblems, () => setProblems(["The images could not be saved."]))
-              .finally(() => setBusy(false));
+            void importFiles(files);
           }}
         />
-      </div>
+      </label>
+      <span role="status" className={styles.importStatus}>
+        {status}
+      </span>
       <Problems problems={problems} />
       {missing.length > 0 ? (
         <p className={ui.muted}>

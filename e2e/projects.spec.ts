@@ -441,3 +441,31 @@ test("T16: 100 cards are generated at 300 dpi in under 10 seconds", async ({
   await context.close();
   removeProfile(profile);
 });
+
+test("Find a prototype and drop artwork into its project", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto(`${WEB_URL}/projects`);
+  for (const name of ["Anchor", "Harbor"]) {
+    await page.getByLabel("New project").fill(name);
+    await page.getByRole("button", { name: "Create project" }).click();
+    await expect(page.getByRole("heading", { name, exact: true })).toBeVisible();
+    await page.getByRole("navigation", { name: "Main" }).getByText("Projects").click();
+  }
+  const list = page.getByRole("list", { name: "Your projects" });
+  await expect(list.getByRole("listitem").first()).toContainText("Harbor");
+  await page.getByLabel("Sort by").selectOption("name");
+  await expect(list.getByRole("listitem").first()).toContainText("Anchor");
+  await page.getByLabel("Find a project").fill("absent");
+  await page.getByRole("button", { name: "Clear search" }).click();
+  await expect(list.getByRole("listitem")).toHaveCount(2);
+  await page.getByLabel("Find a project").fill("  HARB  ");
+  await expect(list.getByRole("listitem")).toHaveCount(1);
+  await list.getByRole("link", { name: "Harbor" }).click();
+  await section(page, "Images").click();
+  await page.getByText("Drop images here").drop({ files: IMAGES });
+  await expect(page.getByRole("status")).toHaveText("Imported 2 images.");
+  await page.reload();
+  await expect(
+    page.getByRole("list", { name: "Project images" }).getByRole("listitem"),
+  ).toHaveCount(2);
+});
