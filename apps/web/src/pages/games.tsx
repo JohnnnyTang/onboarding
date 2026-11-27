@@ -16,7 +16,7 @@ export function GameList({ games }: { games: readonly GameResponse[] }) {
     );
   }
   return (
-    <ul className={ui.list} aria-label="Games">
+    <ul className={ui.shelf} aria-label="Games">
       {games.map((game) => (
         <li key={game.id}>
           <Link to={`/games/${encodeURIComponent(game.id)}`}>{game.name}</Link>
@@ -43,7 +43,9 @@ function Games() {
 export function GamesPage() {
   return (
     <>
-      <PageHeader title="Games">Games you have published.</PageHeader>
+      <PageHeader title="Games" art="shelf">
+        Open a published game to choose a version and host a match.
+      </PageHeader>
       <RequireUser what="games">
         <Games />
       </RequireUser>

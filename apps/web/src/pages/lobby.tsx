@@ -19,9 +19,12 @@ export function SeatList({
   mySeat: string | undefined;
 }) {
   return (
-    <ul className={ui.list} aria-label="Seats">
+    <ul className={ui.seats} aria-label="Seats">
       {seats.map((seat) => (
         <li key={seat.seat}>
+          <span className={ui.counter} aria-hidden="true">
+            {seat.name.trim().slice(0, 1).toUpperCase() || "○"}
+          </span>
           <span>
             <strong>{seatLabel(seat.seat)}</strong>{" "}
             {seat.name === "" ? <span className={ui.muted}>Open</span> : seat.name}

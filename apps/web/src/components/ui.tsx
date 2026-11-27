@@ -3,12 +3,22 @@ import { useLocation } from "react-router";
 import { errorMessage } from "../app/messages";
 import { useAuthUser, useServices } from "../app/services";
 import styles from "./ui.module.css";
+import { WorkspaceArt, type WorkspaceKind } from "./workspace-art";
 
 export { styles as ui };
 
-export function PageHeader({ title, children }: { title: string; children?: ReactNode }) {
+export function PageHeader({
+  title,
+  children,
+  art,
+}: {
+  title: string;
+  children?: ReactNode;
+  art?: WorkspaceKind;
+}) {
   return (
     <header className={styles.pageHeader}>
+      {art && <WorkspaceArt kind={art} className={styles.headerArt} />}
       <h1>{title}</h1>
       {children ? <p>{children}</p> : null}
     </header>

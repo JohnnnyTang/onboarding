@@ -19,7 +19,6 @@
   text-decoration: none;
   font: 700 1.25rem / 1.03 var(--display);
   letter-spacing: -0.04em;
-  max-width: 180px;
 }
 .brand::before {
   content: "";
@@ -103,6 +102,7 @@
     max-width: 45%;
   }
   .brand {
-    max-width: 150px;
+    font-size: 1rem;
+    max-width: 70%;
   }
 }

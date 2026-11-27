@@ -105,6 +105,18 @@ describe("routes", () => {
   test("the join page offers the designer's name when signed in", () => {
     expect(render(<AppRoutes />, "/join/abc", DESIGNER)).toContain('value="Designer One"');
   });
+
+  test("the home workspace links directly to local projects and both online collections", () => {
+    const html = render(<AppRoutes />);
+    for (const [path, title] of [
+      ["/projects", "Project workshop"],
+      ["/games", "Game shelf"],
+      ["/matches", "Match room"],
+    ] as const) {
+      expect(html).toMatch(new RegExp(`<a [^>]*href="${path}"[^>]*>(?:(?!</a>).)*${title}`));
+    }
+    expect(html).toContain('href="#content"');
+  });
 });
 
 describe("empty states and lists", () => {

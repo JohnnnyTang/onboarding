@@ -44,11 +44,11 @@ export function JoinPage() {
   }
 
   return (
-    <>
+    <article className={ui.invite}>
       <PageHeader title="Join a match">
         {user
           ? `You will join as ${user.name}'s account.`
-          : "No account needed: pick the name other players will see."}
+          : "Choose the name your fellow players will see at the table. You can join as a guest."}
       </PageHeader>
       <form onSubmit={submit} noValidate>
         <div className={ui.field}>
@@ -77,6 +77,6 @@ export function JoinPage() {
           {claim.isPending ? "Joining…" : "Join"}
         </button>
       </form>
-    </>
+    </article>
   );
 }

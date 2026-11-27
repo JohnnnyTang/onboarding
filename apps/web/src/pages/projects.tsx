@@ -55,31 +55,37 @@ export function ProjectsPage() {
 
   return (
     <>
-      <PageHeader title="Projects">
+      <PageHeader title="Projects" art="workshop">
         Projects stay on this device until you publish them. They work offline and need no account.
       </PageHeader>
-      <form className={styles.create} onSubmit={create}>
-        <label htmlFor="project-name">New project</label>
-        <input
-          id="project-name"
-          value={name}
-          maxLength={80}
-          placeholder="Name of your game"
-          onChange={(event) => setName(event.target.value)}
-        />
-        <button type="submit" className={ui.button} disabled={busy || name.trim() === ""}>
-          Create project
-        </button>
-      </form>
-      {failed ? (
-        <p className={ui.notice} role="alert">
-          Projects could not be opened. This browser may block local storage in this window.
-        </p>
-      ) : list === null ? (
-        <Loading label="Opening projects…" />
-      ) : (
-        <ProjectListView list={list} onDelete={(project) => void remove(project)} />
-      )}
+      <div className={styles.library}>
+        <form className={styles.create} onSubmit={create}>
+          <h2>Start a prototype</h2>
+          <label htmlFor="project-name">New project</label>
+          <input
+            id="project-name"
+            value={name}
+            maxLength={80}
+            placeholder="Name of your game"
+            onChange={(event) => setName(event.target.value)}
+          />
+          <button type="submit" className={ui.button} disabled={busy || name.trim() === ""}>
+            Create project
+          </button>
+        </form>
+        <section aria-label="Saved projects" className={styles.saved}>
+          <h2>On this device</h2>
+          {failed ? (
+            <p className={ui.notice} role="alert">
+              Projects could not be opened. This browser may block local storage in this window.
+            </p>
+          ) : list === null ? (
+            <Loading label="Opening projects…" />
+          ) : (
+            <ProjectListView list={list} onDelete={(project) => void remove(project)} />
+          )}
+        </section>
+      </div>
     </>
   );
 }
@@ -103,7 +109,7 @@ export function ProjectListView({
       ) : null}
       {list.projects.length === 0 ? (
         <EmptyState title="No projects yet">
-          <p>Name your game above to start putting it on the table.</p>
+          <p>Give your prototype a name to start laying out its pieces.</p>
         </EmptyState>
       ) : (
         <ul className={ui.list} aria-label="Your projects">

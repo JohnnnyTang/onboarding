@@ -1,35 +1,47 @@
 import { Link } from "react-router";
+import { WorkspaceArt } from "../components/workspace-art";
 import styles from "./home.module.css";
 import tabletop from "./tabletop.webp";
+import tabletopSmall from "./tabletop-small.webp";
 
 const destinations = [
   {
     path: "/projects",
     name: "Project workshop",
     summary: "Build cards, place pieces, and try a hot-seat playtest.",
-    mark: "✎",
-    tone: styles.workshop,
+    kind: "workshop",
   },
   {
     path: "/games",
     name: "Game shelf",
     summary: "Find a published version and set up a table for guests.",
-    mark: "▦",
-    tone: styles.shelf,
+    kind: "shelf",
   },
   {
     path: "/matches",
     name: "Match room",
     summary: "Take your seat, return to a match, or watch a replay.",
-    mark: "⚄",
-    tone: styles.room,
+    kind: "room",
   },
-];
+] as const;
 
 export function HomePage() {
   return (
     <section className={styles.home} aria-labelledby="home-heading" data-enter="">
-      <div className={styles.hero}>
+      <div
+        className={styles.hero}
+        onPointerMove={(event) => {
+          if (
+            event.pointerType !== "mouse" ||
+            !window.matchMedia("(prefers-reduced-motion: no-preference)").matches
+          )
+            return;
+          const frame = event.currentTarget;
+          const bounds = frame.getBoundingClientRect();
+          frame.style.setProperty("--spot-x", `${event.clientX - bounds.left}px`);
+          frame.style.setProperty("--spot-y", `${event.clientY - bounds.top}px`);
+        }}
+      >
         <div className={styles.copy}>
           <p className={styles.kicker}>
             <span aria-hidden="true">✳</span> Designer workspace
@@ -38,14 +50,15 @@ export function HomePage() {
             Playtest your board games<span aria-hidden="true">.</span>
           </h1>
           <p className={styles.lead}>
-            Lay out your pieces, deal the first hand, and invite friends to play right in their
-            browsers.
+            Lay out your pieces and deal the first hand. Each guest gets one invite link to join
+            your table in their browser.
           </p>
           <Link to="/projects" className={styles.cta}>
             Open projects <span aria-hidden="true">→</span>
           </Link>
         </div>
-        <div className={styles.art}>
+        <picture className={styles.art} data-visual="">
+          <source media="(max-width: 720px)" srcSet={tabletopSmall} />
           <img
             src={tabletop}
             alt="A golden meeple, illustrated forest cards, and a red die on a checkered board"
@@ -53,18 +66,16 @@ export function HomePage() {
             height="700"
             fetchPriority="high"
           />
-        </div>
+        </picture>
       </div>
       <div className={styles.rule}>
         <h2>Your workspace</h2>
         <span aria-hidden="true" />
       </div>
       <div className={styles.paths}>
-        {destinations.map(({ path, name, summary, mark, tone }) => (
-          <Link key={path} to={path} className={`${styles.path} ${tone}`}>
-            <span className={styles.symbol} aria-hidden="true">
-              {mark}
-            </span>
+        {destinations.map(({ path, name, summary, kind }) => (
+          <Link key={path} to={path} className={styles.path}>
+            <WorkspaceArt kind={kind} className={styles.symbol} />
             <span className={styles.arrow} aria-hidden="true">
               ↗
             </span>

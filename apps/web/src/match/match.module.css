@@ -227,3 +227,25 @@ fieldset.actions {
   margin: 0;
   font-weight: 600;
 }
+.side {
+  padding: 16px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+}
+.table {
+  box-shadow: 0 3px 0 #0c281f44;
+  border: 2px solid #23483a;
+}
+.active {
+  background: var(--color-tint);
+}
+.result {
+  border-top: 6px solid #cda149;
+}
+.scores tr + tr {
+  border-top: 1px solid var(--color-border);
+}
+.banner {
+  border-left: 4px solid var(--color-accent);
+}

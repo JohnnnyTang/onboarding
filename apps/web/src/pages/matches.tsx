@@ -28,7 +28,7 @@ export function MatchList({ matches }: { matches: readonly MatchSummary[] }) {
     );
   }
   return (
-    <ul className={ui.list} aria-label="Matches">
+    <ul className={ui.shelf} aria-label="Matches">
       {matches.map((match) => {
         const filled = match.seats.filter((seat) => seat.name !== "").length;
         return (
@@ -61,7 +61,9 @@ function Matches() {
 export function MatchesPage() {
   return (
     <>
-      <PageHeader title="Matches">Matches you host or play in.</PageHeader>
+      <PageHeader title="Matches" art="room">
+        Matches you host or play in.
+      </PageHeader>
       <RequireUser what="matches">
         <Matches />
       </RequireUser>
