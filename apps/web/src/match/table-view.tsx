@@ -1,5 +1,5 @@
 import type { ComponentsFile, Gesture, SeatId, TableRenderer, TableSnapshot } from "@bgp/schema";
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import styles from "./match.module.css";
 
 export interface TableViewProps {
@@ -8,6 +8,7 @@ export interface TableViewProps {
   seat: SeatId | null;
   snapshot: TableSnapshot | null;
   selection: readonly string[];
+  antialias?: boolean;
   onGesture(gesture: Gesture): void;
   onSelectionChange(ids: string[]): void;
 }
@@ -28,19 +29,20 @@ export function TableView(props: TableViewProps) {
   latest.current = props;
   const [failed, setFailed] = useState(false);
   const keysId = useId();
-  const { components, assetUrl, seat, snapshot, selection } = props;
+  const { components, assetUrl, seat, snapshot, selection, antialias = true } = props;
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const container = host.current;
     if (!container) return;
     let cancelled = false;
-    let instance: TableRenderer<HTMLElement> | null = null;
+    let mounted: TableRenderer<HTMLElement> | null = null;
     const unsubscribe: (() => void)[] = [];
     void preloadTable()
       .then(async ({ PixiTableRenderer }) => {
         if (cancelled) return;
-        instance = new PixiTableRenderer();
-        await instance.mount(container, { components, assetUrl, seat });
+        const instance = new PixiTableRenderer();
+        mounted = instance;
+        await instance.mount(container, { components, assetUrl, seat, antialias });
         if (cancelled) return;
         // Screen readers announce the keys with the table (T20).
         container.querySelector("canvas")?.setAttribute("aria-describedby", keysId);
@@ -60,11 +62,12 @@ export function TableView(props: TableViewProps) {
       cancelled = true;
       for (const stop of unsubscribe) stop();
       renderer.current = null;
-      instance?.destroy();
+      mounted?.destroy();
     };
-  }, [components, assetUrl, seat, keysId]);
+  }, [components, assetUrl, seat, antialias, keysId]);
 
-  useEffect(() => {
+  // Give the renderer the new snapshot before the browser paints the matching controls.
+  useLayoutEffect(() => {
     if (snapshot) renderer.current?.setSnapshot(snapshot);
   }, [snapshot]);
 

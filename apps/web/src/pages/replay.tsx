@@ -78,6 +78,7 @@ function useReplayState(viewer: ReplayController | null): ReplayState | null {
 }
 
 const shortHash = (hash: string) => `${hash.slice(0, 12)}…`;
+const NO_SELECTION: readonly string[] = [];
 
 export function HashCheckNotice({ check }: { check: HashCheck }) {
   switch (check.status) {
@@ -309,7 +310,9 @@ export function ReplayPage() {
               assetUrl={loaded.pkg.assetUrl}
               seat={viewing === "all" ? null : viewing}
               snapshot={state.snapshot}
-              selection={[]}
+              selection={NO_SELECTION}
+              // Keep step-through responsive on software WebGL, where multisampling is costly.
+              antialias={false}
               onGesture={() => {}}
               onSelectionChange={() => {}}
             />

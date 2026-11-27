@@ -159,9 +159,11 @@ with swaps to about 300 events, so the rules host computes and stores the final 
 (`finalHash` in the replay response). A fixed golden file cannot stand in: the server picks
 the seed. Each browser opens the replay page as one of the guests, rebuilds the match in the
 game worker and must show the same hash. The test then steps through every event and times
-each step until the table shows it (p95 under 150 ms, worst under 500 ms). A second test covers
-Q-026: a guest ends a 2-seat sandbox match with the End game button and its confirm step,
-then follows the match page's replay link and sees the rules host's hash.
+each step until the table shows it (p95 under 150 ms, worst under 500 ms). The replay canvas
+uses single-sample rendering to reduce frame cost on software WebGL while keeping the
+same device pixel ratio and piece animations. The sandbox replay test covers Q-026.
+A guest ends a 2-seat sandbox match with the End game button and confirms, then follows
+the match page's replay link and sees the rules host's hash.
 
 T20 adds `e2e/harbor-determinism.spec.ts` for AC-08. It records the same seeded
 Harbor Market cases as PROP-DET in Node and replays each from its seed and

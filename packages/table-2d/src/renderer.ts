@@ -26,7 +26,12 @@ import {
   screenToTable,
 } from "./layout.js";
 
-type Init = { components: ComponentsFile; assetUrl(ref: AssetRef): string; seat: SeatId | null };
+type Init = {
+  components: ComponentsFile;
+  assetUrl(ref: AssetRef): string;
+  seat: SeatId | null;
+  antialias?: boolean;
+};
 type Shape = "rect" | "circle" | "hex";
 interface Visual {
   node: Container;
@@ -192,7 +197,7 @@ export class PixiTableRenderer implements TableRenderer<HTMLElement> {
         width: Math.max(1, container.clientWidth),
         height: Math.max(1, container.clientHeight),
         background: COLORS.surround,
-        antialias: true,
+        antialias: init.antialias ?? true,
         autoDensity: true,
         resolution: Math.min(3, window.devicePixelRatio || 1),
         preference: "webgl",
