@@ -249,3 +249,27 @@ fieldset.actions {
 .banner {
   border-left: 4px solid var(--color-accent);
 }
+
+.playback,
+.playback label {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+.playback {
+  justify-content: space-between;
+}
+.playback select {
+  font: inherit;
+  color: var(--color-text);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding-inline: var(--space-2);
+}
+.replaySteps input[type="range"] {
+  min-height: 32px;
+  cursor: pointer;
+  margin: 0;
+}

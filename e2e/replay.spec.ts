@@ -271,9 +271,15 @@ test("Q-026: a guest ends a sandbox match from the table, and its replay checks 
     await expect(page).toHaveURL(`${WEB_URL}/matches/${match.matchId}/replay`);
     const check = page.getByTestId("hash-check");
     await expect(check).toHaveAttribute("data-hash", replay.finalHash);
-    await page.getByRole("button", { name: "End", exact: true }).click();
+    await page.getByLabel("Speed").selectOption({ label: "2×" });
+    await page.getByRole("button", { name: "Play replay" }).click();
     const step = page.getByTestId("replay-step");
     await expect(step).toHaveAttribute("data-shown", "3");
+    await page.getByRole("button", { name: "Play again" }).click();
+    await expect(step).toHaveAttribute("data-shown", "0");
+    await page.getByRole("button", { name: "Pause replay" }).click();
+    await expect(page.getByRole("button", { name: "Play replay" })).toBeVisible();
+    await page.getByRole("button", { name: "End", exact: true }).click();
     await expect(step).toContainText("Move 3 of 3 · Seat 1 · Bot 1: endGame");
     await expect(page.getByRole("region", { name: "Result" })).toContainText("Ended by Seat 1");
     expect(errors).toEqual([]);

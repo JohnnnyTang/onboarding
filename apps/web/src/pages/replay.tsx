@@ -130,6 +130,27 @@ function StepControls({
 }) {
   const { seq, total } = state;
   const disabled = state.status !== "ready";
+  const [playing, setPlaying] = useState(false);
+  const [delay, setDelay] = useState(1500);
+  useEffect(() => {
+    if (!playing) return;
+    if (disabled || seq === total) {
+      setPlaying(false);
+      return;
+    }
+    if (state.shownSeq !== seq) return;
+    const timer = window.setTimeout(() => viewer.step(1), delay);
+    return () => window.clearTimeout(timer);
+  }, [playing, disabled, seq, total, state.shownSeq, viewer, delay]);
+
+  function seek(step: number) {
+    setPlaying(false);
+    viewer.goTo(step);
+  }
+  function togglePlayback() {
+    if (!playing && seq === total) viewer.goTo(0);
+    setPlaying(!playing);
+  }
   return (
     <section className={styles.replaySteps} aria-label="Steps">
       <p
@@ -140,21 +161,41 @@ function StepControls({
       >
         Move {seq} of {total} · {caption}
       </p>
+      <div className={styles.playback}>
+        <button
+          type="button"
+          className={ui.button}
+          disabled={disabled || total === 0}
+          onClick={togglePlayback}
+        >
+          <span aria-hidden="true">{playing ? "Ⅱ" : "▶"}</span>
+          {playing ? "Pause replay" : seq === total && total > 0 ? "Play again" : "Play replay"}
+        </button>
+        <label>
+          Speed
+          <select value={delay} onChange={(event) => setDelay(Number(event.target.value))}>
+            <option value={3000}>0.5×</option>
+            <option value={1500}>1×</option>
+            <option value={750}>2×</option>
+          </select>
+        </label>
+      </div>
       <input
         type="range"
         aria-label="Step"
         min={0}
         max={total}
+        aria-valuetext={`Move ${seq} of ${total}`}
         value={seq}
         disabled={disabled}
-        onChange={(event) => viewer.goTo(Number(event.target.value))}
+        onChange={(event) => seek(Number(event.target.value))}
       />
       <div className={styles.actions}>
         <button
           type="button"
           className={`${ui.button} ${ui.secondary}`}
           disabled={disabled || seq === 0}
-          onClick={() => viewer.goTo(0)}
+          onClick={() => seek(0)}
         >
           Setup
         </button>
@@ -162,7 +203,7 @@ function StepControls({
           type="button"
           className={`${ui.button} ${ui.secondary}`}
           disabled={disabled || seq === 0}
-          onClick={() => viewer.step(-1)}
+          onClick={() => seek(seq - 1)}
         >
           Back
         </button>
@@ -170,7 +211,7 @@ function StepControls({
           type="button"
           className={ui.button}
           disabled={disabled || seq === total}
-          onClick={() => viewer.step(1)}
+          onClick={() => seek(seq + 1)}
         >
           Forward
         </button>
@@ -178,7 +219,7 @@ function StepControls({
           type="button"
           className={`${ui.button} ${ui.secondary}`}
           disabled={disabled || seq === total}
-          onClick={() => viewer.goTo(total)}
+          onClick={() => seek(total)}
         >
           End
         </button>
