@@ -1,6 +1,6 @@
 import type { Manifest, MatchSummary } from "@bgp/schema";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { ApiError } from "../api/client";
 import { errorMessage, seatLabel } from "../app/messages";
 import { type Services, useAuthUser, useServices } from "../app/services";
@@ -43,22 +43,44 @@ export function canStart(match: MatchSummary, minPlayers: number): boolean {
   );
 }
 
-function CopyButton({ text, label }: { text: string; label: string }) {
-  const [copied, setCopied] = useState(false);
+function InviteLink({ url, seat }: { url: string; seat: string }) {
+  const input = useRef<HTMLInputElement>(null);
+  const [message, setMessage] = useState("");
+  const label = seatLabel(seat);
+
+  async function copy() {
+    try {
+      await navigator.clipboard.writeText(url);
+      setMessage(`Invite for ${label} copied.`);
+    } catch {
+      input.current?.focus();
+      input.current?.select();
+      setMessage("Link selected. Use your device’s Copy command.");
+    }
+  }
+
   return (
-    <button
-      type="button"
-      className={`${ui.button} ${ui.secondary}`}
-      aria-label={label}
-      onClick={() => {
-        void navigator.clipboard?.writeText(text).then(
-          () => setCopied(true),
-          () => setCopied(false),
-        );
-      }}
-    >
-      {copied ? "Copied" : "Copy"}
-    </button>
+    <>
+      <input
+        ref={input}
+        type="text"
+        readOnly
+        value={url}
+        aria-label={`Invite link for ${label}`}
+        onFocus={(event) => event.target.select()}
+      />
+      <button
+        type="button"
+        className={`${ui.button} ${ui.secondary}`}
+        aria-label={`Copy invite for ${label}`}
+        onClick={() => void copy()}
+      >
+        Copy
+      </button>
+      <span role="status" className={ui.muted}>
+        {message}
+      </span>
+    </>
   );
 }
 
@@ -134,8 +156,7 @@ export function HostPanel({ match, manifest }: { match: MatchSummary; manifest: 
                 <span>Taken by {seat.name}</span>
               ) : url ? (
                 <span className={ui.copyRow}>
-                  <code data-testid={`invite-${seat.seat}`}>{url}</code>
-                  <CopyButton text={url} label={`Copy invite for ${label}`} />
+                  <InviteLink key={url} url={url} seat={seat.seat} />
                   {!seated && token ? (
                     <button
                       type="button"

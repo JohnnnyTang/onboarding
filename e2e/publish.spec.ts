@@ -280,9 +280,22 @@ test("E2E-02 and E2E-03: publish a project, host a 3-seat match with two guests,
     await expect(page.getByRole("list", { name: "Seats" })).toContainText(
       "Seat 1 Designer Two (you)",
     );
+    await page.evaluate(() => {
+      Object.defineProperty(navigator, "clipboard", { configurable: true, value: undefined });
+    });
+    await page.getByRole("button", { name: "Copy invite for Seat 2" }).click();
+    const link = page.getByRole("textbox", { name: "Invite link for Seat 2" });
+    await expect(link).toBeFocused();
+    await expect(page.getByText("Link selected. Use your device’s Copy command.")).toBeVisible();
+    expect(
+      await link.evaluate(
+        (input: HTMLInputElement) =>
+          input.selectionStart === 0 && input.selectionEnd === input.value.length,
+      ),
+    ).toBe(true);
     const inviteUrls = await Promise.all(
-      ["1", "2"].map(
-        async (seat) => (await page.getByTestId(`invite-${seat}`).textContent()) ?? "",
+      [2, 3].map((seat) =>
+        page.getByRole("textbox", { name: `Invite link for Seat ${seat}` }).inputValue(),
       ),
     );
     expect(inviteUrls.every((url) => url.startsWith(`${WEB_URL}/join/`))).toBe(true);
