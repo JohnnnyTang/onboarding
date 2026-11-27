@@ -17,6 +17,9 @@ import {
 
 const NAMES = ["Ann", "Bo", "Cy", "Di"];
 
+// Capturing four canvases on every changed frame competes with each seat's game worker.
+const multiplayer = test.extend({ trace: { mode: "retain-on-failure", screenshots: false } });
+
 async function seatAtTable(players: Player[], matchId: string): Promise<void> {
   for (const { page } of players) {
     await expect(page).toHaveURL(`${WEB_URL}/matches/${matchId}`);
@@ -60,7 +63,7 @@ async function playTurn({ page, seat }: Player): Promise<void> {
   await expect(prompt(page)).not.toHaveText(before ?? "");
 }
 
-test("E2E-04: four seats play Harbor Market to the result screen", async ({ browser }) => {
+multiplayer("E2E-04: four seats play Harbor Market to the result screen", async ({ browser }) => {
   test.setTimeout(300_000);
   const token = await designerToken(browser, "designer2");
   const match = await createHarborMatch(token, 4);
