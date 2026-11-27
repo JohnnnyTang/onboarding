@@ -1,42 +1,46 @@
+@import "@fontsource/source-serif-4/latin-700.css";
+@import "@fontsource/inter/latin-400.css";
+@import "@fontsource/inter/latin-600.css";
 :root {
-  --color-bg: #f6f3ee;
-  --color-surface: #ffffff;
-  --color-text: #1f1d1a;
-  --color-muted: #6b655c;
-  --color-border: #ddd6cb;
-  --color-accent: #2f6b4f;
-  --color-accent-text: #ffffff;
-  --color-danger: #a33a2b;
-  --radius: 8px;
+  --color-bg: #f6f3eb;
+  --color-surface: #fffdf6;
+  --color-text: #202e29;
+  --color-muted: #58655c;
+  --color-border: #c9cbbd;
+  --color-accent: #185248;
+  --color-accent-text: #fff9eb;
+  --color-tint: #e0ece1;
+  --color-danger: #ab3526;
+  --radius: 12px;
   --space-1: 4px;
   --space-2: 8px;
   --space-3: 16px;
   --space-4: 24px;
   --space-5: 40px;
-  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --font-mono: ui-monospace, "Cascadia Mono", Consolas, monospace;
-  color-scheme: light dark;
+  --gutter: clamp(16px, 4vw, 64px);
+  --font-sans: Inter, system-ui, sans-serif;
+  --display: "Source Serif 4", Georgia, serif;
+  --font-mono: ui-monospace, Consolas, monospace;
+  color-scheme: light;
 }
-
 @media (prefers-color-scheme: dark) {
   :root {
-    --color-bg: #191816;
-    --color-surface: #23211e;
-    --color-text: #eeeae4;
-    --color-muted: #a59e93;
-    --color-border: #3a3632;
-    --color-accent: #6fb593;
-    --color-accent-text: #10201a;
-    --color-danger: #e28877;
+    --color-bg: #15231f;
+    --color-surface: #20332c;
+    --color-text: #faf4df;
+    --color-muted: #bec7b9;
+    --color-border: #526357;
+    --color-accent: #bce0c9;
+    --color-accent-text: #12372c;
+    --color-tint: #304b3d;
+    --color-danger: #ffab93;
   }
 }
-
 *,
 *::before,
 *::after {
   box-sizing: border-box;
 }
-
 body {
   margin: 0;
   background: var(--color-bg);
@@ -44,17 +48,50 @@ body {
   font-family: var(--font-sans);
   line-height: 1.5;
 }
-
 a {
   color: var(--color-accent);
+  text-underline-offset: 3px;
 }
-
+h1,
+h2,
+h3 {
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+}
 h1,
 h2 {
-  line-height: 1.2;
+  font-family: var(--display);
+  letter-spacing: -0.045em;
 }
-
 code {
   font-family: var(--font-mono);
   font-size: 0.9em;
+}
+:focus-visible {
+  outline: 3px solid #ce7629;
+  outline-offset: 3px;
+}
+input,
+select,
+textarea {
+  max-width: 100%;
+  accent-color: var(--color-accent);
+}
+input:not([type="checkbox"], [type="radio"], [type="range"], [type="color"]),
+select,
+button {
+  min-height: 44px;
+}
+@media (prefers-reduced-motion: no-preference) {
+  a,
+  button {
+    transition:
+      background-color 0.16s,
+      color 0.16s,
+      transform 0.16s,
+      box-shadow 0.16s;
+  }
+  button:enabled:active {
+    transform: translateY(1px);
+  }
 }

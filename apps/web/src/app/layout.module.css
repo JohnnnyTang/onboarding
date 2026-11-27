@@ -1,52 +1,108 @@
 .shell {
-  min-height: 100vh;
+  min-height: 100svh;
   display: flex;
   flex-direction: column;
 }
-
 .header {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  gap: var(--space-2) var(--space-4);
-  padding: var(--space-3);
+  gap: clamp(20px, 5vw, 84px);
+  padding: 12px max(var(--gutter), calc((100% - 1232px) / 2));
   border-bottom: 1px solid var(--color-border);
   background: var(--color-surface);
 }
-
 .brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 11px;
   color: var(--color-text);
-  font-weight: 700;
   text-decoration: none;
+  font: 700 1.25rem / 1.03 var(--display);
+  letter-spacing: -0.04em;
+  max-width: 180px;
 }
-
+.brand::before {
+  content: "";
+  flex: none;
+  width: 38px;
+  height: 38px;
+  border-radius: 9px;
+  background:
+    radial-gradient(circle at 29% 29%, #fff2d9 0 3px, transparent 4px),
+    radial-gradient(circle, #fff2d9 0 3px, transparent 4px),
+    radial-gradient(circle at 71% 71%, #fff2d9 0 3px, transparent 4px), #c34a2f;
+  box-shadow: inset 0 -4px #923b28;
+}
 .nav {
   display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-3);
+  gap: 6px;
 }
-
 .nav a {
-  color: var(--color-muted);
-  text-decoration: none;
-}
-
-.nav a[aria-current="page"] {
-  color: var(--color-text);
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 15px;
+  border-radius: 7px;
   font-weight: 600;
+  font-size: 0.9rem;
+  text-decoration: none;
+  color: var(--color-muted);
 }
-
+.nav a:hover,
+.nav a[aria-current="page"] {
+  color: var(--color-accent);
+  background: var(--color-tint);
+}
 .account {
+  margin-left: auto;
   display: flex;
   align-items: center;
-  gap: var(--space-2);
-  margin-left: auto;
+  gap: 8px;
+  min-width: 0;
 }
-
+.account span {
+  overflow-wrap: anywhere;
+}
 .main {
-  width: 100%;
-  max-width: 960px;
+  width: min(100%, calc(1232px + 2 * var(--gutter)));
   margin: 0 auto;
-  padding: var(--space-4) var(--space-3);
+  padding: clamp(22px, 3vw, 46px) var(--gutter) 60px;
   flex: 1;
+}
+.skip {
+  position: absolute;
+  left: 1rem;
+  top: 0.5rem;
+  transform: translateY(-160%);
+  z-index: 4;
+  padding: 10px 16px;
+  background: var(--color-surface);
+}
+.skip:focus {
+  transform: none;
+}
+@media (max-width: 720px) {
+  .header {
+    flex-wrap: wrap;
+    gap: 6px;
+    padding-block: 10px 4px;
+  }
+  .nav {
+    order: 3;
+    width: 100%;
+    justify-content: space-between;
+    border-top: 1px solid var(--color-border);
+    padding-top: 3px;
+  }
+  .nav a {
+    justify-content: center;
+    flex: 1;
+    padding: 0 6px;
+  }
+  .account {
+    max-width: 45%;
+  }
+  .brand {
+    max-width: 150px;
+  }
 }

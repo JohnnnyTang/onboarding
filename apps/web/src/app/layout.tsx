@@ -26,11 +26,17 @@ export function Layout() {
   const { pathname } = useLocation();
   return (
     <div className={styles.shell}>
+      <a className={styles.skip} href="#content">
+        Skip to content
+      </a>
       <header className={styles.header}>
         <Link to="/" className={styles.brand}>
           Board Game Platform
         </Link>
         <nav className={styles.nav} aria-label="Main">
+          <NavLink to="/" end>
+            Home
+          </NavLink>
           <NavLink to="/projects">Projects</NavLink>
           <NavLink to="/games">Games</NavLink>
           <NavLink to="/matches">Matches</NavLink>
@@ -39,7 +45,7 @@ export function Layout() {
           <Account />
         </div>
       </header>
-      <main className={styles.main}>
+      <main id="content" tabIndex={-1} className={styles.main}>
         <PageErrorBoundary key={pathname}>
           <Outlet />
         </PageErrorBoundary>
