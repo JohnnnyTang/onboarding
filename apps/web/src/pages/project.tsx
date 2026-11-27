@@ -1,4 +1,5 @@
 import { Link, NavLink, useParams } from "react-router";
+import { PageErrorBoundary } from "../app/error-boundary";
 import { CardsSection } from "../cards/cards-section";
 import { EmptyState, Loading, PageHeader, ui } from "../components/ui";
 import { missingImages } from "../projects/project-model";
@@ -98,7 +99,9 @@ export function ProjectPage() {
         </p>
       ) : null}
       {known ? (
-        <Section section={section} project={project} editor={editor} images={images} />
+        <PageErrorBoundary key={section}>
+          <Section section={section} project={project} editor={editor} images={images} />
+        </PageErrorBoundary>
       ) : (
         <EmptyState title="Unknown section">
           <p>

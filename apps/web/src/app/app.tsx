@@ -22,9 +22,8 @@ export function AppRoutes() {
       <Route element={<Layout />}>
         <Route index element={<HomePage />} />
         <Route path="projects" element={<ProjectsPage />} />
-        <Route path="projects/:projectId" element={<ProjectPage />} />
         <Route path="projects/:projectId/play" element={<HotSeatPage />} />
-        <Route path="projects/:projectId/:section" element={<ProjectPage />} />
+        <Route path="projects/:projectId/:section?" element={<ProjectPage />} />
         <Route path="games" element={<GamesPage />} />
         <Route path="games/:gameId" element={<GamePage />} />
         <Route path="games/:gameId/versions/:versionId" element={<VersionPage />} />

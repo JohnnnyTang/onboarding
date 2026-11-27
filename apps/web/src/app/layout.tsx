@@ -1,4 +1,4 @@
-import { Link, NavLink, Outlet, useLocation } from "react-router";
+import { Link, NavLink, Outlet, useLocation, useMatch } from "react-router";
 import { SignInButton, ui } from "../components/ui";
 import { PageErrorBoundary } from "./error-boundary";
 import styles from "./layout.module.css";
@@ -24,6 +24,12 @@ function Account() {
 
 export function Layout() {
   const { pathname } = useLocation();
+  const project = useMatch("/projects/:projectId/:section?");
+  // Editor sections share the loaded project and its object URLs. The play table has its own lifetime.
+  const pageKey =
+    project && project.params.section !== "play"
+      ? `project-editor:${project.params.projectId}`
+      : pathname;
   return (
     <div className={styles.shell}>
       <a className={styles.skip} href="#content">
@@ -46,7 +52,7 @@ export function Layout() {
         </div>
       </header>
       <main id="content" tabIndex={-1} className={styles.main}>
-        <PageErrorBoundary key={pathname}>
+        <PageErrorBoundary key={pageKey}>
           <Outlet />
         </PageErrorBoundary>
       </main>

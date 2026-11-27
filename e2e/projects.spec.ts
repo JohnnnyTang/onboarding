@@ -461,7 +461,11 @@ test("Find a prototype and drop artwork into its project", async ({ page }) => {
   await page.getByLabel("Find a project").fill("  HARB  ");
   await expect(list.getByRole("listitem")).toHaveCount(1);
   await list.getByRole("link", { name: "Harbor" }).click();
-  await section(page, "Images").click();
+  const imagesLink = section(page, "Images");
+  await imagesLink.focus();
+  await page.keyboard.press("Enter");
+  await expect(page.getByText("Drop images here")).toBeVisible();
+  await expect(imagesLink).toBeFocused();
   await page.getByText("Drop images here").drop({ files: IMAGES });
   await expect(page.getByRole("status")).toHaveText("Imported 2 images.");
   await page.reload();
