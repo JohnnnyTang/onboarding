@@ -1,7 +1,7 @@
 # T13: 2D renderer comparison
 
 Status: complete; PixiJS 8.6.6 confirmed by the project owner on 2026-10-27.
-D-009 for 2D is Accepted. Physical-phone qualification is deferred to T20.
+D-009 for 2D is Accepted. The owner permanently deferred physical-phone qualification on 2026-11-26. See the [final handoff](../t20-validation.md#acceptance-criteria).
 
 ## Method
 
@@ -78,7 +78,7 @@ additional desktop evidence for the final recommendation.
 
 The project owner explicitly deferred physical-phone testing from the T13 gates
 to T20 on 2026-10-27. This changes when the evidence is due; it does not establish
-a phone performance pass. The 300-item/60 fps target and AC-12 remain T20 gates.
+a phone performance pass. The 300-item/60 fps target and AC-12 were carried into T20 at that time.
 The project owner then confirmed PixiJS 8.6.6 for Phase 1 on 2026-10-27.
 D-009 for 2D is Accepted and T13 is complete; Q-008 is resolved.
 
@@ -112,7 +112,7 @@ Accepted recommendation: PixiJS 8.6.6 behind `TableRenderer` for Phase 1. Retain
 item nodes, the working interaction implementation, reviewed desktop baselines,
 and the accelerated comparison support it. Canvas remains a credible fallback.
 These are desktop results; physical-phone drag/zoom, text and performance checks
-remain explicitly tracked under T20 and must not be inferred from this run.
+were never measured on hardware during Phase 1.
 
 API references: [Pixi Application](https://pixijs.com/8.x/guides/components/application),
 [Pixi Assets](https://pixijs.com/8.x/guides/components/assets),

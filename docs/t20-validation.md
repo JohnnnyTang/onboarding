@@ -1,8 +1,7 @@
 # T20 validation: hardening and handoff check
 
 Work on the `claude/t20-hardening` branch, based on the T19 tip `8324d0d`.
-Status: **complete**. The clean-machine run passed (AC-15). On 2026-11-14, the project
-owner deferred physical-phone qualification (AC-12) as a non-blocking follow-up.
+Status: **complete**. The clean-machine run passed (AC-15). On 2026-11-26, the project owner permanently deferred Phase 1 physical-phone qualification. Desktop browser coverage for AC-12 passed.
 
 ## Delivered
 
@@ -116,66 +115,40 @@ at 20 concurrent matches.
 
 ## Acceptance criteria
 
-| ID    | Status       | Evidence                                                                                                                                                                                                                |
-| ----- | ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| AC-01 | Pass         | E2E-01, `e2e/projects.spec.ts`, all three browsers, under the content security policy                                                                                                                                   |
-| AC-02 | Pass         | E2E-02 `e2e/publish.spec.ts`; INT-UPLOAD `apps/server/test/int-upload.test.ts`                                                                                                                                          |
-| AC-03 | Pass         | E2E-03 `e2e/publish.spec.ts`, all three browsers                                                                                                                                                                        |
-| AC-04 | Pass         | UNIT-LEAK (`games/harbor-market/test/game.prop.test.ts`, `packages/testing/test/leaks.prop.test.ts`); INT-LEAK `apps/server/test/room-harbor.test.ts`                                                                   |
-| AC-05 | Pass         | E2E-04 `e2e/match.spec.ts`, all three browsers                                                                                                                                                                          |
-| AC-06 | Pass         | E2E-05 (guest) and the Q-018 designer reload, `e2e/match.spec.ts`, all three browsers                                                                                                                                   |
-| AC-07 | Pass         | INT-REPLAY `apps/server/test/room-harbor.test.ts`; the replay page in E2E-06                                                                                                                                            |
-| AC-08 | Pass         | [Node PROP-DET](../games/harbor-market/test/game.prop.test.ts) and [Chromium property replay](../e2e/harbor-determinism.spec.ts) passed 1,000 games each. [E2E-06](../e2e/replay.spec.ts) passed in all three browsers. |
-| AC-09 | Pass         | INT-ISOLATION `packages/rules-host/test/host-client.test.ts`; the endless move stopped under 1.5 s in `apps/server/test/room-protocol.test.ts`                                                                          |
-| AC-10 | Pass         | INT-RECOVERY `apps/server/test/room-harbor.test.ts`, `packages/rules-host/test/host-client.test.ts`                                                                                                                     |
-| AC-11 | Pass         | PERF-01, [docs/perf/perf-01-results.json](perf/perf-01-results.json)                                                                                                                                                    |
-| AC-12 | **Deferred** | Desktop Playwright Chromium, Firefox and WebKit pass at 360 px and 1440 px. The physical Safari on iOS and Chrome on Android run is a non-blocking follow-up.                                                           |
-| AC-13 | Pass         | E2E-07 `e2e/cli.spec.ts` (T19; `bgp dev` in all three browsers here)                                                                                                                                                    |
-| AC-14 | Pass         | CI-WASM-INVENTORY, `pnpm check:wasm`                                                                                                                                                                                    |
-| AC-15 | Pass         | [Clean Windows run](#clean-machine-check-ac-15). Frozen install, browser install, startup, sign-in, workspace tests and full desktop browser matrix.                                                                    |
+| ID    | Status                                    | Evidence                                                                                                                                                                                                                |
+| ----- | ----------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| AC-01 | Pass                                      | E2E-01, `e2e/projects.spec.ts`, all three browsers, under the content security policy                                                                                                                                   |
+| AC-02 | Pass                                      | E2E-02 `e2e/publish.spec.ts`; INT-UPLOAD `apps/server/test/int-upload.test.ts`                                                                                                                                          |
+| AC-03 | Pass                                      | E2E-03 `e2e/publish.spec.ts`, all three browsers                                                                                                                                                                        |
+| AC-04 | Pass                                      | UNIT-LEAK (`games/harbor-market/test/game.prop.test.ts`, `packages/testing/test/leaks.prop.test.ts`); INT-LEAK `apps/server/test/room-harbor.test.ts`                                                                   |
+| AC-05 | Pass                                      | E2E-04 `e2e/match.spec.ts`, all three browsers                                                                                                                                                                          |
+| AC-06 | Pass                                      | E2E-05 (guest) and the Q-018 designer reload, `e2e/match.spec.ts`, all three browsers                                                                                                                                   |
+| AC-07 | Pass                                      | INT-REPLAY `apps/server/test/room-harbor.test.ts`; the replay page in E2E-06                                                                                                                                            |
+| AC-08 | Pass                                      | [Node PROP-DET](../games/harbor-market/test/game.prop.test.ts) and [Chromium property replay](../e2e/harbor-determinism.spec.ts) passed 1,000 games each. [E2E-06](../e2e/replay.spec.ts) passed in all three browsers. |
+| AC-09 | Pass                                      | INT-ISOLATION `packages/rules-host/test/host-client.test.ts`; the endless move stopped under 1.5 s in `apps/server/test/room-protocol.test.ts`                                                                          |
+| AC-10 | Pass                                      | INT-RECOVERY `apps/server/test/room-harbor.test.ts`, `packages/rules-host/test/host-client.test.ts`                                                                                                                     |
+| AC-11 | Pass                                      | PERF-01, [docs/perf/perf-01-results.json](perf/perf-01-results.json)                                                                                                                                                    |
+| AC-12 | Desktop pass; phones permanently deferred | Desktop Chromium, Firefox and WebKit passed at 360 px and 1440 px. Physical iOS Safari and Android Chrome remain unmeasured.                                                                                            |
+| AC-13 | Pass                                      | E2E-07 `e2e/cli.spec.ts` (T19; `bgp dev` in all three browsers here)                                                                                                                                                    |
+| AC-14 | Pass                                      | CI-WASM-INVENTORY, `pnpm check:wasm`                                                                                                                                                                                    |
+| AC-15 | Pass                                      | [Clean Windows run](#clean-machine-check-ac-15). Frozen install, browser install, startup, sign-in, workspace tests and full desktop browser matrix.                                                                    |
 
 "All three browsers" means desktop Chromium, Firefox and WebKit through Playwright. Desktop
 WebKit and synthetic touch do not stand in for iOS or Android (testing.md).
 
 ## Handoff runs
 
-### Physical-device table qualification (AC-12, deferred from T13)
+### Physical-device table qualification
 
-Run on one identified mid-range Android phone (Chrome) and one iPhone (Safari), both on the
-same Wi-Fi network as the development machine.
+The owner permanently deferred this run on 2026-11-26, superseding the 2026-11-14 follow-up. The team has no physical-device measurements for the 300-item frame rate, text clarity or touch interaction.
 
-1. Serve the renderer harness to the network: `pnpm dev:table --host 0.0.0.0`, then open
-   `http://<machine-ip>:4313/dev/table/` on the phone.
-2. Three-engine comparison: open `/dev/table/spike.html?engine=pixi&measure=1`, then
-   `engine=three` and `engine=canvas`. Keep each page foregrounded until its automatic
-   measurement appears. For the production renderer, open `/dev/table/?stress=1&fps=1`,
-   then drag one of the 300 cards continuously for five seconds. Release it and record the
-   overlay reading, which uses up to 180 intervals from that drag.
-3. For each, record in the table below: device model, OS and browser version, DPR, the
-   graphics backend where the page shows it, and p50/p95 frame intervals against the 60 fps
-   target (16.7 ms). After recording timings, check card text at the fitted view and
-   after pinch-zooming. The comparison pages use browser zoom and the production
-   renderer zooms the table.
-4. On `/dev/table/?stress=1` and the five-layout fixture, check by hand with real touch: drag
-   and drop a card into each zone, pinch to zoom, pan, the seat rotation buttons, and the page
-   from 360 px wide (portrait) to landscape.
-5. Optional, the whole app: start the API with `PUBLIC_WEB_ORIGIN=http://<machine-ip>:5173`,
-   build the web app with `VITE_API_URL=http://<machine-ip>:3000` and
-   `VITE_WS_URL=ws://<machine-ip>:3000/ws`, serve it with `vite preview --host 0.0.0.0`, and join
-   a match from an invite link as a guest (guests need no Keycloak sign-in, whose client only
-   allows `localhost`). Plain-http LAN origins are not a secure context, so the replay page
-   skips its hash check there.
+### Last Ferry agent playtest
 
-| Device | OS / browser | DPR | Backend | Engine | p50 / p95 ms | Text | Touch checks |
-| ------ | ------------ | --- | ------- | ------ | ------------ | ---- | ------------ |
-|        |              |     |         | pixi   |              |      |              |
-|        |              |     |         | three  |              |      |              |
-|        |              |     |         | canvas |              |      |              |
-|        |              |     |         | prod   |              |      |              |
-|        |              |     |         | pixi   |              |      |              |
-|        |              |     |         | three  |              |      |              |
-|        |              |     |         | canvas |              |      |              |
-|        |              |     |         | prod   |              |      |              |
+On 2026-11-26 a designer agent created _Last Ferry_, a two-seat sandbox game. Crews alternate boarding one or two passengers from a public pier. The crew that boards the last passenger wins. Using the local integration fixture, the designer published a version, the two seats were claimed with separate credentials, and each agent chose moves from its seat's view on a separate loopback WebSocket. The coordinator relayed the moves. Match ID: `01a21817-9f2e-74be-a331-0a1d90c43986`.
+
+The designer boarded one of the four passengers and passed. The guest boarded two and passed. The designer boarded the last passenger and ended the match. Both clients observed the same counts after each update and reached sequence 6 with four aboard, the pier empty and the match finished. Under the game's manual scoring rule, the designer won. The playtest exposed a forced win for the starting crew: boarding one leaves three, so either reply lets the first crew finish on its next turn.
+
+This arranged session exercised publishing, invite claims, turn changes and finish propagation through the room server. The [Phase 2 product gate](phase-1-spec.md) still requires evidence of designers independently returning with remote guests.
 
 ### Clean-machine check (AC-15)
 
@@ -264,6 +237,14 @@ Final native Ubuntu replay timings (300 steps in each engine):
 | Chromium | 55.0 ms | 73.8 ms | 94.9 ms  |
 | Firefox  | 17.0 ms | 21.0 ms | 198.0 ms |
 | WebKit   | 32.0 ms | 41.0 ms | 280.0 ms |
+
+## Scheduled browser checks, 2026-11-26
+
+The [November 25 run](https://github.com/JohnnnyTang/onboarding/actions/runs/45669225993) measured Chromium replay p95 above the 150 ms limit on all three attempts. On the same local Windows machine, E2E-06 measured 126 ms p95 with trace screenshots enabled and 87–89 ms with screenshots disabled. The final 300-step run measured 88.4 ms p95 and 174.3 ms maximum. The timed test retains DOM snapshots, per-step timings and the original 150 ms p95 and 500 ms maximum assertions.
+
+The [November 23 matrix](https://github.com/JohnnnyTang/onboarding/actions/runs/45244988737) reached the nightly job. Firefox could not create a graphics context. One WebKit guest reported a worker timeout during the four-seat match. In the Playwright 1.64.1 Ubuntu 24.04 image, headless Firefox returned a null WebGL2 context without a display and obtained a Mesa llvmpipe context under Xvfb. The nightly job now starts its browser matrix under Xvfb. Firefox and WebKit each passed the four-seat match and idle-table test under Xvfb with tracing and zero retries against the local server. The WebKit timeout did not recur in this focused run. A run on the hosted runner is needed to confirm the workflow change there.
+
+The final native Windows matrix passed 101 tests with four expected skips and zero retries in 13.2 minutes. Earlier runs exposed an IPv6-only preview listener and intermittent Firefox guest-join and canvas-comparison failures. The preview now binds to IPv4 loopback. The guest join and designer reload each passed five focused runs, and the exact canvas comparison passed three. Future comparison failures attach both PNGs. All three cases passed in the final matrix. The 300-step replay p95 was 85.1 ms in Chromium, 12 ms in Firefox and 61 ms in WebKit.
 
 ## Decisions and open questions
 

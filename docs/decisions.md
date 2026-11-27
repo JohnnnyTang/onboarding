@@ -181,8 +181,7 @@ is implemented behind `TableRenderer`, with 8.6.6 pinned because inspected newer
 v8 distributions ship optional WASM transcoders that violate AC-14. The project
 owner confirmed PixiJS 8.6.6 on 2026-10-27 after reviewing the desktop spike
 recommendation; this resolves Q-008.
-The owner deferred physical-phone qualification to T20 on 2026-10-27; the
-300-item/60 fps target and AC-12 still require physical-device evidence there.
+On 2026-11-26 the owner permanently deferred physical-phone qualification for the Phase 1 renderer. Its 300-item/60 fps target remains unmeasured on phones.
 The Chromium follow-up records 8.4 ms Pixi p95 frame intervals on Intel D3D11 at
 both fixture widths and separately records slower headless SwiftShader results.
 
@@ -243,7 +242,7 @@ What to decide, when, and how to judge it. Record each outcome as a new entry or
 | Before T07              | ORM                                                  | Drizzle, Kysely, Prisma                                                   | Migration workflow, typed queries, team familiarity                                                  |
 | T08 spike               | Server sandbox (D-008)                               | QuickJS, `vm` + process, isolated-vm, Deno                                | Spike criteria in D-008                                                                              |
 | Before T12              | App shell framework (D-009)                          | React, Svelte, SolidJS                                                    | Team familiarity, ecosystem for editors, agent reliability                                           |
-| T13 spike               | 2D renderer (D-009)                                  | PixiJS, Three.js orthographic, Canvas 2D                                  | Desktop fixture comparison, text and Phase 2 reuse; phone 300-item/60 fps qualification at T20       |
+| T13 spike               | 2D renderer (D-009)                                  | PixiJS, Three.js orthographic, Canvas 2D                                  | Desktop fixture comparison, text and Phase 2 reuse; physical-phone run permanently deferred          |
 | Before first deployment | Hosting, storage provider, identity provider (Q-002) | University infrastructure, cloud providers                                | Cost, data location rules, SSO, operations effort                                                    |
 | Phase 2 spike           | Physics                                              | Rapier, cannon-es, Jolt                                                   | 200 bodies at 60 fps on a mid-range phone; believable dice; deterministic replay for dexterity shots |
 | Phase 2                 | Texture and model formats                            | KTX2 + Meshopt, WebP/AVIF + plain glTF                                    | GPU memory and load time on the device matrix                                                        |

@@ -2,7 +2,7 @@
 
 T13 is complete. The project owner confirmed PixiJS 8.6.6 behind `TableRenderer`
 on 2026-10-27, and its D-009 status is Accepted. Physical-phone qualification was
-explicitly deferred to T20. This is a scheduling change, not a physical-device pass.
+explicitly deferred to T20. The owner made that deferral permanent on 2026-11-26. See the [final handoff](t20-validation.md#acceptance-criteria).
 
 ## Scope
 
@@ -82,7 +82,7 @@ gates. `tasks.md`, `testing.md` and D-009 now carry that follow-up explicitly:
 - Record model, OS/browser version, DPR, graphics backend where exposed, and
   p50/p95 frame intervals against the 60 fps target.
 - Check text at fit/zoom, real-touch drag/drop, pinch/pan, seat rotation and
-  viewport resizing from 360 px upwards. AC-12 remains a T20 acceptance gate.
+  viewport resizing from 360 px upwards. This was the planned device coverage before the permanent deferral.
 
 No contract, determinism, hidden-information, isolation or WASM rule was relaxed.
 

@@ -4,7 +4,7 @@
 
 Board Game Platform is an in-progress, browser-based toolkit for indie board game designers. The idea is to let a designer start with components and manual play, add enforceable rules when ready, and invite remote playtesters without asking them to install an app. The platform supplies the table, networking, accounts, storage, and replay machinery; game packages supply the game.
 
-> **Development status:** Phase 1 is implemented and runs locally end to end: offline sandbox projects with generated cards, hot-seat play, publishing, remote matches with guests, the Harbor Market reference game, replays and the `bgp` CLI. It is not a hosted service yet; hosting is an open decision. The last handoff checks (physical phones, a clean-machine run) are tracked in [the task tracker](docs/tasks.md) with the validation notes.
+> **Development status:** Phase 1 is implemented and runs locally end to end: offline sandbox projects with generated cards, hot-seat play, publishing, remote matches with guests, the Harbor Market reference game, replays and the `bgp` CLI. It is not a hosted service yet; hosting is an open decision. The clean-machine run and desktop browser matrix passed. The owner permanently deferred physical-phone qualification. See the [handoff evidence](docs/t20-validation.md#acceptance-criteria).
 
 ## The story
 
@@ -35,18 +35,18 @@ The intended full system is described in [architecture.md](docs/architecture.md)
 
 ## What is in this repository
 
-| Area                      | Role                                                              | Current state                                     |
-| ------------------------- | ----------------------------------------------------------------- | ------------------------------------------------- |
-| `packages/schema`         | Zod contracts and generated JSON Schemas                          | Implemented                                       |
-| `packages/rules`          | Seeded RNG, rules runtime, sandbox operations, replay and hashing | Implemented                                       |
-| `packages/testing`        | Headless runner, random bot, leak and determinism checks          | Implemented                                       |
-| `packages/rules-host`     | Isolated server-side game execution (QuickJS) and recovery client | Implemented                                       |
-| `packages/table-2d`       | PixiJS table renderer, gestures and keyboard play                 | Implemented; physical-phone qualification remains |
-| `apps/server`             | HTTP API, room server, database, auth and uploads                 | Implemented                                       |
-| `apps/web`                | Browser application: projects, publishing, matches, replays       | Implemented                                       |
-| `games/harbor-market`     | Enforced reference game                                           | Implemented                                       |
-| `packages/card-generator` | Card faces from templates and CSV rows                            | Implemented (T16)                                 |
-| `packages/cli`            | `bgp init`, `dev`, `validate`, `build`, `publish`                 | Implemented (T19)                                 |
+| Area                      | Role                                                              | Current state                      |
+| ------------------------- | ----------------------------------------------------------------- | ---------------------------------- |
+| `packages/schema`         | Zod contracts and generated JSON Schemas                          | Implemented                        |
+| `packages/rules`          | Seeded RNG, rules runtime, sandbox operations, replay and hashing | Implemented                        |
+| `packages/testing`        | Headless runner, random bot, leak and determinism checks          | Implemented                        |
+| `packages/rules-host`     | Isolated server-side game execution (QuickJS) and recovery client | Implemented                        |
+| `packages/table-2d`       | PixiJS table renderer, gestures and keyboard play                 | Implemented; desktop matrix passed |
+| `apps/server`             | HTTP API, room server, database, auth and uploads                 | Implemented                        |
+| `apps/web`                | Browser application: projects, publishing, matches, replays       | Implemented                        |
+| `games/harbor-market`     | Enforced reference game                                           | Implemented                        |
+| `packages/card-generator` | Card faces from templates and CSV rows                            | Implemented (T16)                  |
+| `packages/cli`            | `bgp init`, `dev`, `validate`, `build`, `publish`                 | Implemented (T19)                  |
 
 The [Phase 1 specification](docs/phase-1-spec.md) defines the complete designer sandbox, remote match, replay, and SDK acceptance criteria. Later 3D and balance-analysis phases are direction, not current features.
 

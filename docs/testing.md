@@ -200,14 +200,7 @@ Enter and Space, checking the `drop` gestures. `e2e/match.spec.ts` plays the sta
 then a swap with M, the arrow keys and Enter, and checks that the canvas points at the visible
 key list. `keyboardDropTargets` has unit tests in `packages/table-2d/test/layout.test.ts`.
 
-Physical Android/iPhone renderer profiling is a T20 gate, deferred from T13 by
-the project owner on 2026-10-27. Run both the three-engine spike and production
-`/dev/table/?stress=1&fps=1` (on-screen frame intervals, T20) on identified hardware
-using the [T20 device run steps](t20-validation.md#physical-device-table-qualification-ac-12-deferred-from-t13).
-Record 300-item frame cadence
-against the 60 fps target, DPR/backend, readable text after zooming and actual
-touch drag/drop, pinch/pan, seat rotation and viewport resizing. Desktop WebKit
-and synthetic touch events do not establish AC-12 on iOS or Android.
+Phase 1 AC-12 uses the desktop Chromium, Firefox and WebKit matrix at 360 px and 1440 px. The owner permanently deferred physical Android and iPhone testing on 2026-11-26. See the [handoff evidence](t20-validation.md#acceptance-criteria).
 
 1. Install with a frozen lockfile.
 2. `pnpm lint`, `pnpm typecheck`.

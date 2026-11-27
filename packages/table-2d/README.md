@@ -84,5 +84,5 @@ The dedicated Windows CI job compares screenshots in all three browsers.
 Update with `--update-snapshots` only after reviewing the actual images.
 
 The project owner confirmed PixiJS 8.6.6 at T13 on 2026-10-27; D-009 for 2D is
-Accepted. Physical-phone qualification is tracked at T20. See
+Accepted. Phase 1 physical-phone qualification was permanently deferred at handoff. See
 `docs/spikes/t13-renderer-2d.md` for measurements and limits.
