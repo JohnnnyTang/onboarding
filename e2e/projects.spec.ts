@@ -103,15 +103,18 @@ async function storedFace(page: Page, path: string) {
       request.onsuccess = () => resolve(request.result);
       request.onerror = () => reject(request.error);
     });
-    const records = await new Promise<{ path: string; blob: Blob }[]>((resolve, reject) => {
-      const request = db.transaction("projectAssets").objectStore("projectAssets").getAll();
-      request.onsuccess = () => resolve(request.result);
-      request.onerror = () => reject(request.error);
-    });
+    const records = await new Promise<{ path: string; bytes: ArrayBuffer; contentType: string }[]>(
+      (resolve, reject) => {
+        const request = db.transaction("projectAssets").objectStore("projectAssets").getAll();
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      },
+    );
     db.close();
     const record = records.find((entry) => entry.path === wanted);
     if (!record) return null;
-    const bitmap = await createImageBitmap(record.blob);
+    const blob = new Blob([record.bytes], { type: record.contentType });
+    const bitmap = await createImageBitmap(blob);
     const canvas = document.createElement("canvas");
     canvas.width = bitmap.width;
     canvas.height = bitmap.height;
@@ -119,7 +122,7 @@ async function storedFace(page: Page, path: string) {
     ctx?.drawImage(bitmap, 0, 0);
     const [r, g, b] = ctx?.getImageData(20, 20, 1, 1).data ?? [];
     return {
-      type: record.blob.type,
+      type: blob.type,
       size: [bitmap.width, bitmap.height],
       pixel: `#${[r, g, b].map((part) => (part ?? 0).toString(16).padStart(2, "0")).join("")}`,
     };

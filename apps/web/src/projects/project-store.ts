@@ -71,18 +71,25 @@ function parseProject(value: unknown): LocalProject {
 
 function parseAsset(value: unknown): ProjectAsset | null {
   if (typeof value !== "object" || value === null) return null;
-  const { blob, ...info } = value as Record<string, unknown>;
+  const { blob, bytes, ...info } = value as Record<string, unknown>;
   const parsed = ProjectAssetInfoSchema.safeParse(info);
-  if (!parsed.success || !(blob instanceof Blob) || blob.size !== parsed.data.size) return null;
+  if (!parsed.success) return null;
+  if (bytes instanceof ArrayBuffer && bytes.byteLength === parsed.data.size) {
+    return { ...parsed.data, blob: new Blob([bytes], { type: parsed.data.contentType }) };
+  }
+  // Older projects stored the Blob directly.
+  if (!(blob instanceof Blob) || blob.size !== parsed.data.size) return null;
   return { ...parsed.data, blob };
 }
 
 /** The record stored for an asset, validated, with its bytes. */
-function assetRecord(asset: ProjectAsset): ProjectAssetInfo & { blob: Blob } {
+async function assetRecord(
+  asset: ProjectAsset,
+): Promise<ProjectAssetInfo & { bytes: ArrayBuffer }> {
   const { blob, ...info } = asset;
   const parsed = ProjectAssetInfoSchema.parse(info);
   if (blob.size !== parsed.size) throw new Error("Asset size does not match its bytes");
-  return { ...parsed, blob };
+  return { ...parsed, bytes: await blob.arrayBuffer() };
 }
 
 function assetRange(projectId: string): IDBKeyRange {
@@ -126,7 +133,7 @@ export async function openProjectStore(name = DATABASE_NAME): Promise<ProjectSto
     },
     async putProjectWithAssets(project, put, remove) {
       const parsed = LocalProjectSchema.parse(project);
-      const records = put.map(assetRecord);
+      const records = await Promise.all(put.map(assetRecord));
       if (records.some((record) => record.projectId !== parsed.id)) {
         throw new Error("Assets belong to another project");
       }
@@ -157,7 +164,7 @@ export async function openProjectStore(name = DATABASE_NAME): Promise<ProjectSto
       });
     },
     async putAsset(asset) {
-      await db.put("projectAssets", assetRecord(asset));
+      await db.put("projectAssets", await assetRecord(asset));
     },
     async deleteAsset(projectId, path) {
       await db.delete("projectAssets", [projectId, path]);

@@ -90,6 +90,8 @@ describe("project store", () => {
     ).rejects.toThrow();
     await expect(projects.putAsset({ ...asset(A, "assets/c.png"), size: 99 })).rejects.toThrow();
     const raw = await openDB(name);
+    // Read old Blob records alongside the current byte representation.
+    await raw.put("projectAssets", asset(A, "assets/b.png"));
     await raw.put("projectAssets", { ...asset(A, "assets/z.png"), blob: "not a blob" });
     raw.close();
     const listed = await projects.listAssets(A);
